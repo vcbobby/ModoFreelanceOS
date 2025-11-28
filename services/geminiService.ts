@@ -1,6 +1,7 @@
 import { GoogleGenAI, Type, Schema } from '@google/genai'
 import { Proposal } from '../types'
 
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY })
 
 const proposalSchema: Schema = {
     type: Type.OBJECT,
