@@ -39,6 +39,7 @@ export const generateProposals = async (
                 platformInstructions = `
           - Estilo: Directo, agresivo en ventas pero educado.
           - Longitud mínima: 100 caracteres.
+          - Longitud máxima: 1500 caracteres.
           - Ofrece un plan de accion claro, especificando punto por punto como propongo realizar el proyecto y que se ajuste a lo que el cliente necesita para realizar su proyecto.
           - Enfoque: Qué voy a hacer por ti AHORA mismo.
         `
