@@ -10,6 +10,7 @@ import {
     User as UserIcon,
     CheckCircle, // <--- AGREGA ESTO
     Sparkles,
+    History,
 } from 'lucide-react'
 import { DashboardTips } from './components/DashboardTips'
 import { ProposalTool } from './views/ProposalTool'
@@ -17,6 +18,7 @@ import { Landing } from './views/Landing'
 import { AuthView } from './views/Auth' // Importamos la nueva vista
 import { PricingModal } from './components/ui'
 import { AppView, UserState } from './types'
+import { HistoryView } from './views/HistoryView'
 
 // Firebase
 import { auth, db } from './firebase'
@@ -65,47 +67,6 @@ const App = () => {
         })
         return () => unsubscribe()
     }, [])
-
-    // Función para traer datos (Créditos) de Firebase
-    // const fetchUserData = async (uid: string) => {
-    //     try {
-    //         const docRef = doc(db, 'users', uid)
-    //         const docSnap = await getDoc(docRef)
-
-    //         if (docSnap.exists()) {
-    //             const data = docSnap.data()
-    //             let isSub = data.isSubscribed || false
-    //             let credits = data.credits !== undefined ? data.credits : 0
-
-    //             // --- LÓGICA DE VENCIMIENTO ---
-    //             if (isSub && data.subscriptionEnd) {
-    //                 const now = Date.now()
-    //                 // Si la fecha actual es MAYOR que la fecha de fin, venció.
-    //                 if (now > data.subscriptionEnd) {
-    //                     isSub = false
-    //                     credits = 3 // Lo devolvemos al plan gratis
-
-    //                     // Actualizamos la base de datos para quitarle el PRO
-    //                     await updateDoc(docRef, {
-    //                         isSubscribed: false,
-    //                         credits: 3,
-    //                     })
-    //                     alert(
-    //                         'Tu suscripción ha vencido. Por favor renueva tu plan.'
-    //                     )
-    //                 }
-    //             }
-    //             // -----------------------------
-
-    //             setUserState({
-    //                 isSubscribed: isSub,
-    //                 credits: credits,
-    //             })
-    //         }
-    //     } catch (error) {
-    //         console.error('Error al cargar datos:', error)
-    //     }
-    // }
 
     // Reemplaza tu función fetchUserData por esta mejorada:
     const fetchUserData = async (uid: string) => {
@@ -277,6 +238,8 @@ const App = () => {
                         </div>
                     </div>
                 )
+            case AppView.HISTORY:
+                return <HistoryView userId={firebaseUser?.uid} />
             default:
                 return (
                     <div className="max-w-4xl mx-auto py-8">
@@ -398,6 +361,15 @@ const App = () => {
                             active={currentView === AppView.PROPOSALS}
                             onClick={() => {
                                 setCurrentView(AppView.PROPOSALS)
+                                setIsMobileMenuOpen(false)
+                            }}
+                        />
+                        <NavItem
+                            icon={<History />}
+                            label="Historial"
+                            active={currentView === AppView.HISTORY}
+                            onClick={() => {
+                                setCurrentView(AppView.HISTORY)
                                 setIsMobileMenuOpen(false)
                             }}
                         />

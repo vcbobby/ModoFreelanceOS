@@ -3,6 +3,7 @@ export enum AppView {
     DASHBOARD = 'DASHBOARD',
     PROPOSALS = 'PROPOSALS',
     TEMPLATES = 'TEMPLATES',
+    HISTORY = 'history',
 }
 
 export interface Proposal {
@@ -16,4 +17,13 @@ export interface UserState {
     credits: number // Demo credits before forced upgrade
     subscriptionEnd?: number // <--- NUEVO (Fecha fin plan PRO)
     nextReset?: number
+}
+
+export interface HistoryItem {
+    id: string
+    createdAt: string // Fecha ISO
+    clientName: string
+    platform: string
+    type: string // Formal, Corto, etc.
+    content: string
 }

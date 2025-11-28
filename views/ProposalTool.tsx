@@ -12,7 +12,7 @@ import {
 import { generateProposals } from '../services/geminiService'
 import { Proposal } from '../types'
 import { Button, Card } from '../components/ui'
-import { doc, getDoc, setDoc } from 'firebase/firestore' // Importamos Firestore
+import { doc, getDoc, setDoc, collection, addDoc } from 'firebase/firestore' // Importamos Firestore
 import { db } from '../firebase'
 import ReactMarkdown from 'react-markdown'
 
@@ -96,6 +96,25 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
             }))
             setProposals(repairedResults)
             setActiveTab(0)
+            if (userId) {
+                // Guardamos las 3 propuestas o solo la seleccionada?
+                // Para ser más útil, guardemos las 3 como un lote o individualmente.
+                // Aquí guardaremos cada variante para que el usuario no pierda nada.
+                const historyRef = collection(db, 'users', userId, 'history')
+
+                // Usamos Promise.all para guardar las 3 rápido y sin bloquear mucho
+                await Promise.all(
+                    repairedResults.map((prop) =>
+                        addDoc(historyRef, {
+                            createdAt: new Date().toISOString(),
+                            clientName: clientName || 'Cliente Desconocido',
+                            platform: platform,
+                            type: prop.type, // Formal, Corto, etc.
+                            content: prop.content,
+                        })
+                    )
+                )
+            }
         } catch (e) {
             alert('Error al generar propuestas. Por favor intenta de nuevo.')
         } finally {
