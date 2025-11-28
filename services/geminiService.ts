@@ -37,10 +37,12 @@ export const generateProposals = async (
         switch (platform) {
             case 'Freelancer':
                 platformInstructions = `
-          - Estilo: Directo, agresivo en ventas pero educado.
-          - Longitud máxima: La propuesta, ni formal, corto o valor, no pueden exceder los 1500 caracteres.
-          - Ofrece un plan de accion claro, especificando punto por punto como propongo realizar el proyecto y que se ajuste a lo que el cliente necesita para realizar su proyecto.
-          - Enfoque: Qué voy a hacer por ti AHORA mismo.
+          ALERTA DE LONGITUD CRÍTICA:
+          - La plataforma Freelancer.com CORTA el texto si excede 1500 caracteres.
+          - TU OBJETIVO: Escribir menos de 200 PALABRAS por propuesta.
+          - Estilo: Venta agresiva pero educada. Ve directo a la solución.
+          - Plan de acción: OBLIGATORIO incluirlo, pero debe ser RESUMIDO (puntos cortos y concisos).
+          - NO introducciones largas. NO despedidas largas.
         `
                 break
             case 'Workana':
