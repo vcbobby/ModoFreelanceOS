@@ -151,8 +151,8 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
                 .replace(/\,([A-Za-z])/g, ', $1')
                 // 3. Convertir saltos de línea literales en saltos reales
                 .replace(/\\n/g, '\n')
-                // 4. Asegurar que los párrafos tengan doble salto
-                .replace(/\n(?!\n)/g, '\n\n')
+            // 4. Asegurar que los párrafos tengan doble salto
+            // .replace(/\n(?!\n)/g, '\n\n')
         )
     }
 
