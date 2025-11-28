@@ -38,6 +38,7 @@ export const generateProposals = async (
             case 'Freelancer':
                 platformInstructions = `
           REGLA PARA FREELANCER:
+          - La propuesta debe ser redactada en lenguaje natural que no se note que esta redactada con ia, donde detallas que el perfil se adapta a las necesidades que busca el cliente o empresa y un plan de acción que se propone para realizar dicho proyecto.
           - La propuesta debe tener una longitud MÍNIMA de 100 caracteres.
           - Sé directo pero profesional, evitando relleno innecesario.
         `
@@ -45,7 +46,7 @@ export const generateProposals = async (
             case 'Workana':
                 platformInstructions = `
           REGLA PARA WORKANA:
-          - El formato es CLAVE. Usa Markdown generosamente.
+          - La propuesta debe ser redactada en lenguaje natural que no se note que esta redactada con ia, donde detallas que el perfil se adapta a las necesidades que busca el cliente o empresa y un plan de acción que se propone para realizar dicho proyecto.
           - Usa listas (bullet points) si hay varios requerimientos.
           - Deja espacios claros entre párrafos.
         `
@@ -54,6 +55,7 @@ export const generateProposals = async (
             case 'LinkedIn':
                 platformInstructions = `
           REGLA PARA ${platform.toUpperCase()}:
+          - La cover letter debe ser redactada en lenguaje natural que no se note que esta redactada con ia, donde detallas que el perfil se adapta a las necesidades que busca el cliente o empresa.
           - Estructura la respuesta como una "Cover Letter" profesional.
           - Debe tener un cuerpo argumentativo sólido y cierre (Call to Action).
         `
