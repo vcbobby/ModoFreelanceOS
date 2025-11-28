@@ -100,7 +100,7 @@ export const generateProposals = async (
       3. Mi Perfil (Úsalo solo como base de datos de lo que sé hacer, no necesariamente tienes que expresar en la propuesta todas mis habilidades): "${userProfile}"
       
       INSTRUCCIONES DE IDIOMA (IMPORTANTE):
-      Detecta el idioma de la "Descripción del Cliente" y escribe las propuestas EN ESE MISMO IDIOMA.
+      Detecta el idioma de la "Descripción del Trabajo (Job Description)" y escribe las propuestas EN ESE MISMO IDIOMA.
       
       INSTRUCCIONES DE FORMATO:
       ${platformInstructions}
