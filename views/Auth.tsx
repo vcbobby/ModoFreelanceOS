@@ -45,6 +45,7 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
                 credits: 3,
                 isSubscribed: false,
                 createdAt: new Date().toISOString(),
+                lastReset: Date.now(),
             })
         }
     }

@@ -67,6 +67,47 @@ const App = () => {
     }, [])
 
     // Función para traer datos (Créditos) de Firebase
+    // const fetchUserData = async (uid: string) => {
+    //     try {
+    //         const docRef = doc(db, 'users', uid)
+    //         const docSnap = await getDoc(docRef)
+
+    //         if (docSnap.exists()) {
+    //             const data = docSnap.data()
+    //             let isSub = data.isSubscribed || false
+    //             let credits = data.credits !== undefined ? data.credits : 0
+
+    //             // --- LÓGICA DE VENCIMIENTO ---
+    //             if (isSub && data.subscriptionEnd) {
+    //                 const now = Date.now()
+    //                 // Si la fecha actual es MAYOR que la fecha de fin, venció.
+    //                 if (now > data.subscriptionEnd) {
+    //                     isSub = false
+    //                     credits = 3 // Lo devolvemos al plan gratis
+
+    //                     // Actualizamos la base de datos para quitarle el PRO
+    //                     await updateDoc(docRef, {
+    //                         isSubscribed: false,
+    //                         credits: 3,
+    //                     })
+    //                     alert(
+    //                         'Tu suscripción ha vencido. Por favor renueva tu plan.'
+    //                     )
+    //                 }
+    //             }
+    //             // -----------------------------
+
+    //             setUserState({
+    //                 isSubscribed: isSub,
+    //                 credits: credits,
+    //             })
+    //         }
+    //     } catch (error) {
+    //         console.error('Error al cargar datos:', error)
+    //     }
+    // }
+
+    // Reemplaza tu función fetchUserData por esta mejorada:
     const fetchUserData = async (uid: string) => {
         try {
             const docRef = doc(db, 'users', uid)
@@ -77,29 +118,33 @@ const App = () => {
                 let isSub = data.isSubscribed || false
                 let credits = data.credits !== undefined ? data.credits : 0
 
-                // --- LÓGICA DE VENCIMIENTO ---
-                if (isSub && data.subscriptionEnd) {
-                    const now = Date.now()
-                    // Si la fecha actual es MAYOR que la fecha de fin, venció.
-                    if (now > data.subscriptionEnd) {
-                        isSub = false
-                        credits = 3 // Lo devolvemos al plan gratis
+                // CÁLCULOS DE FECHAS
+                const now = Date.now()
 
-                        // Actualizamos la base de datos para quitarle el PRO
+                // 1. Para usuarios FREE: Calculamos renovación (7 días después del último reset)
+                // Si no existe lastReset (usuarios viejos), asumimos que es hoy.
+                const lastReset = data.lastReset || now
+                const nextResetDate = lastReset + 7 * 24 * 60 * 60 * 1000 // Sumamos 7 días
+
+                // 2. Para usuarios PRO: Verificamos vencimiento
+                if (isSub && data.subscriptionEnd) {
+                    if (now > data.subscriptionEnd) {
+                        // Si ya venció, lo degradamos (esto ya lo tenías, lo mantenemos)
+                        isSub = false
+                        credits = 3
                         await updateDoc(docRef, {
                             isSubscribed: false,
                             credits: 3,
                         })
-                        alert(
-                            'Tu suscripción ha vencido. Por favor renueva tu plan.'
-                        )
+                        alert('Tu suscripción ha vencido.')
                     }
                 }
-                // -----------------------------
 
                 setUserState({
                     isSubscribed: isSub,
                     credits: credits,
+                    subscriptionEnd: data.subscriptionEnd, // Guardamos fecha fin
+                    nextReset: nextResetDate, // Guardamos fecha renovación
                 })
             }
         } catch (error) {
@@ -266,6 +311,33 @@ const App = () => {
                                     {userState.isSubscribed
                                         ? 'Créditos Ilimitados'
                                         : 'Créditos Disponibles'}
+                                </div>
+                                <div className="w-full border-t border-slate-100 pt-3 text-center">
+                                    {userState.isSubscribed ? (
+                                        // CASO PRO: Muestra vencimiento del plan
+                                        <p className="text-xs text-brand-600 font-medium">
+                                            Tu plan vence el: <br />
+                                            <span className="font-bold text-slate-700 text-sm">
+                                                {userState.subscriptionEnd
+                                                    ? new Date(
+                                                          userState.subscriptionEnd
+                                                      ).toLocaleDateString()
+                                                    : 'De por vida'}
+                                            </span>
+                                        </p>
+                                    ) : (
+                                        // CASO FREE: Muestra renovación de créditos
+                                        <p className="text-xs text-slate-400">
+                                            Se renuevan el: <br />
+                                            <span className="font-bold text-slate-600 text-sm">
+                                                {userState.nextReset
+                                                    ? new Date(
+                                                          userState.nextReset
+                                                      ).toLocaleDateString()
+                                                    : 'Próximamente'}
+                                            </span>
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         </div>
