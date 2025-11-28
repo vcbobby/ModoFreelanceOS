@@ -14,6 +14,7 @@ import { Proposal } from '../types'
 import { Button, Card } from '../components/ui'
 import { doc, getDoc, setDoc } from 'firebase/firestore' // Importamos Firestore
 import { db } from '../firebase'
+import ReactMarkdown from 'react-markdown'
 
 interface ProposalToolProps {
     onUsage: () => Promise<boolean>
@@ -240,8 +241,46 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
                                 <h3 className="font-bold text-lg text-slate-900 mb-4">
                                     {proposals[activeTab].title}
                                 </h3>
-                                <div className="prose prose-slate text-sm leading-relaxed whitespace-pre-line text-slate-700">
-                                    {proposals[activeTab].content}
+
+                                {/* REEMPLAZA EL CONTENIDO VIEJO POR ESTO: */}
+                                <div className="prose prose-slate prose-sm max-w-none text-slate-700 leading-relaxed">
+                                    <ReactMarkdown
+                                        components={{
+                                            // Personalizamos cómo se ven los elementos
+                                            p: ({ node, ...props }) => (
+                                                <p
+                                                    className="mb-4"
+                                                    {...props}
+                                                />
+                                            ),
+                                            ul: ({ node, ...props }) => (
+                                                <ul
+                                                    className="list-disc pl-4 mb-4 space-y-1"
+                                                    {...props}
+                                                />
+                                            ),
+                                            ol: ({ node, ...props }) => (
+                                                <ol
+                                                    className="list-decimal pl-4 mb-4 space-y-1"
+                                                    {...props}
+                                                />
+                                            ),
+                                            li: ({ node, ...props }) => (
+                                                <li
+                                                    className="pl-1"
+                                                    {...props}
+                                                />
+                                            ),
+                                            strong: ({ node, ...props }) => (
+                                                <strong
+                                                    className="font-bold text-slate-900"
+                                                    {...props}
+                                                />
+                                            ),
+                                        }}
+                                    >
+                                        {proposals[activeTab].content}
+                                    </ReactMarkdown>
                                 </div>
                             </div>
                         </div>
