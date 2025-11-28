@@ -8,6 +8,7 @@ import {
     CheckCircle2,
     Globe,
     Hash,
+    Trash2,
 } from 'lucide-react'
 import { generateProposals } from '../services/geminiService'
 import { Proposal } from '../types'
@@ -27,7 +28,7 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
 }) => {
     const [jobDescription, setJobDescription] = useState('')
     const [userProfile, setUserProfile] = useState('')
-    const [platform, setPlatform] = useState('Upwork')
+    const [platform, setPlatform] = useState('Workana')
     const [clientName, setClientName] = useState('')
     const [isGenerating, setIsGenerating] = useState(false)
     const [proposals, setProposals] = useState<Proposal[] | null>(null)
@@ -62,6 +63,13 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
             )
         } catch (e) {
             console.error('Error guardando perfil', e)
+        }
+    }
+    const handleClear = () => {
+        if (confirm('¿Borrar los datos del cliente y descripción?')) {
+            setJobDescription('')
+            setClientName('')
+            // No borramos el perfil porque ese es permanente
         }
     }
 
@@ -157,9 +165,9 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
     }
 
     return (
-        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 h-full items-start">
             {/* Input Section */}
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-6 lg:sticky lg:top-6">
                 <div>
                     <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
                         <Wand2 className="w-6 h-6 text-brand-600" />
@@ -182,8 +190,8 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
                                 value={platform}
                                 onChange={(e) => setPlatform(e.target.value)}
                             >
-                                <option value="Upwork">Upwork</option>
                                 <option value="Workana">Workana</option>
+                                <option value="Upwork">Upwork</option>
                                 <option value="LinkedIn">LinkedIn</option>
                                 <option value="Freelancer">Freelancer</option>
                             </select>
@@ -231,16 +239,29 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
                         />
                     </div>
 
-                    <Button
-                        onClick={handleGenerate}
-                        isLoading={isGenerating}
-                        disabled={!jobDescription || !userProfile}
-                        className="w-full mt-2"
-                    >
-                        {isGenerating
-                            ? 'Analizando requerimientos...'
-                            : 'Generar Propuestas'}
-                    </Button>
+                    <div className="flex gap-3 mt-2">
+                        {/* BOTÓN LIMPIAR */}
+                        <button
+                            onClick={handleClear}
+                            disabled={!jobDescription && !clientName}
+                            className="px-4 py-2 border border-slate-300 text-slate-600 rounded-xl hover:bg-slate-50 hover:text-red-600 transition-colors flex items-center gap-2 disabled:opacity-50"
+                            title="Limpiar campos"
+                        >
+                            <Trash2 className="w-5 h-5" />
+                        </button>
+
+                        {/* BOTÓN GENERAR */}
+                        <Button
+                            onClick={handleGenerate}
+                            isLoading={isGenerating}
+                            disabled={!jobDescription || !userProfile}
+                            className="flex-1"
+                        >
+                            {isGenerating
+                                ? 'Analizando...'
+                                : 'Generar Propuestas'}
+                        </Button>
+                    </div>
                 </Card>
             </div>
 
