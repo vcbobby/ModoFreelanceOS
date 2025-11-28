@@ -1,14 +1,6 @@
 import { GoogleGenAI, Type, Schema } from '@google/genai'
 import { Proposal } from '../types'
 
-// Corrección importante: En Vite usamos import.meta.env
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY
-
-if (!apiKey) {
-    throw new Error('Falta la API Key en las variables de entorno')
-}
-
-const ai = new GoogleGenAI({ apiKey })
 
 const proposalSchema: Schema = {
     type: Type.OBJECT,
