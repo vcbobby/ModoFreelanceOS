@@ -96,7 +96,7 @@ export const generateProposals = async (
         // Nota: Usamos gemini-1.5-flash que es más estable actualmente,
         // si tienes acceso a la 2.0 puedes cambiarlo.
         const response = await ai.models.generateContent({
-            model: 'gemini-1.5-flash',
+            model: 'gemini-2.5-flash',
             contents: prompt,
             config: {
                 responseMimeType: 'application/json',
