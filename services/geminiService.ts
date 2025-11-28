@@ -1,7 +1,14 @@
 import { GoogleGenAI, Type, Schema } from '@google/genai'
 import { Proposal } from '../types'
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY })
+// Corrección importante: En Vite usamos import.meta.env
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY
+
+if (!apiKey) {
+    throw new Error('Falta la API Key en las variables de entorno')
+}
+
+const ai = new GoogleGenAI({ apiKey })
 
 const proposalSchema: Schema = {
     type: Type.OBJECT,
@@ -37,71 +44,70 @@ export const generateProposals = async (
         switch (platform) {
             case 'Freelancer':
                 platformInstructions = `
-          REGLA PARA FREELANCER:
-          - La propuesta debe ser redactada en lenguaje natural que no se note que esta redactada con ia, donde detallas que el perfil se adapta a las necesidades que busca el cliente o empresa y un plan de acción que se propone para realizar dicho proyecto.
-          - La propuesta debe tener una longitud MÍNIMA de 100 caracteres.
-          - Sé directo pero profesional, evitando relleno innecesario.
+          - Estilo: Directo, agresivo en ventas pero educado.
+          - Longitud mínima: 100 caracteres.
+          - Enfoque: Qué voy a hacer por ti AHORA mismo.
         `
                 break
             case 'Workana':
                 platformInstructions = `
-          REGLA PARA WORKANA:
-          - La propuesta debe ser redactada en lenguaje natural que no se note que esta redactada con ia, donde detallas que el perfil se adapta a las necesidades que busca el cliente o empresa y un plan de acción que se propone para realizar dicho proyecto.
-          - Usa listas (bullet points) si hay varios requerimientos.
-          - Deja espacios claros entre párrafos.
+          - Estilo: Profesional, empático y estructurado.
+          - Formato: Usa párrafos cortos.
         `
                 break
             case 'Upwork':
             case 'LinkedIn':
                 platformInstructions = `
-          REGLA PARA ${platform.toUpperCase()}:
-          - La cover letter debe ser redactada en lenguaje natural que no se note que esta redactada con ia, donde detallas que el perfil se adapta a las necesidades que busca el cliente o empresa.
-          - Estructura la respuesta como una "Cover Letter" profesional.
-          - Debe tener un cuerpo argumentativo sólido y cierre (Call to Action).
+          - Estilo: "Cover Letter" conversacional y experta.
+          - Estructura: Gancho inicial -> Solución al problema -> Cierre con llamada a la acción.
         `
                 break
         }
 
         const greetingInstruction =
             clientName && clientName.trim() !== ''
-                ? `El cliente se llama "${clientName}". Úsalo naturalmente en el saludo.`
-                : `NO se conoce el nombre del cliente. IMPORTANTE: NO uses saludos robóticos como "Estimado contratante" o "Estimado cliente". Empieza con un simple "Hola," o ve directo al punto de forma natural.`
+                ? `El cliente se llama "${clientName}". Úsalo naturalmente.`
+                : `NO uses "Estimado cliente". Empieza con "Hola," o directo al grano.`
 
         const prompt = `
-      Actúa como un redactor experto en copywriting para freelancers en la plataforma: ${platform}.
+      Actúa como un estratega de propuestas freelance experto.
       
-      OBJETIVO:
-      Detecta el idioma en el que está escrita la "Descripción del Cliente" (Español, Inglés, Portugués, etc.) y genera las propuestas EN ESE MISMO IDIOMA.
+      OBJETIVO PRINCIPAL:
+      Leer la descripción del trabajo, detectar el dolor principal del cliente y explicar CÓMO mi perfil resuelve ese dolor específico.
       
-      Datos del Trabajo:
-      - Plataforma Objetivo: ${platform}
-      - Descripción del Cliente: "${jobDescription}"
+      REGLA DE ORO (ANTI-COPIA/PEGA):
+      - NO listes mis habilidades ni mi experiencia tal cual aparecen en mi perfil.
+      - NO digas frases como "Como puedes ver en mi perfil tengo habilidades en...".
+      - EN SU LUGAR, integra mis habilidades en la narrativa. 
+      - Ejemplo MALO: "Tengo experiencia en React y Node."
+      - Ejemplo BUENO: "Puedo construir la plataforma que necesitas utilizando React para asegurar una carga rápida..."
       
-      Mi Perfil:
-      "${userProfile}"
+      CONTEXTO:
+      1. Plataforma: ${platform}
+      2. Lo que pide el cliente (Job Description): "${jobDescription}"
+      3. Mi Perfil (Úsalo solo como base de datos de lo que sé hacer): "${userProfile}"
+      
+      INSTRUCCIONES DE IDIOMA:
+      Detecta el idioma de la "Descripción del Cliente" y escribe las propuestas EN ESE MISMO IDIOMA.
       
       INSTRUCCIONES DE FORMATO:
       ${platformInstructions}
-
-      INSTRUCCIONES DE SALUDO:
       ${greetingInstruction}
 
-      Genera 3 variantes de propuesta:
-      1. Formal: Profesional y corporativa.
-      2. Corto: Directo al grano.
-      3. Valor: Enfocada en beneficios/ROI.
-      
-      Asegúrate de que suenen humanas y persuasivas.
+      Genera 3 variantes:
+      1. Formal: Corporativa, seria, enfocada en garantías y seguridad.
+      2. Corto: Para clientes ocupados. "Hola, entiendo que necesitas X. Yo hago X así. Hablemos."
+      3. Valor: Enfocada en el beneficio (ROI, ahorro de tiempo, más ventas).
     `
 
+        // Nota: Usamos gemini-1.5-flash que es más estable actualmente,
+        // si tienes acceso a la 2.0 puedes cambiarlo.
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-1.5-flash',
             contents: prompt,
             config: {
                 responseMimeType: 'application/json',
                 responseSchema: proposalSchema,
-                systemInstruction:
-                    'Eres un asistente experto para freelancers. Tu prioridad es adaptarte al idioma del proyecto y al formato de la plataforma.',
             },
         })
 
