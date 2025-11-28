@@ -397,7 +397,7 @@ const App = () => {
                             label="Propuestas IA"
                             active={currentView === AppView.PROPOSALS}
                             onClick={() => {
-                                setCurrentView(AppView.DASHBOARD)
+                                setCurrentView(AppView.PROPOSALS)
                                 setIsMobileMenuOpen(false)
                             }}
                         />
