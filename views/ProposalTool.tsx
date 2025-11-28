@@ -90,7 +90,11 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
                 platform,
                 clientName
             )
-            setProposals(results)
+            const repairedResults = results.map((p) => ({
+                ...p,
+                content: repairTextFormatting(p.content),
+            }))
+            setProposals(repairedResults)
             setActiveTab(0)
         } catch (e) {
             alert('Error al generar propuestas. Por favor intenta de nuevo.')
@@ -117,6 +121,19 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
                 // 4. (Opcional) Convertir listas de Markdown en algo más limpio si es necesario
                 // Pero normalmente los guiones (-) se ven bien en texto plano.
                 .trim()
+        )
+    }
+    const repairTextFormatting = (text: string) => {
+        return (
+            text
+                // 1. Asegurar espacio después de punto (si falta)
+                .replace(/\.([A-ZÁÉÍÓÚ])/g, '. $1')
+                // 2. Asegurar espacio después de coma (si falta)
+                .replace(/\,([A-Za-z])/g, ', $1')
+                // 3. Convertir saltos de línea literales en saltos reales
+                .replace(/\\n/g, '\n')
+                // 4. Asegurar que los párrafos tengan doble salto
+                .replace(/\n(?!\n)/g, '\n\n')
         )
     }
 

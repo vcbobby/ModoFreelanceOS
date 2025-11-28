@@ -70,6 +70,14 @@ export const generateProposals = async (
       OBJETIVO PRINCIPAL:
       Leer la descripción del trabajo, detectar el dolor principal del cliente y explicar CÓMO mi perfil resuelve ese dolor específico.
       
+      REGLAS DE PUNTUACIÓN Y FORMATO (CRÍTICO):
+      1. JAMÁS escribas un bloque de texto pegado.
+      2. Usa DOBLE SALTO DE LÍNEA (\\n\\n) para separar cada párrafo.
+      3. Después de cada punto (.) o coma (,), DEBE haber un espacio.
+         - MAL: "Hola.Soy ingeniero"
+         - BIEN: "Hola. Soy ingeniero"
+      4. Usa listas (bullet points) para enumerar pasos.
+
       REGLA DE ORO (ANTI-COPIA/PEGA):
       - NO listes mis habilidades ni mi experiencia tal cual aparecen en mi perfil.
       - NO digas frases como "Como puedes ver en mi perfil tengo habilidades en...".
@@ -82,7 +90,7 @@ export const generateProposals = async (
       - Usa **negritas** para resaltar palabras clave, beneficios o tecnologías importantes.
       - Usa listas con viñetas (- punto 1) o números (1. paso 1) para enumerar pasos o beneficios.
       - Deja DOBLE SALTO DE LÍNEA entre párrafos para que el texto respire.
-      - despues de cada punto "." deja un espacio.
+      - despues de cada punto "." deja un espacio o salto de linea si es otro parrafo.
 
       CONTEXTO:
       1. Plataforma: ${platform}
