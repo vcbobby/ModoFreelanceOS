@@ -372,7 +372,10 @@ const App = () => {
                     <div className="p-6">
                         <h1
                             className="text-2xl font-bold text-white tracking-tight cursor-pointer"
-                            onClick={() => setCurrentView(AppView.DASHBOARD)}
+                            onClick={() => {
+                                setCurrentView(AppView.DASHBOARD)
+                                setIsMobileMenuOpen(false)
+                            }}
                         >
                             ModoFreelance
                             <span className="text-brand-500">OS</span>
@@ -384,13 +387,19 @@ const App = () => {
                             icon={<LayoutDashboard />}
                             label="Inicio"
                             active={currentView === AppView.DASHBOARD}
-                            onClick={() => setCurrentView(AppView.DASHBOARD)}
+                            onClick={() => {
+                                setCurrentView(AppView.DASHBOARD)
+                                setIsMobileMenuOpen(false)
+                            }}
                         />
                         <NavItem
                             icon={<PenTool />}
                             label="Propuestas IA"
                             active={currentView === AppView.PROPOSALS}
-                            onClick={() => setCurrentView(AppView.PROPOSALS)}
+                            onClick={() => {
+                                setCurrentView(AppView.DASHBOARD)
+                                setIsMobileMenuOpen(false)
+                            }}
                         />
                         {/* <NavItem
                             icon={<Code />}
