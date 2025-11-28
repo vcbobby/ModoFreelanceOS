@@ -39,12 +39,14 @@ export const generateProposals = async (
                 platformInstructions = `
           - Estilo: Directo, agresivo en ventas pero educado.
           - Longitud mínima: 100 caracteres.
+          - Ofrece un plan de accion claro, que se ajuste a lo que el cliente necesita para realizar su proyecto.
           - Enfoque: Qué voy a hacer por ti AHORA mismo.
         `
                 break
             case 'Workana':
                 platformInstructions = `
           - Estilo: Profesional, empático y estructurado.
+          - Ofrece un plan de accion claro, que se ajuste a lo que el cliente necesita para realizar su proyecto.
           - Formato: Usa párrafos cortos.
         `
                 break
