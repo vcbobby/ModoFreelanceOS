@@ -100,9 +100,24 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
     }
 
     const copyToClipboard = (text: string, index: number) => {
-        navigator.clipboard.writeText(text)
+        const cleanText = cleanMarkdownForClipboard(text)
+        navigator.clipboard.writeText(cleanText)
         setCopiedIndex(index)
         setTimeout(() => setCopiedIndex(null), 2000)
+    }
+    const cleanMarkdownForClipboard = (text: string) => {
+        return (
+            text
+                // 1. Eliminar negritas (**texto**)
+                .replace(/\*\*/g, '')
+                // 2. Eliminar cursivas (*texto* o _texto_)
+                .replace(/(\*|_)(.*?)\1/g, '$2')
+                // 3. Eliminar encabezados de Markdown (### Titulo) dejando solo el texto
+                .replace(/^#+\s/gm, '')
+                // 4. (Opcional) Convertir listas de Markdown en algo más limpio si es necesario
+                // Pero normalmente los guiones (-) se ven bien en texto plano.
+                .trim()
+        )
     }
 
     return (
