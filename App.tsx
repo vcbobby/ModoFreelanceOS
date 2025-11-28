@@ -8,7 +8,10 @@ import {
     LogOut,
     Code,
     User as UserIcon,
+    CheckCircle, // <--- AGREGA ESTO
+    Sparkles,
 } from 'lucide-react'
+import { DashboardTips } from './components/DashboardTips'
 import { ProposalTool } from './views/ProposalTool'
 import { Landing } from './views/Landing'
 import { AuthView } from './views/Auth' // Importamos la nueva vista
@@ -34,6 +37,7 @@ const App = () => {
         isSubscribed: false,
         credits: 0,
     })
+    const [showSuccessMsg, setShowSuccessMsg] = useState(false)
 
     // 1. Escuchar autenticación al cargar
     // 1. Escuchar autenticación al cargar
@@ -133,6 +137,8 @@ const App = () => {
             alert(
                 `¡Suscripción activa! Válida hasta el ${expirationDate.toLocaleDateString()}`
             )
+            setShowSuccessMsg(true)
+            setTimeout(() => setShowSuccessMsg(false), 5000)
         } catch (error) {
             console.error('Error activando plan:', error)
         }
@@ -228,29 +234,44 @@ const App = () => {
                 )
             default:
                 return (
-                    <div className="text-center py-20">
-                        <h2 className="text-3xl font-bold text-slate-800">
-                            Hola, {firebaseUser?.email} 👋
-                        </h2>
-                        <p className="text-slate-500 mt-2">
-                            Bienvenido a tu panel de control.
-                        </p>
+                    <div className="max-w-4xl mx-auto py-8">
+                        {/* Mensaje de Pago Exitoso (Solo aparece si showSuccessMsg es true) */}
+                        {showSuccessMsg && (
+                            <div className="mb-6 bg-green-500 text-white p-4 rounded-xl shadow-lg flex items-center justify-center gap-2 animate-bounce">
+                                <CheckCircle className="w-6 h-6" />
+                                <span className="font-bold">
+                                    ¡Pago recibido! Tu cuenta ahora es PRO.
+                                </span>
+                            </div>
+                        )}
 
-                        <div className="mt-8 flex justify-center gap-4">
-                            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm w-48">
+                        <div className="text-center mb-10">
+                            <h2 className="text-3xl font-bold text-slate-800">
+                                Hola, {firebaseUser?.email?.split('@')[0]} 👋
+                            </h2>
+                            <p className="text-slate-500 mt-2">
+                                Bienvenido a tu centro de mando.
+                            </p>
+                        </div>
+
+                        {/* Tarjeta de Créditos */}
+                        <div className="flex justify-center gap-4 mb-10">
+                            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm w-full md:w-64 flex flex-col items-center">
                                 <div className="text-3xl font-bold text-brand-600">
-                                    {userState.isSubscribed ? 'PRO 🚀' : 'FREE'}
+                                    {userState.isSubscribed
+                                        ? '∞'
+                                        : userState.credits}
                                 </div>
-                                <div className="text-sm text-slate-500">
-                                    {/* Solo mostramos créditos si NO es suscriptor */}
-                                    {!userState.isSubscribed && (
-                                        <span className="text-xs text-brand-400 font-bold">
-                                            {userState.credits} créditos
-                                        </span>
-                                    )}
+                                <div className="text-sm text-slate-500 font-medium uppercase tracking-wide mt-1">
+                                    {userState.isSubscribed
+                                        ? 'Créditos Ilimitados'
+                                        : 'Créditos Disponibles'}
                                 </div>
                             </div>
                         </div>
+
+                        {/* Componente de Tips */}
+                        <DashboardTips />
                     </div>
                 )
         }
