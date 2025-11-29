@@ -25,6 +25,42 @@ const proposalSchema: Schema = {
     required: ['proposals'],
 }
 
+const sanitizeWorkanaContent = (text: string): string => {
+    let clean = text
+
+    // 1. Reemplazar palabras prohibidas específicas
+    clean = clean.replace(/whatsapp/gi, 'mensajería de la plataforma')
+    clean = clean.replace(/feedback/gi, 'retroalimentación')
+
+    // 2. Reemplazar cualquier palabra que contenga "fee" (fees, coffee, feed)
+    // OJO: Esto es agresivo, pero es lo que pide Workana.
+    // Usamos una función de reemplazo para intentar salvar algunas palabras si es posible
+    clean = clean.replace(/\b\w*fee\w*\b/gi, (match) => {
+        const lower = match.toLowerCase()
+        if (lower.includes('coffee')) return 'café'
+        if (lower.includes('fee')) return 'tarifa'
+        return '[término eliminado]' // Por seguridad si no sabemos qué es
+    })
+
+    // 3. Eliminar Emails
+    clean = clean.replace(
+        /[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}/g,
+        '[Contacto externo eliminado]'
+    )
+
+    // 4. Eliminar menciones con @
+    clean = clean.replace(/@\w+/g, '')
+
+    // 5. Eliminar Dominios/Enlaces (.com, .es, .net, .js, etc)
+    clean = clean.replace(/\b[\w-]+\.(com|es|net|js|org|io|co|ar|mx)\b/gi, '')
+
+    // 6. Eliminar Números de teléfono (secuencias de más de 6 dígitos)
+    // Borra "1234567" o "123 456 789"
+    clean = clean.replace(/\b\d[\d\s-]{5,}\d\b/g, '[Teléfono eliminado]')
+
+    return clean
+}
+
 export const generateProposals = async (
     jobDescription: string,
     userProfile: string,
@@ -138,7 +174,15 @@ export const generateProposals = async (
         if (!jsonText) throw new Error('No response from AI')
 
         const parsed = JSON.parse(jsonText)
-        return parsed.proposals
+        let finalProposals = parsed.proposals
+
+        if (platform === 'Workana') {
+            finalProposals = parsed.proposals.map((p: Proposal) => ({
+                ...p,
+                content: sanitizeWorkanaContent(p.content),
+            }))
+        }
+        return finalProposals
     } catch (error) {
         console.error('Error generating proposals:', error)
         throw error
