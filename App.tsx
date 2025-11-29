@@ -23,7 +23,7 @@ import { HistoryView } from './views/HistoryView'
 // Firebase
 import { auth, db } from './firebase'
 import { onAuthStateChanged, signOut, User } from 'firebase/auth'
-import { doc, getDoc, updateDoc } from 'firebase/firestore'
+import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore'
 const GUMROAD_LINK = 'https://modofreelanceos.gumroad.com/l/pro-plan'
 const WORDPRESS_URL = 'https://www.pixelclickdigital.com'
 
@@ -68,29 +68,28 @@ const App = () => {
         return () => unsubscribe()
     }, [])
 
-    // Reemplaza tu función fetchUserData por esta mejorada:
+    // Función MEJORADA para leer datos y auto-reparar usuarios nuevos
     const fetchUserData = async (uid: string) => {
         try {
             const docRef = doc(db, 'users', uid)
             const docSnap = await getDoc(docRef)
 
+            const now = Date.now()
+            const oneWeekMs = 7 * 24 * 60 * 60 * 1000
+
             if (docSnap.exists()) {
+                // --- CASO 1: El usuario YA TIENE datos ---
                 const data = docSnap.data()
                 let isSub = data.isSubscribed || false
                 let credits = data.credits !== undefined ? data.credits : 0
 
-                // CÁLCULOS DE FECHAS
-                const now = Date.now()
-
-                // 1. Para usuarios FREE: Calculamos renovación (7 días después del último reset)
-                // Si no existe lastReset (usuarios viejos), asumimos que es hoy.
+                // Lógica de renovación semanal para usuarios Free
                 const lastReset = data.lastReset || now
-                const nextResetDate = lastReset + 7 * 24 * 60 * 60 * 1000 // Sumamos 7 días
+                const nextResetDate = lastReset + oneWeekMs
 
-                // 2. Para usuarios PRO: Verificamos vencimiento
+                // Verificar vencimiento de plan PRO
                 if (isSub && data.subscriptionEnd) {
                     if (now > data.subscriptionEnd) {
-                        // Si ya venció, lo degradamos (esto ya lo tenías, lo mantenemos)
                         isSub = false
                         credits = 3
                         await updateDoc(docRef, {
@@ -104,8 +103,33 @@ const App = () => {
                 setUserState({
                     isSubscribed: isSub,
                     credits: credits,
-                    subscriptionEnd: data.subscriptionEnd, // Guardamos fecha fin
-                    nextReset: nextResetDate, // Guardamos fecha renovación
+                    subscriptionEnd: data.subscriptionEnd,
+                    nextReset: nextResetDate,
+                })
+            } else {
+                // --- CASO 2 (NUEVO): El usuario existe pero NO TIENE datos en la DB ---
+                // Esto pasa si el registro fue muy rápido. Aquí lo arreglamos creando los datos.
+
+                console.log(
+                    'Usuario nuevo detectado, creando perfil inicial...'
+                )
+
+                const initialData = {
+                    email: auth.currentUser?.email,
+                    credits: 3, // Le damos sus 3 créditos
+                    isSubscribed: false,
+                    createdAt: new Date().toISOString(),
+                    lastReset: now, // Guardamos la fecha de hoy
+                }
+
+                // Guardamos en Firebase
+                await setDoc(docRef, initialData)
+
+                // Actualizamos la App inmediatamente
+                setUserState({
+                    isSubscribed: false,
+                    credits: 3,
+                    nextReset: now + oneWeekMs,
                 })
             }
         } catch (error) {
