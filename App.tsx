@@ -316,7 +316,11 @@ const App = () => {
         <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
             {/* Mobile Header */}
             <div className="md:hidden fixed top-0 w-full bg-white border-b border-slate-200 z-20 px-4 py-3 flex justify-between items-center">
-                <span className="font-bold text-xl tracking-tight text-slate-900">
+                <span // 1. AGREGAMOS EL EVENTO CLICK AQUÍ
+                    onClick={() => (window.location.href = WORDPRESS_URL)}
+                    // 2. AGREGAMOS 'cursor-pointer' PARA QUE SE VEA CLICKEABLE
+                    className="font-bold text-xl tracking-tight text-slate-900 cursor-pointer"
+                >
                     ModoFreelance<span className="text-brand-600">OS</span>
                 </span>
                 <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
@@ -335,10 +339,9 @@ const App = () => {
                     <div className="p-6">
                         <h1
                             className="text-2xl font-bold text-white tracking-tight cursor-pointer"
-                            onClick={() => {
-                                setCurrentView(AppView.DASHBOARD)
-                                setIsMobileMenuOpen(false)
-                            }}
+                            onClick={() =>
+                                (window.location.href = WORDPRESS_URL)
+                            }
                         >
                             ModoFreelance
                             <span className="text-brand-500">OS</span>
