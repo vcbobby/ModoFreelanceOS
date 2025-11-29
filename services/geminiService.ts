@@ -47,6 +47,17 @@ export const generateProposals = async (
                 break
             case 'Workana':
                 platformInstructions = `
+                🔴 REGLAS DE SEGURIDAD EXTREMA (ANTI-BANEO):
+          1. PROHIBIDO usar la palabra "WhatsApp". Usa "chat de la plataforma".
+          2. PROHIBIDO usar la palabra "feedback". Usa "comentarios" o "retroalimentación".
+          3. PROHIBIDO cualquier palabra con "fee" (ej: fees, coffee, feed). Usa "tarifas" o "café".
+          4. PROHIBIDO enlaces (.com, .net), emails o teléfonos.
+          5. PROHIBIDO símbolos @. Usa "correo electrónico" en su lugar.
+          6. PROHIBIDO ofertas de descuento o precios especiales.
+          7. PROHIBIDO mencionar mi perfil o experiencia tal cual. Integra mis habilidades en la narrativa.
+          8. PROHIBIDO usar la palabra comisión o comisiones. Usa "tarifas de la plataforma".
+
+            FORMATO Y ESTRUCTURA:
           - Estilo: Profesional, empático y estructurado.
           - Ofrece un plan de accion claro, especificando punto por punto como propongo realizar el proyecto y que se ajuste a lo que el cliente necesita para realizar su proyecto.
           - Formato: Usa párrafos cortos.
@@ -91,7 +102,7 @@ export const generateProposals = async (
       - Usa formato Markdown para estructurar el texto.
       - Usa **negritas** para resaltar palabras clave, beneficios o tecnologías importantes.
       - Usa listas con viñetas (- punto 1) o números (1. paso 1) para enumerar pasos o beneficios.
-      - Deja DOBLE SALTO DE LÍNEA entre párrafos para que el texto respire.
+      - Deja SALTO DE LÍNEA entre párrafos para que el texto respire.
       - despues de cada punto "." deja un espacio o salto de linea si es otro parrafo.
 
       CONTEXTO:
