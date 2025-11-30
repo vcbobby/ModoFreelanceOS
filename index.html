@@ -1,56 +1,77 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ModoFreelanceOS - El Sistema Operativo para Freelancers</title>
-    <meta name="description">ModoFreelanceOS, el sistema operativo todo en uno para freelancers. Gestiona proyectos, facturación, clientes y más en una sola plataforma diseñada para autónomos.</meta>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              brand: {
-                50: '#f0fdf4',
-                100: '#dcfce7',
-                500: '#22c55e',
-                600: '#16a34a',
-                700: '#15803d',
-                900: '#14532d',
-              }
+    <head>
+        <meta charset="UTF-8" />
+        <meta
+            name="description"
+            content="ModoFreelanceOS, el sistema operativo todo en uno para freelancers. Gestiona proyectos, facturación, clientes y más."
+        />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>ModoFreelanceOS - El Sistema Operativo para Freelancers</title>
+
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            brand: {
+                                50: '#f0fdf4',
+                                100: '#dcfce7',
+                                500: '#22c55e',
+                                600: '#16a34a',
+                                700: '#15803d',
+                                900: '#14532d',
+                            },
+                        },
+                    },
+                },
             }
-          }
-        }
-      }
-    </script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-      body { font-family: 'Inter', sans-serif; }
-    </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0"
-  }
-}
-</script>
-<link rel="icon" type="image/png" href="/favicon.png" />
-    <link rel="apple-touch-icon" href="https://modofreelanceos.vercel.app/favicon.png" />
-    <meta property="og:title" content="ModoFreelanceOS - Tu oficina virtual" />
-<meta property="og:description" content="Genera propuestas, logos y facturas con IA." />
-<meta property="og:image" content="https://modofreelanceos.vercel.app/og-image.png" />
-<meta property="og:image:width" content="1200" />
-<meta property="og:image:height" content="630" />
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#16a34a">
-</head>
-  <body>
-    <div id="root"></div>
-  <script type="module" src="/index.tsx"></script>
-</body>
+        </script>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            body {
+                font-family: 'Inter', sans-serif;
+            }
+        </style>
+        <script type="importmap">
+            {
+                "imports": {
+                    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+                    "react": "https://aistudiocdn.com/react@^19.2.0",
+                    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+                    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
+                    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0"
+                }
+            }
+        </script>
+        <link rel="icon" type="image/png" href="/favicon.png" />
+        <link
+            rel="apple-touch-icon"
+            href="https://modofreelanceos.vercel.app/favicon.png"
+        />
+        <meta
+            property="og:title"
+            content="ModoFreelanceOS - Tu oficina virtual"
+        />
+        <meta
+            property="og:description"
+            content="Genera propuestas, logos y facturas con IA."
+        />
+        <meta
+            property="og:image"
+            content="https://modofreelanceos.vercel.app/og-image.png"
+        />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#16a34a" />
+    </head>
+    <body>
+        <div id="root"></div>
+        <script type="module" src="/index.tsx"></script>
+    </body>
 </html>
