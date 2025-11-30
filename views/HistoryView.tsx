@@ -23,8 +23,14 @@ import {
     ChevronLeft,
     ChevronRight,
     AlertTriangle,
+    Image as ImageIcon,
+    ExternalLink, // Nuevos iconos
+    Download,
+    FileText,
 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
+import html2pdf from 'html2pdf.js'
+import { ConfirmationModal } from '../components/ui/ConfirmationModal'
 
 interface HistoryViewProps {
     userId?: string
@@ -38,6 +44,13 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ userId }) => {
     const [searchTerm, setSearchTerm] = useState('')
     const [currentPage, setCurrentPage] = useState(1)
     const itemsPerPage = 5
+    const [isModalOpen, setIsModalOpen] = useState(false)
+    const [modalConfig, setModalConfig] = useState({
+        title: '',
+        message: '',
+        action: () => {},
+        isDanger: false,
+    })
 
     // 1. CARGAR HISTORIAL (Limitado a los últimos 100 para optimizar)
     useEffect(() => {
@@ -71,42 +84,57 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ userId }) => {
     }, [userId])
 
     // 2. BORRAR UN ITEM
-    const handleDelete = async (id: string) => {
+    const handleDelete = (id: string) => {
         if (!userId) return
-        if (confirm('¿Borrar esta propuesta?')) {
-            await deleteDoc(doc(db, 'users', userId, 'history', id))
-            setHistory((prev) => prev.filter((item) => item.id !== id))
-        }
-    }
-
-    // 3. VACIAR TODO EL HISTORIAL (Batch Delete)
-    const handleClearAll = async () => {
-        if (!userId || history.length === 0) return
-
-        const confirmDelete = confirm(
-            '⚠️ ¿ESTÁS SEGURO?\n\nEsto borrará permanentemente todas las propuestas guardadas en tu historial. Esta acción no se puede deshacer.'
+        confirmAction(
+            '¿Borrar propuesta?',
+            'Esta acción eliminará este elemento de tu historial permanentemente.',
+            async () => {
+                await deleteDoc(doc(db, 'users', userId, 'history', id))
+                setHistory((prev) => prev.filter((item) => item.id !== id))
+            },
+            true // es peligroso (rojo)
         )
-
-        if (confirmDelete) {
-            setLoading(true)
-            try {
-                // Firebase permite borrar en lotes (batches)
-                const batch = writeBatch(db)
-                history.forEach((item) => {
-                    const docRef = doc(db, 'users', userId, 'history', item.id)
-                    batch.delete(docRef)
-                })
-
-                await batch.commit()
-                setHistory([]) // Limpiamos la vista local
-                alert('Historial vaciado correctamente.')
-            } catch (error) {
-                console.error('Error borrando historial', error)
-                alert('Hubo un error al borrar. Intenta de nuevo.')
-            } finally {
-                setLoading(false)
-            }
-        }
+    }
+    const confirmAction = (
+        title: string,
+        message: string,
+        action: () => void,
+        isDanger = false
+    ) => {
+        setModalConfig({ title, message, action, isDanger })
+        setIsModalOpen(true)
+    }
+    // 3. VACIAR TODO EL HISTORIAL (Batch Delete)
+    const handleClearAll = () => {
+        if (!userId || history.length === 0) return
+        confirmAction(
+            '¿Vaciar todo el historial?',
+            'Estás a punto de borrar TODAS las propuestas y logos guardados. Esta acción no se puede deshacer.',
+            async () => {
+                setLoading(true)
+                try {
+                    const batch = writeBatch(db)
+                    history.forEach((item) => {
+                        const docRef = doc(
+                            db,
+                            'users',
+                            userId,
+                            'history',
+                            item.id
+                        )
+                        batch.delete(docRef)
+                    })
+                    await batch.commit()
+                    setHistory([])
+                } catch (error) {
+                    console.error(error)
+                } finally {
+                    setLoading(false)
+                }
+            },
+            true // es peligroso
+        )
     }
 
     // 4. LÓGICA DE FILTRADO
@@ -192,13 +220,33 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ userId }) => {
 
             {/* ITEMS DEL HISTORIAL */}
             <div className="space-y-4">
-                {currentItems.map((item) => (
-                    <HistoryCard
-                        key={item.id}
-                        item={item}
-                        onDelete={() => handleDelete(item.id)}
-                    />
-                ))}
+                {currentItems.map((item) => {
+                    if (item.category === 'logo')
+                        return (
+                            <LogoHistoryCard
+                                key={item.id}
+                                item={item}
+                                onDelete={() => handleDelete(item.id)}
+                            />
+                        )
+                    // NUEVO: Si es factura
+                    if (item.category === 'invoice')
+                        return (
+                            <InvoiceHistoryCard
+                                key={item.id}
+                                item={item}
+                                onDelete={() => handleDelete(item.id)}
+                            />
+                        )
+
+                    return (
+                        <HistoryCard
+                            key={item.id}
+                            item={item}
+                            onDelete={() => handleDelete(item.id)}
+                        />
+                    )
+                })}
             </div>
 
             {/* PAGINACIÓN */}
@@ -229,6 +277,16 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ userId }) => {
                     </button>
                 </div>
             )}
+            {/* MODAL GLOBAL */}
+            <ConfirmationModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onConfirm={modalConfig.action}
+                title={modalConfig.title}
+                message={modalConfig.message}
+                isDanger={modalConfig.isDanger}
+                confirmText={modalConfig.isDanger ? 'Sí, borrar' : 'Confirmar'}
+            />
         </div>
     )
 }
@@ -353,6 +411,372 @@ const HistoryCard = ({
                             {copied ? 'Copiado' : 'Copiar'}
                         </button>
                     )}
+                </div>
+            </div>
+        </div>
+    )
+}
+// --- COMPONENTE TARJETA DE LOGO (MEJORADO) ---
+const LogoHistoryCard = ({
+    item,
+    onDelete,
+}: {
+    item: HistoryItem
+    onDelete: () => void
+}) => {
+    const [showImage, setShowImage] = useState(false)
+    const [copied, setCopied] = useState(false)
+    const [isDownloading, setIsDownloading] = useState(false)
+
+    const dateStr =
+        new Date(item.createdAt).toLocaleDateString() +
+        ' ' +
+        new Date(item.createdAt).toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+        })
+
+    // 1. FUNCIÓN PARA COPIAR EL TEXTO DESCRIPTIVO
+    // 1. FUNCIÓN PARA COPIAR EL TEXTO DESCRIPTIVO (BLINDADA)
+    const handleCopyDescription = () => {
+        const textToCopy = `Marca: ${item.clientName}\nDetalles: ${item.content}\nEstilo: ${item.type}`
+
+        // INTENTO A: API Moderna (La que tenías)
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard
+                .writeText(textToCopy)
+                .then(() => {
+                    setCopied(true)
+                    setTimeout(() => setCopied(false), 2000)
+                })
+                .catch((err) => {
+                    console.error('Error copiando (Moderno):', err)
+                    fallbackCopyTextToClipboard(textToCopy) // Si falla, vamos al Plan B
+                })
+        } else {
+            // INTENTO B: Si el navegador no soporta la API moderna
+            fallbackCopyTextToClipboard(textToCopy)
+        }
+    }
+
+    // Función auxiliar "Plan B" (Método clásico compatible con todo)
+    const fallbackCopyTextToClipboard = (text: string) => {
+        const textArea = document.createElement('textarea')
+        textArea.value = text
+
+        // Evitar que haga scroll al fondo de la página
+        textArea.style.top = '0'
+        textArea.style.left = '0'
+        textArea.style.position = 'fixed'
+
+        document.body.appendChild(textArea)
+        textArea.focus()
+        textArea.select()
+
+        try {
+            const successful = document.execCommand('copy')
+            if (successful) {
+                setCopied(true)
+                setTimeout(() => setCopied(false), 2000)
+            } else {
+                alert('No se pudo copiar el texto automáticamente.')
+            }
+        } catch (err) {
+            console.error('Error copiando (Fallback):', err)
+        }
+
+        document.body.removeChild(textArea)
+    }
+
+    // 2. FUNCIÓN PARA RE-DESCARGAR LA IMAGEN
+    const handleReDownload = async () => {
+        if (!item.imageUrl) return
+        setIsDownloading(true)
+        try {
+            // Hacemos un fetch para obtener el "blob" (el archivo en sí)
+            const response = await fetch(item.imageUrl)
+            const blob = await response.blob()
+            const blobUrl = window.URL.createObjectURL(blob)
+
+            // Creamos el enlace invisible para forzar la descarga
+            const link = document.createElement('a')
+            link.href = blobUrl
+            link.download = `logo-${item.clientName
+                .replace(/\s+/g, '-')
+                .toLowerCase()}-${Date.now()}.jpg`
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+            window.URL.revokeObjectURL(blobUrl) // Limpiamos memoria
+        } catch (error) {
+            console.error('Error al descargar:', error)
+            // Si falla la descarga directa, abrimos en pestaña nueva como respaldo
+            window.open(item.imageUrl, '_blank')
+        } finally {
+            setIsDownloading(false)
+        }
+    }
+
+    return (
+        <div className="bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+            {/* ENCABEZADO */}
+            <div className="p-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+                <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+                    <span className="bg-purple-100 text-purple-700 text-xs font-bold px-2 py-1 rounded-md uppercase flex items-center gap-1 w-fit">
+                        <ImageIcon className="w-3 h-3" /> LOGO
+                    </span>
+                    <div className="flex items-center gap-1 text-xs text-slate-500">
+                        <Calendar className="w-3 h-3" /> {dateStr}
+                    </div>
+                    <span className="text-sm font-bold text-slate-800">
+                        {item.clientName}
+                    </span>
+                </div>
+                <button
+                    onClick={onDelete}
+                    className="text-slate-400 hover:text-red-500 transition-colors p-1"
+                    title="Borrar del historial"
+                >
+                    <Trash2 className="w-4 h-4" />
+                </button>
+            </div>
+
+            {/* CUERPO DE LA TARJETA */}
+            <div className="p-5 flex flex-col sm:flex-row gap-6 items-start">
+                {/* COLUMNA IZQUIERDA: VISUALIZADOR DE IMAGEN */}
+                <div className="w-full sm:w-40 shrink-0">
+                    <div
+                        className="aspect-square bg-slate-100 rounded-lg overflow-hidden border border-slate-200 flex items-center justify-center relative group cursor-pointer"
+                        onClick={() => setShowImage(!showImage)}
+                    >
+                        {/* Si hay URL, mostramos la imagen siempre (como miniatura) */}
+                        {item.imageUrl ? (
+                            <img
+                                src={item.imageUrl}
+                                alt="Logo guardado"
+                                className="w-full h-full object-contain p-1"
+                                loading="lazy"
+                            />
+                        ) : (
+                            <ImageIcon className="w-10 h-10 text-slate-300" />
+                        )}
+
+                        {/* Overlay para indicar que se puede expandir */}
+                        {!showImage && (
+                            <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors flex items-center justify-center">
+                                <span className="sr-only">Ver detalles</span>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Botón de Re-descarga debajo de la imagen */}
+                    <button
+                        onClick={handleReDownload}
+                        disabled={isDownloading}
+                        className="mt-2 w-full py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-md flex items-center justify-center gap-1 transition-colors"
+                    >
+                        {isDownloading ? (
+                            <span className="animate-pulse">Bajando...</span>
+                        ) : (
+                            <>
+                                <Download className="w-3 h-3" /> Descargar
+                            </>
+                        )}
+                    </button>
+                </div>
+
+                {/* COLUMNA DERECHA: DATOS Y ACCIONES */}
+                <div className="flex-1 w-full">
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                Estilo
+                            </span>
+                            <p className="text-sm font-medium text-slate-700">
+                                {item.type}
+                            </p>
+                        </div>
+                        <div>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                Marca
+                            </span>
+                            <p className="text-sm font-medium text-slate-700">
+                                {item.clientName}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="mb-4">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            Prompt / Detalles
+                        </span>
+                        <div
+                            className={`text-sm text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 italic ${
+                                !showImage ? 'line-clamp-2' : ''
+                            }`}
+                        >
+                            "{item.content}"
+                        </div>
+                    </div>
+
+                    {/* BOTONES DE ACCIÓN */}
+                    <div className="flex flex-wrap gap-3 pt-2 border-t border-slate-100">
+                        {/* Botón Ver Más / Menos */}
+                        <button
+                            onClick={() => setShowImage(!showImage)}
+                            className="text-sm font-bold text-brand-600 hover:text-brand-800 flex items-center gap-1"
+                        >
+                            {showImage ? (
+                                <>
+                                    Ver menos <ChevronUp className="w-4 h-4" />
+                                </>
+                            ) : (
+                                <>
+                                    Ver detalles completos{' '}
+                                    <ChevronDown className="w-4 h-4" />
+                                </>
+                            )}
+                        </button>
+
+                        {/* Botón Copiar Descripción */}
+                        <button
+                            onClick={handleCopyDescription}
+                            className="text-sm text-slate-500 hover:text-slate-900 flex items-center gap-1 ml-auto"
+                        >
+                            {copied ? (
+                                <CheckCircle2 className="w-4 h-4 text-green-600" />
+                            ) : (
+                                <Copy className="w-4 h-4" />
+                            )}
+                            {copied
+                                ? 'Descripción copiada'
+                                : 'Copiar descripción'}
+                        </button>
+                    </div>
+
+                    {/* VISOR EXPANDIDO (Opcional, si quieres ver la imagen en grande al darle ver más) */}
+                    {showImage && item.imageUrl && (
+                        <div className="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200 flex justify-center">
+                            <img
+                                src={item.imageUrl}
+                                alt="Logo Full"
+                                className="max-h-64 object-contain shadow-sm rounded-lg bg-white"
+                            />
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    )
+}
+const InvoiceHistoryCard = ({
+    item,
+    onDelete,
+}: {
+    item: HistoryItem
+    onDelete: () => void
+}) => {
+    const [isDownloading, setIsDownloading] = useState(false)
+    const dateStr = new Date(item.createdAt).toLocaleDateString()
+
+    // Función para regenerar el PDF desde el JSON guardado
+    const handleRedownload = () => {
+        setIsDownloading(true)
+        const data = item.invoiceData
+        if (!data) return
+
+        // Creamos un HTML temporal en memoria para imprimir
+        const content = document.createElement('div')
+        content.innerHTML = `
+            <div style="padding: 20px; font-family: sans-serif; color: #333;">
+                <h1>FACTURA #${data.invoiceNumber}</h1>
+                <p><strong>Fecha:</strong> ${data.date}</p>
+                <hr/>
+                <h3>Cliente: ${data.client.name}</h3>
+                <p>Total: <strong>${data.currency}${data.total.toFixed(
+            2
+        )}</strong></p>
+                <br/>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="background: #eee;">
+                        <th style="text-align: left; padding: 5px;">Item</th>
+                        <th style="text-align: right; padding: 5px;">Total</th>
+                    </tr>
+                    ${data.items
+                        .map(
+                            (i: any) => `
+                        <tr>
+                            <td style="padding: 5px; border-bottom: 1px solid #ddd;">${
+                                i.desc
+                            } (x${i.qty})</td>
+                            <td style="text-align: right; padding: 5px; border-bottom: 1px solid #ddd;">${
+                                data.currency
+                            }${(i.price * i.qty).toFixed(2)}</td>
+                        </tr>
+                    `
+                        )
+                        .join('')}
+                </table>
+                <br/>
+                <p><em>Copia regenerada desde historial.</em></p>
+            </div>
+        `
+
+        const opt = {
+            margin: 10,
+            filename: `copia-factura-${data.invoiceNumber}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        }
+
+        html2pdf()
+            .set(opt)
+            .from(content)
+            .save()
+            .then(() => {
+                setIsDownloading(false)
+            })
+    }
+
+    return (
+        <div className="bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+            <div className="p-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                    <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-md uppercase flex items-center gap-1">
+                        <FileText className="w-3 h-3" /> FACTURA
+                    </span>
+                    <span className="text-xs text-slate-500 font-medium">
+                        {dateStr}
+                    </span>
+                    <span className="text-sm font-bold text-slate-800">
+                        {item.clientName}
+                    </span>
+                </div>
+                <button
+                    onClick={onDelete}
+                    className="text-slate-400 hover:text-red-500 transition-colors p-1"
+                >
+                    <Trash2 className="w-4 h-4" />
+                </button>
+            </div>
+            <div className="p-5">
+                <p className="text-sm text-slate-600 mb-4">{item.content}</p>
+                <div className="flex gap-3">
+                    <button
+                        onClick={handleRedownload}
+                        disabled={isDownloading}
+                        className="text-sm font-bold text-brand-600 hover:text-brand-800 flex items-center gap-2 border border-brand-200 px-3 py-1.5 rounded-lg hover:bg-brand-50 transition-colors"
+                    >
+                        {isDownloading ? (
+                            <span className="animate-pulse">Generando...</span>
+                        ) : (
+                            <>
+                                <Download className="w-4 h-4" /> Descargar Copia
+                                PDF
+                            </>
+                        )}
+                    </button>
                 </div>
             </div>
         </div>

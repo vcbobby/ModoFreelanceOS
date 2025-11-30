@@ -11,6 +11,11 @@ import {
     CheckCircle, // <--- AGREGA ESTO
     Sparkles,
     History,
+    Palette,
+    FileText,
+    StickyNote,
+    PenLine,
+    Check,
 } from 'lucide-react'
 import { DashboardTips } from './components/DashboardTips'
 import { ProposalTool } from './views/ProposalTool'
@@ -19,7 +24,11 @@ import { AuthView } from './views/Auth' // Importamos la nueva vista
 import { PricingModal } from './components/ui'
 import { AppView, UserState } from './types'
 import { HistoryView } from './views/HistoryView'
-
+import { LogoTool } from './views/LogoTool' // <--- Importa la vista nueva
+import { InvoiceTool } from './views/InvoiceTool'
+import { NotesView } from './views/NotesView'
+import { DashboardPinnedNotes } from './components/DashboardPinnedNotes'
+import { SupportWidget } from './components/SupportWidget'
 // Firebase
 import { auth, db } from './firebase'
 import { onAuthStateChanged, signOut, User } from 'firebase/auth'
@@ -40,6 +49,8 @@ const App = () => {
         credits: 0,
     })
     const [showSuccessMsg, setShowSuccessMsg] = useState(false)
+    const [isEditingName, setIsEditingName] = useState(false)
+    const [displayName, setDisplayName] = useState('')
 
     // 1. Escuchar autenticación al cargar
     // 1. Escuchar autenticación al cargar
@@ -68,6 +79,17 @@ const App = () => {
         return () => unsubscribe()
     }, [])
 
+    const handleSaveName = async () => {
+        if (!firebaseUser || !displayName.trim()) return
+        try {
+            await updateDoc(doc(db, 'users', firebaseUser.uid), {
+                displayName: displayName,
+            })
+            setIsEditingName(false)
+        } catch (error) {
+            console.error('Error guardando nombre', error)
+        }
+    }
     // Función MEJORADA para leer datos y auto-reparar usuarios nuevos
     const fetchUserData = async (uid: string) => {
         try {
@@ -80,6 +102,8 @@ const App = () => {
             if (docSnap.exists()) {
                 // --- CASO 1: El usuario YA TIENE datos ---
                 const data = docSnap.data()
+                const nameFromDb = data.displayName || data.email?.split('@')[0]
+                setDisplayName(nameFromDb)
                 let isSub = data.isSubscribed || false
                 let credits = data.credits !== undefined ? data.credits : 0
 
@@ -177,29 +201,25 @@ const App = () => {
     // Función para gastar créditos en la nube
     // Modificación en src/App.tsx
 
-    // Cambiamos la firma para que devuelva true o false
-    const handleFeatureUsage = async (): Promise<boolean> => {
-        // 1. Si es PRO, pase usted (True)
+    // Modificamos para aceptar un costo (por defecto 1)
+    const handleFeatureUsage = async (cost: number = 1): Promise<boolean> => {
+        // Si es PRO, pase usted (Gratis)
         if (userState.isSubscribed) return true
 
-        // 2. Si tiene créditos, cobramos y pase usted (True)
-        if (userState.credits > 0 && firebaseUser) {
-            const newCredits = userState.credits - 1
+        // Si tiene suficientes créditos para cubrir el costo
+        if (userState.credits >= cost && firebaseUser) {
+            const newCredits = userState.credits - cost
 
             // Actualizar visualmente
             setUserState((prev) => ({ ...prev, credits: newCredits }))
 
             // Actualizar base de datos
             const docRef = doc(db, 'users', firebaseUser.uid)
-            // No necesitamos await aquí para no bloquear la UI, se guarda en fondo
             updateDoc(docRef, { credits: newCredits })
 
             return true // APROBADO
-        }
-
-        // 3. Si no tiene créditos ni es PRO
-        else {
-            setIsPricingOpen(true) // Abrimos modal
+        } else {
+            setIsPricingOpen(true) // No alcanza
             return false // DENEGADO
         }
     }
@@ -245,6 +265,13 @@ const App = () => {
                         userId={firebaseUser?.uid}
                     />
                 )
+            case AppView.INVOICES:
+                return (
+                    <InvoiceTool
+                        onUsage={handleFeatureUsage}
+                        userId={firebaseUser?.uid}
+                    />
+                )
             case AppView.TEMPLATES:
                 return (
                     <div className="max-w-4xl mx-auto">
@@ -264,6 +291,15 @@ const App = () => {
                 )
             case AppView.HISTORY:
                 return <HistoryView userId={firebaseUser?.uid} />
+            case AppView.LOGOS:
+                return (
+                    <LogoTool
+                        onUsage={handleFeatureUsage}
+                        userId={firebaseUser?.uid}
+                    />
+                )
+            case AppView.NOTES:
+                return <NotesView userId={firebaseUser?.uid} />
             default:
                 return (
                     <div className="max-w-4xl mx-auto py-8">
@@ -277,11 +313,45 @@ const App = () => {
                             </div>
                         )}
 
-                        <div className="text-center mb-10">
-                            <h2 className="text-3xl font-bold text-slate-800">
-                                Hola, {firebaseUser?.email?.split('@')[0]} 👋
-                            </h2>
-                            <p className="text-slate-500 mt-2">
+                        <div className="text-center mb-8">
+                            <div className="flex items-center justify-center gap-2 mb-2">
+                                <h2 className="text-3xl font-bold text-slate-800">
+                                    Hola,
+                                </h2>
+                                {isEditingName ? (
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            autoFocus
+                                            value={displayName}
+                                            onChange={(e) =>
+                                                setDisplayName(e.target.value)
+                                            }
+                                            className="text-3xl font-bold text-slate-800 border-b-2 border-brand-500 outline-none w-40 bg-transparent"
+                                        />
+                                        <button
+                                            onClick={handleSaveName}
+                                            className="bg-brand-100 p-1 rounded-full text-brand-700 hover:bg-brand-200"
+                                        >
+                                            <Check className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-2 group">
+                                        <span className="text-3xl font-bold text-slate-800">
+                                            {displayName} 👋
+                                        </span>
+                                        <button
+                                            onClick={() =>
+                                                setIsEditingName(true)
+                                            }
+                                            className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-brand-600 transition-opacity"
+                                        >
+                                            <PenLine className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                            <p className="text-slate-500">
                                 Bienvenido a tu centro de mando.
                             </p>
                         </div>
@@ -328,6 +398,16 @@ const App = () => {
                                 </div>
                             </div>
                         </div>
+
+                        {/* SECCIÓN DE NOTAS FIJADAS (NUEVO) */}
+                        {firebaseUser && (
+                            <DashboardPinnedNotes
+                                userId={firebaseUser.uid}
+                                onGoToNotes={() =>
+                                    setCurrentView(AppView.NOTES)
+                                }
+                            />
+                        )}
 
                         {/* Componente de Tips */}
                         <DashboardTips />
@@ -388,6 +468,33 @@ const App = () => {
                             active={currentView === AppView.PROPOSALS}
                             onClick={() => {
                                 setCurrentView(AppView.PROPOSALS)
+                                setIsMobileMenuOpen(false)
+                            }}
+                        />
+                        <NavItem
+                            icon={<StickyNote />}
+                            label="Notas Rápidas"
+                            active={currentView === AppView.NOTES}
+                            onClick={() => {
+                                setCurrentView(AppView.NOTES)
+                                setIsMobileMenuOpen(false)
+                            }}
+                        />
+                        <NavItem
+                            icon={<FileText />}
+                            label="Facturación"
+                            active={currentView === AppView.INVOICES}
+                            onClick={() => {
+                                setCurrentView(AppView.INVOICES)
+                                setIsMobileMenuOpen(false)
+                            }}
+                        />
+                        <NavItem
+                            icon={<Palette />}
+                            label="Generador Logos"
+                            active={currentView === AppView.LOGOS}
+                            onClick={() => {
+                                setCurrentView(AppView.LOGOS)
                                 setIsMobileMenuOpen(false)
                             }}
                         />
@@ -453,7 +560,7 @@ const App = () => {
                     {renderContent()}
                 </div>
             </main>
-
+            <SupportWidget />
             <PricingModal
                 isOpen={isPricingOpen}
                 onClose={() => setIsPricingOpen(false)}

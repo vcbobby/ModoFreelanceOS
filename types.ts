@@ -4,6 +4,9 @@ export enum AppView {
     PROPOSALS = 'PROPOSALS',
     TEMPLATES = 'TEMPLATES',
     HISTORY = 'history',
+    LOGOS = 'logos',
+    INVOICES = 'invoices',
+    NOTES = 'notes',
 }
 
 export interface Proposal {
@@ -26,4 +29,9 @@ export interface HistoryItem {
     platform: string
     type: string // Formal, Corto, etc.
     content: string
+    category?: 'proposal' | 'logo' | 'invoice' // Para saber qué tarjeta mostrar
+    imageUrl?: string
+
+    // Datos específicos para facturas (los guardaremos en el mismo objeto para simplificar)
+    invoiceData?: any
 }

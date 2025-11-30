@@ -16,6 +16,7 @@ import { Button, Card } from '../components/ui'
 import { doc, getDoc, setDoc, collection, addDoc } from 'firebase/firestore' // Importamos Firestore
 import { db } from '../firebase'
 import ReactMarkdown from 'react-markdown'
+import { ConfirmationModal } from '../components/ui/ConfirmationModal'
 
 interface ProposalToolProps {
     onUsage: () => Promise<boolean>
@@ -34,6 +35,22 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
     const [proposals, setProposals] = useState<Proposal[] | null>(null)
     const [activeTab, setActiveTab] = useState<number>(0)
     const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
+    const [isModalOpen, setIsModalOpen] = useState(false)
+    const [modalConfig, setModalConfig] = useState({
+        title: '',
+        message: '',
+        action: () => {},
+        isDanger: false,
+    })
+    const openConfirmation = (
+        title: string,
+        message: string,
+        action: () => void,
+        isDanger = false
+    ) => {
+        setModalConfig({ title, message, action, isDanger })
+        setIsModalOpen(true)
+    }
 
     useEffect(() => {
         const loadProfile = async () => {
@@ -66,11 +83,16 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
         }
     }
     const handleClear = () => {
-        if (confirm('¿Borrar los datos del cliente y descripción?')) {
-            setJobDescription('')
-            setClientName('')
-            // No borramos el perfil porque ese es permanente
-        }
+        openConfirmation(
+            '¿Limpiar campos?',
+            'Esto borrará la descripción del trabajo y el nombre del cliente actual. Tu perfil se mantendrá intacto.',
+            () => {
+                // Esta es la acción que se ejecutará si dicen "SÍ"
+                setJobDescription('')
+                setClientName('')
+            },
+            true // true = botón rojo (acción destructiva)
+        )
     }
 
     const handleGenerate = async () => {
@@ -383,6 +405,17 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
                     </div>
                 )}
             </div>
+            {/* --- AGREGAR AQUÍ EL MODAL --- */}
+            <ConfirmationModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onConfirm={modalConfig.action}
+                title={modalConfig.title}
+                message={modalConfig.message}
+                isDanger={modalConfig.isDanger}
+                confirmText="Sí, limpiar"
+                cancelText="Cancelar"
+            />
         </div>
     )
 }
