@@ -437,99 +437,105 @@ const App = () => {
                 className={`
         fixed inset-y-0 left-0 z-10 w-64 bg-slate-900 text-slate-300 transform transition-transform duration-200 ease-in-out md:translate-x-0 md:static
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+        flex flex-col h-screen border-r border-slate-800
       `}
             >
-                <div className="h-full flex flex-col">
-                    <div className="p-6">
-                        <h1
-                            className="text-2xl font-bold text-white tracking-tight cursor-pointer"
-                            onClick={() =>
-                                (window.location.href = WORDPRESS_URL)
-                            }
-                        >
-                            ModoFreelance
-                            <span className="text-brand-500">OS</span>
-                        </h1>
-                    </div>
+                {/* 1. HEADER (LOGO) - Tamaño Fijo */}
+                <div className="p-6 shrink-0">
+                    <h1
+                        className="text-2xl font-bold text-white tracking-tight cursor-pointer"
+                        onClick={() => (window.location.href = WORDPRESS_URL)}
+                    >
+                        ModoFreelance<span className="text-brand-500">OS</span>
+                    </h1>
+                </div>
 
-                    <nav className="flex-1 px-4 space-y-2 mt-4">
-                        <NavItem
-                            icon={<LayoutDashboard />}
-                            label="Inicio"
-                            active={currentView === AppView.DASHBOARD}
-                            onClick={() => {
-                                setCurrentView(AppView.DASHBOARD)
-                                setIsMobileMenuOpen(false)
-                            }}
-                        />
-                        <NavItem
-                            icon={<PenTool />}
-                            label="Propuestas IA"
-                            active={currentView === AppView.PROPOSALS}
-                            onClick={() => {
-                                setCurrentView(AppView.PROPOSALS)
-                                setIsMobileMenuOpen(false)
-                            }}
-                        />
-                        <NavItem
-                            icon={<StickyNote />}
-                            label="Notas Rápidas"
-                            active={currentView === AppView.NOTES}
-                            onClick={() => {
-                                setCurrentView(AppView.NOTES)
-                                setIsMobileMenuOpen(false)
-                            }}
-                        />
-                        <NavItem
-                            icon={<FileText />}
-                            label="Facturación"
-                            active={currentView === AppView.INVOICES}
-                            onClick={() => {
-                                setCurrentView(AppView.INVOICES)
-                                setIsMobileMenuOpen(false)
-                            }}
-                        />
-                        <NavItem
-                            icon={<Palette />}
-                            label="Generador Logos"
-                            active={currentView === AppView.LOGOS}
-                            onClick={() => {
-                                setCurrentView(AppView.LOGOS)
-                                setIsMobileMenuOpen(false)
-                            }}
-                        />
-                        <NavItem
-                            icon={<History />}
-                            label="Historial"
-                            active={currentView === AppView.HISTORY}
-                            onClick={() => {
-                                setCurrentView(AppView.HISTORY)
-                                setIsMobileMenuOpen(false)
-                            }}
-                        />
-                        {/* <NavItem
-                            icon={<Code />}
-                            label="Plantillas"
-                            active={currentView === AppView.TEMPLATES}
-                            onClick={() => setCurrentView(AppView.TEMPLATES)}
-                        /> */}
-                    </nav>
+                {/* 2. MENÚ DE NAVEGACIÓN - Flexible (Ocupa el espacio disponible y hace scroll si es necesario) */}
+                <nav className="flex-1 px-4 space-y-2 overflow-y-auto custom-scrollbar min-h-0">
+                    <NavItem
+                        icon={<LayoutDashboard />}
+                        label="Inicio"
+                        active={currentView === AppView.DASHBOARD}
+                        onClick={() => {
+                            setCurrentView(AppView.DASHBOARD)
+                            setIsMobileMenuOpen(false)
+                        }}
+                    />
+                    <NavItem
+                        icon={<PenTool />}
+                        label="Propuestas IA"
+                        active={currentView === AppView.PROPOSALS}
+                        onClick={() => {
+                            setCurrentView(AppView.PROPOSALS)
+                            setIsMobileMenuOpen(false)
+                        }}
+                    />
+                    <NavItem
+                        icon={<StickyNote />}
+                        label="Notas Rápidas"
+                        active={currentView === AppView.NOTES}
+                        onClick={() => {
+                            setCurrentView(AppView.NOTES)
+                            setIsMobileMenuOpen(false)
+                        }}
+                    />
+                    <NavItem
+                        icon={<Palette />}
+                        label="Generador Logos"
+                        active={currentView === AppView.LOGOS}
+                        onClick={() => {
+                            setCurrentView(AppView.LOGOS)
+                            setIsMobileMenuOpen(false)
+                        }}
+                    />
+                    <NavItem
+                        icon={<FileText />}
+                        label="Facturación"
+                        active={currentView === AppView.INVOICES}
+                        onClick={() => {
+                            setCurrentView(AppView.INVOICES)
+                            setIsMobileMenuOpen(false)
+                        }}
+                    />
 
-                    <div className="p-4 bg-slate-800 m-4 rounded-xl">
+                    {/* <NavItem
+                        icon={<Code />}
+                        label="Plantillas"
+                        active={currentView === AppView.TEMPLATES}
+                        onClick={() => {
+                            setCurrentView(AppView.TEMPLATES)
+                            setIsMobileMenuOpen(false)
+                        }}
+                    /> */}
+                    <NavItem
+                        icon={<History />}
+                        label="Historial"
+                        active={currentView === AppView.HISTORY}
+                        onClick={() => {
+                            setCurrentView(AppView.HISTORY)
+                            setIsMobileMenuOpen(false)
+                        }}
+                    />
+                </nav>
+
+                {/* 3. FOOTER (Usuario + Créditos + Logout) - Tamaño Fijo y Pegado al Fondo */}
+                <div className="p-4 bg-slate-900 shrink-0 border-t border-slate-800">
+                    {/* Tarjeta de Usuario/Créditos */}
+                    <div className="bg-slate-800 p-3 rounded-xl mb-3">
                         <div className="flex items-center gap-2 mb-2 text-white">
                             <UserIcon className="w-4 h-4" />
-                            <span className="text-xs truncate max-w-[120px]">
-                                {firebaseUser?.email}
+                            <span className="text-xs truncate max-w-[120px] font-medium">
+                                {firebaseUser?.email?.split('@')[0]}
                             </span>
                         </div>
-                        <div className="flex justify-between items-center mb-2 bg-slate-900 p-2 rounded-lg">
-                            <span className="text-xs font-bold text-white">
-                                {userState.isSubscribed ? 'PRO 🚀' : 'FREE'}
+
+                        <div className="flex justify-between items-center bg-slate-900 p-2 rounded-lg">
+                            <span className="text-[10px] font-bold text-white uppercase">
+                                {userState.isSubscribed ? 'PLAN PRO' : 'FREE'}
                             </span>
-                            {/* Solo mostramos créditos si NO es suscriptor */}
                             {!userState.isSubscribed && (
-                                <span className="text-xs text-brand-400 font-bold">
-                                    {userState.credits} créditos
+                                <span className="text-[10px] text-brand-400 font-bold">
+                                    {userState.credits} créd.
                                 </span>
                             )}
                         </div>
@@ -537,21 +543,20 @@ const App = () => {
                         {!userState.isSubscribed && (
                             <button
                                 onClick={() => setIsPricingOpen(true)}
-                                className="w-full py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-lg transition-colors"
+                                className="w-full mt-2 py-1.5 bg-brand-600 hover:bg-brand-500 text-white text-[10px] font-bold rounded-lg transition-colors uppercase tracking-wide"
                             >
                                 Ser PRO ($10)
                             </button>
                         )}
                     </div>
 
-                    <div className="p-4 border-t border-slate-800">
-                        <button
-                            onClick={handleLogout}
-                            className="flex items-center text-sm hover:text-white transition-colors w-full"
-                        >
-                            <LogOut className="w-4 h-4 mr-2" /> Cerrar Sesión
-                        </button>
-                    </div>
+                    {/* Botón Cerrar Sesión */}
+                    <button
+                        onClick={handleLogout}
+                        className="flex items-center justify-center w-full py-2 text-sm text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+                    >
+                        <LogOut className="w-4 h-4 mr-2" /> Cerrar Sesión
+                    </button>
                 </div>
             </aside>
 
