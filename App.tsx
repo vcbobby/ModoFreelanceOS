@@ -34,7 +34,7 @@ import { auth, db } from './firebase'
 import { onAuthStateChanged, signOut, User } from 'firebase/auth'
 import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore'
 const GUMROAD_LINK = 'https://modofreelanceos.gumroad.com/l/pro-plan'
-const WORDPRESS_URL = 'https://www.pixelclickdigital.com'
+const WORDPRESS_URL = 'https://beige-wildcat-737140.hostingersite.com/'
 
 const App = () => {
     const [currentView, setCurrentView] = useState<AppView>(AppView.DASHBOARD)
