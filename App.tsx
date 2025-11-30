@@ -344,7 +344,7 @@ const App = () => {
                                             onClick={() =>
                                                 setIsEditingName(true)
                                             }
-                                            className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-brand-600 transition-opacity"
+                                            className="opacity-100 md:opacity-0 md:group-hover:opacity-100 text-slate-400 hover:text-brand-600 transition-opacity"
                                         >
                                             <PenLine className="w-5 h-5" />
                                         </button>
@@ -419,7 +419,7 @@ const App = () => {
     return (
         <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
             {/* Mobile Header */}
-            <div className="md:hidden fixed top-0 w-full bg-white border-b border-slate-200 z-20 px-4 py-3 flex justify-between items-center">
+            <div className="md:hidden fixed top-0 w-full bg-white border-b border-slate-200 z-50 px-4 py-3 flex justify-between items-center">
                 <span // 1. AGREGAMOS EL EVENTO CLICK AQUÍ
                     onClick={() => (window.location.href = WORDPRESS_URL)}
                     // 2. AGREGAMOS 'cursor-pointer' PARA QUE SE VEA CLICKEABLE
@@ -435,7 +435,7 @@ const App = () => {
             {/* Sidebar */}
             <aside
                 className={`
-        fixed inset-y-0 left-0 z-10 w-64 bg-slate-900 text-slate-300 transform transition-transform duration-200 ease-in-out md:translate-x-0 md:static
+        fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-300 transform transition-transform duration-200 ease-in-out md:translate-x-0 md:static
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
         flex flex-col h-screen border-r border-slate-800
       `}

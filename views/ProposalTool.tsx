@@ -201,7 +201,7 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
                 </div>
 
                 <Card className="p-6 flex-1 flex flex-col gap-4 shadow-md">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                                 <Globe className="w-4 h-4" />

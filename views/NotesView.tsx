@@ -182,7 +182,7 @@ export const NotesView: React.FC<NotesViewProps> = ({ userId }) => {
                         }
                     />
                     {isInputExpanded && (
-                        <div className="flex items-center justify-between px-3 py-2 bg-slate-50 border-t border-slate-100">
+                        <div className="flex flex-wrap items-center justify-between px-3 py-2 bg-slate-50 border-t border-slate-100 gap-4">
                             <div className="flex gap-1">
                                 {colors.map((c) => (
                                     <button
@@ -347,7 +347,7 @@ const NoteCard = ({
             </div>
 
             <div
-                className={`absolute bottom-2 right-2 flex gap-1 bg-white/50 backdrop-blur-sm p-1 rounded-lg border border-white/20 transition-opacity ${
+                className={`absolute bottom-2 right-2 flex gap-1 bg-white/90 backdrop-blur-sm p-1 rounded-lg border border-slate-200 transition-opacity opacity-100 md:opacity-0 md:group-hover:opacity-100 shadow-sm ${
                     isHovered ? 'opacity-100' : 'opacity-0'
                 }`}
             >

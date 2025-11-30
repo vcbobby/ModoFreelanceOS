@@ -359,7 +359,7 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({
                             {items.map((item) => (
                                 <div
                                     key={item.id}
-                                    className="flex gap-2 items-center"
+                                    className="flex flex-col sm:flex-row gap-2 items-start sm:items-center border-b border-slate-100 pb-4 sm:border-0 sm:pb-0 mb-2 sm:mb-0"
                                 >
                                     <input
                                         placeholder="Descripción"
@@ -417,7 +417,7 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({
                     </div>
 
                     {/* 5. Impuestos y Notas */}
-                    <div className="grid grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label className="text-xs font-bold text-slate-500 uppercase">
                                 Notas / Datos Bancarios
