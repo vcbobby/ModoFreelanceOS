@@ -347,9 +347,7 @@ const NoteCard = ({
             </div>
 
             <div
-                className={`absolute bottom-2 right-2 flex gap-1 bg-white/90 backdrop-blur-sm p-1 rounded-lg border border-slate-200 transition-opacity opacity-100 md:opacity-0 md:group-hover:opacity-100 shadow-sm ${
-                    isHovered ? 'opacity-100' : 'opacity-0'
-                }`}
+                className={`absolute bottom-2 right-2 flex gap-1 bg-white/90 backdrop-blur-sm p-1 rounded-lg border border-slate-200 transition-opacity opacity-100 md:opacity-0 md:group-hover:opacity-100 shadow-sm `}
             >
                 <button
                     onClick={onPin}
