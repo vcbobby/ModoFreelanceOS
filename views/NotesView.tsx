@@ -317,50 +317,89 @@ const NoteCard = ({
     onClick: () => void
 }) => {
     const [isHovered, setIsHovered] = useState(false)
+    const [copied, setCopied] = useState(false) // Faltaba este estado en la versión anterior
     const borderColor = note.color
         .replace('bg-', 'border-')
         .replace('100', '200')
 
+    const handleCopy = (e: React.MouseEvent) => {
+        e.stopPropagation()
+        navigator.clipboard.writeText(`${note.title}\n${note.content}`)
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+    }
+
+    // FUNCIÓN CLAVE PARA ARREGLAR EL BLUR EN MÓVIL
+    const handlePrivacyClick = (e: React.MouseEvent) => {
+        // 1. Evitamos que se abra el editor
+        e.stopPropagation()
+
+        // 2. Ejecutamos la acción de privacidad (Base de datos)
+        onPrivacy(e)
+
+        // 3. TRUCO: Forzamos a que 'isHovered' sea falso inmediatamente.
+        // Esto le dice a la tarjeta: "Deja de mostrar el contenido AHORA", aplicando el blur al instante.
+        setIsHovered(false)
+    }
+
     return (
         <div
             onClick={onClick}
-            className={`group relative p-5 rounded-xl border ${borderColor} ${note.color} shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer`}
+            className={`group relative p-5 rounded-xl border ${borderColor} ${note.color} shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer select-none`}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
+            // En móvil, al tocar la tarjeta también activamos el hover para ver el contenido si estaba oculto
+            onTouchStart={() => setIsHovered(true)}
         >
+            {/* Pin */}
             {note.isPinned && (
                 <div className="absolute -top-2 -right-2 bg-white border border-slate-200 p-1 rounded-full shadow-sm text-brand-600 z-10">
                     <Pin className="w-3 h-3 fill-current" />
                 </div>
             )}
+
+            {/* Título */}
             {note.title && (
                 <h3 className="font-bold text-slate-800 mb-2 pr-6">
                     {note.title}
                 </h3>
             )}
+
+            {/* Contenido (Lógica de Blur) */}
             <div
-                className={`text-sm text-slate-700 whitespace-pre-wrap leading-relaxed ${
-                    note.isPrivate && !isHovered ? 'blur-sm select-none' : ''
+                className={`text-sm text-slate-700 whitespace-pre-wrap leading-relaxed transition-all duration-300 ${
+                    note.isPrivate && !isHovered
+                        ? 'blur-md opacity-50'
+                        : 'blur-0 opacity-100'
                 }`}
             >
                 {note.content}
             </div>
 
+            {/* BARRA DE HERRAMIENTAS */}
+            {/* Nota: Usamos las clases corregidas del paso anterior para que se vean siempre en móvil (opacity-100 md:opacity-0) */}
             <div
-                className={`absolute bottom-2 right-2 flex gap-1 bg-white/90 backdrop-blur-sm p-1 rounded-lg border border-slate-200 transition-opacity opacity-100 md:opacity-0 md:group-hover:opacity-100 shadow-sm `}
+                className={`absolute bottom-2 right-2 flex gap-1 bg-white/90 backdrop-blur-sm p-1 rounded-lg border border-slate-200 transition-opacity opacity-100 md:opacity-0 md:group-hover:opacity-100 shadow-sm z-20`}
             >
                 <button
-                    onClick={onPin}
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        onPin(e)
+                    }}
                     className={`p-1.5 rounded hover:bg-white ${
                         note.isPinned ? 'text-brand-600' : 'text-slate-500'
                     }`}
                 >
                     <Pin className="w-3.5 h-3.5" />
                 </button>
+
+                {/* Usamos la nueva función handlePrivacyClick aquí */}
                 <button
-                    onClick={onPrivacy}
+                    onClick={handlePrivacyClick}
                     className={`p-1.5 rounded hover:bg-white ${
-                        note.isPrivate ? 'text-slate-800' : 'text-slate-500'
+                        note.isPrivate
+                            ? 'text-slate-900 font-bold'
+                            : 'text-slate-500'
                     }`}
                 >
                     {note.isPrivate ? (
@@ -369,6 +408,18 @@ const NoteCard = ({
                         <Eye className="w-3.5 h-3.5" />
                     )}
                 </button>
+
+                <button
+                    onClick={handleCopy}
+                    className="p-1.5 rounded hover:bg-white text-slate-500 hover:text-blue-600"
+                >
+                    {copied ? (
+                        <Check className="w-3.5 h-3.5 text-green-600" />
+                    ) : (
+                        <Copy className="w-3.5 h-3.5" />
+                    )}
+                </button>
+
                 <button
                     onClick={(e) => {
                         e.stopPropagation()
