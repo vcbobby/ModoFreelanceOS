@@ -2,13 +2,43 @@
 <html lang="es">
     <head>
         <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        <!-- DESCRIPCIÓN (En una sola línea para evitar errores visuales) -->
         <meta
             name="description"
             content="ModoFreelanceOS, el sistema operativo todo en uno para freelancers. Gestiona proyectos, facturación, clientes y más."
         />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        <!-- TÍTULO -->
         <title>ModoFreelanceOS - El Sistema Operativo para Freelancers</title>
 
+        <!-- FAVICON -->
+        <!-- Asegúrate de que el archivo favicon.png esté en la carpeta /public -->
+        <link rel="icon" type="image/png" href="/favicon.png" />
+        <link rel="apple-touch-icon" href="/favicon.png" />
+
+        <!-- OPEN GRAPH (Redes Sociales) -->
+        <meta
+            property="og:title"
+            content="ModoFreelanceOS - Tu oficina virtual"
+        />
+        <meta
+            property="og:description"
+            content="Genera propuestas, logos y facturas con IA."
+        />
+        <meta
+            property="og:image"
+            content="https://modofreelanceos.vercel.app/og-image.png"
+        />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+
+        <!-- PWA -->
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#16a34a" />
+
+        <!-- ESTILOS Y FUENTES -->
         <script src="https://cdn.tailwindcss.com"></script>
         <script>
             tailwind.config = {
@@ -37,41 +67,12 @@
                 font-family: 'Inter', sans-serif;
             }
         </style>
-        <script type="importmap">
-            {
-                "imports": {
-                    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-                    "react": "https://aistudiocdn.com/react@^19.2.0",
-                    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-                    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
-                    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0"
-                }
-            }
-        </script>
-        <link rel="icon" type="image/png" href="/favicon.png" />
-        <link
-            rel="apple-touch-icon"
-            href="https://modofreelanceos.vercel.app/favicon.png"
-        />
-        <meta
-            property="og:title"
-            content="ModoFreelanceOS - Tu oficina virtual"
-        />
-        <meta
-            property="og:description"
-            content="Genera propuestas, logos y facturas con IA."
-        />
-        <meta
-            property="og:image"
-            content="https://modofreelanceos.vercel.app/og-image.png"
-        />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#16a34a" />
     </head>
     <body>
         <div id="root"></div>
-        <script type="module" src="/index.tsx"></script>
+
+        <!-- IMPORTANTE: Verifica si tu archivo está en 'src' o en la raíz -->
+        <!-- Si usas la estructura estándar de Vite, suele ser /src/index.tsx o /src/main.tsx -->
+        <script type="module" src="/src/index.tsx"></script>
     </body>
 </html>
