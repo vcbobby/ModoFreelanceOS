@@ -1,0 +1,335 @@
+import {
+    GoogleGenerativeAI,
+    HarmCategory,
+    HarmBlockThreshold,
+} from '@google/generative-ai'
+import { Proposal } from '../types'
+
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY
+
+if (!apiKey) {
+    throw new Error('Falta la API Key en las variables de entorno')
+}
+
+const genAI = new GoogleGenerativeAI(apiKey)
+// Usamos el modelo más compatible y rápido para todos los navegadores
+const MODEL_NAME = 'gemini-2.5-flash'
+
+// --- UTILIDADES ---
+const sanitizeWorkanaContent = (text: string): string => {
+    let clean = text
+    clean = clean.replace(/whatsapp/gi, 'mensajería de la plataforma')
+    clean = clean.replace(/feedback/gi, 'retroalimentación')
+    clean = clean.replace(/\b\w*fee\w*\b/gi, (match) => {
+        const lower = match.toLowerCase()
+        if (lower.includes('coffee')) return 'café'
+        if (lower.includes('fee')) return 'tarifa'
+        return '[término eliminado]'
+    })
+    clean = clean.replace(
+        /[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}/g,
+        '[Contacto externo eliminado]'
+    )
+    clean = clean.replace(/@\w+/g, '')
+    clean = clean.replace(/\b[\w-]+\.(com|es|net|js|org|io|co|ar|mx)\b/gi, '')
+    clean = clean.replace(/\b\d[\d\s-]{5,}\d\b/g, '[Teléfono eliminado]')
+    return clean
+}
+
+// --- FUNCIÓN 1: PROPUESTAS ---
+export const generateProposals = async (
+    jobDescription: string,
+    userProfile: string,
+    platform: string,
+    clientName?: string
+): Promise<Proposal[]> => {
+    try {
+        const model = genAI.getGenerativeModel({
+            model: MODEL_NAME,
+            generationConfig: { responseMimeType: 'application/json' },
+        })
+
+        let platformInstructions = ''
+        switch (platform) {
+            case 'Freelancer':
+                platformInstructions = `
+          ALERTA DE LONGITUD CRÍTICA:
+          - La plataforma Freelancer.com CORTA el texto si excede 1500 caracteres.
+          - TU OBJETIVO: Escribir menos de 200 PALABRAS por propuesta.
+          - Estilo: Venta agresiva pero educada. Ve directo a la solución.
+          - Plan de acción: OBLIGATORIO incluirlo, pero debe ser RESUMIDO (puntos cortos y concisos).
+          - NO introducciones largas. NO despedidas largas.
+        `
+                break
+            case 'Workana':
+                platformInstructions = `
+                🔴 REGLAS DE SEGURIDAD EXTREMA (ANTI-BANEO):
+          1. PROHIBIDO usar la palabra "WhatsApp". Usa "chat de la plataforma".
+          2. PROHIBIDO usar la palabra "feedback". Usa "comentarios" o "retroalimentación".
+          3. PROHIBIDO cualquier palabra con "fee" (ej: fees, coffee, feed). Usa "tarifas" o "café".
+          4. PROHIBIDO enlaces (.com, .net), emails o teléfonos.
+          5. PROHIBIDO símbolos @. Usa "correo electrónico" en su lugar.
+          6. PROHIBIDO ofertas de descuento o precios especiales.
+          7. PROHIBIDO mencionar mi perfil o experiencia tal cual. Integra mis habilidades en la narrativa.
+          8. PROHIBIDO usar la palabra comisión o comisiones. Usa "tarifas de la plataforma".
+
+            FORMATO Y ESTRUCTURA:
+          - Estilo: Profesional, empático y estructurado.
+          - Ofrece un plan de accion claro, especificando punto por punto como propongo realizar el proyecto y que se ajuste a lo que el cliente necesita para realizar su proyecto.
+          - Formato: Usa párrafos cortos.
+        `
+                break
+            case 'Upwork':
+            case 'LinkedIn':
+                platformInstructions = `
+          - Estilo: "Cover Letter" conversacional y experta.
+          - Estructura: Gancho inicial -> Solución al problema -> Cierre con llamada a la acción.
+        `
+                break
+        }
+        const greetingInstruction =
+            clientName && clientName.trim() !== ''
+                ? `El cliente se llama "${clientName}". Úsalo naturalmente.`
+                : `NO uses "Estimado cliente". Empieza con "Hola," o directo al grano.`
+
+        const prompt = `
+            Actúa como un estratega de propuestas freelance experto.
+      
+      OBJETIVO PRINCIPAL:
+      Leer la descripción del trabajo, detectar el dolor principal del cliente y explicar CÓMO mi perfil resuelve ese dolor específico.
+      
+      REGLAS DE PUNTUACIÓN Y FORMATO (CRÍTICO):
+      1. JAMÁS escribas un bloque de texto pegado.
+      2. Usa DOBLE SALTO DE LÍNEA (\\n\\n) para separar cada párrafo.
+      3. Después de cada punto (.) o coma (,), DEBE haber un espacio.
+         - MAL: "Hola.Soy ingeniero"
+         - BIEN: "Hola. Soy ingeniero"
+      4. Usa listas (bullet points) para enumerar pasos.
+
+      REGLA DE ORO (ANTI-COPIA/PEGA):
+      - NO listes mis habilidades ni mi experiencia tal cual aparecen en mi perfil.
+      - NO digas frases como "Como puedes ver en mi perfil tengo habilidades en...".
+      - EN SU LUGAR, integra mis habilidades en la narrativa. 
+      - Ejemplo MALO: "Estimado Paul, Entiendo que su visión es establecer una tienda en línea completa y funcional, específicamente optimizada para capitalizar el tráfico proveniente de TikTok, con una atención crítica en la experiencia móvil y la implementación del sistema de Pago Contra Entrega (COD) como opción principal.Como ingeniero y desarrollador web con experiencia en diseño UI/UX, mi enfoque se centrará en una arquitectura de plataforma robusta y escalable. Utilizando mi dominio en Shopify o WordPress con WooCommerce, construiré una tienda que no solo cumpla con todas las funcionalidades estándar de e-commerce (gestión de catálogo, carrito, seguimiento de pedidos), sino que también garantice un rendimiento excepcional y una fluidez total en dispositivos móviles.Mi experiencia en diseño UI/UX, respaldada por herramientas como Figma y el uso de React/Bootstrap, me permite crear interfaces intuitivas y estéticamente atractivas que son cruciales para el público de TikTok, asegurando una alta tasa de compromiso y conversión. La integración del COD será ejecutada con precisión, priorizándola en el proceso de checkout para ofrecer la flexibilidad que sus clientes requieren.Además, desarrollaré un panel de administración intuitivo que simplificará la gestión de inventario y ventas, permitiéndole operar su negocio de manera eficiente. Estoy listo para discutir cómo mi experiencia puede transformar su proyecto en una plataforma de ventas exitosa y rentable."
+      - Ejemplo BUENO: "Hola Miriam, ¿cómo estás? Estuve revisando tu proyecto y me interesa mucho colaborar contigo. Mi nombre es Víctor Castillo y trabajo como desarrollador web especializado en tiendas online. Tengo experiencia creando e-commerce funcionales, fáciles de administrar y listos para que el cliente solo tenga que enfocarse en vender. Por lo que comentas, mi perfil encaja bastante bien con lo que necesitas: una tienda clara, rápida, con buena experiencia de usuario y que además sea fácil de mantener y escalar. He trabajado con plataformas como Shopify, WooCommerce y configuraciones completas tipo “llave en mano”, desde el diseño hasta la integración de productos, pasarelas de pago y ajustes finales. Lo que propongo para tu proyecto 1. Revisión inicial y definición del estilo Conversamos brevemente sobre el tipo de productos, estilo visual y funcionalidades básicas (envíos, pago, categorías, etc.). Con eso defino una línea de diseño limpia, moderna y orientada a conversión. 2. Diseño y maquetación de la tienda Creo una estructura ordenada con un diseño atractivo, adaptable a móviles y que facilite la navegación. Esto incluye homepage, página de producto, carrito y checkout según la plataforma. 3. Configuración completa del sistema de ventas Integración de métodos de pago, logística básica, inventarios, variantes, cupones y todo lo necesario para que la tienda quede operativa. 4. Carga inicial de productos Subo los productos base (cantidad a definir contigo) con imágenes optimizadas y descripciones bien estructuradas. 5. Optimización y pruebas Reviso velocidad, usabilidad y realizo pruebas de compra para asegurar que todo funcione perfecto antes de la entrega. 6. Entrega “llave en mano” + soporte Te entrego la tienda lista para usar y te doy una pequeña guía de gestión para que puedas actualizar productos o realizar cambios sin complicaciones. Si te parece, puedo comenzar de inmediato. Cualquier detalle adicional que quieras incluir, estoy abierto a revisarlo contigo. Quedo atento, Miriam. Con gusto te ayudo a lanzar tu tienda. Saludos, Víctor."
+      
+      INSTRUCCIONES DE DISEÑO VISUAL (IMPORTANTE):
+      - Usa formato Markdown para estructurar el texto.
+      - Usa **negritas** para resaltar palabras clave, beneficios o tecnologías importantes.
+      - Usa listas con viñetas (- punto 1) o números (1. paso 1) para enumerar pasos o beneficios.
+      - Deja SALTO DE LÍNEA entre párrafos para que el texto respire.
+      - despues de cada punto "." deja un espacio o salto de linea si es otro parrafo.
+
+      CONTEXTO:
+      1. Plataforma: ${platform}
+      2. Lo que pide el cliente (Job Description): "${jobDescription}"
+      3. Mi Perfil (Úsalo solo como base de datos de lo que sé hacer, no necesariamente tienes que expresar en la propuesta todas mis habilidades): "${userProfile}"
+      
+      INSTRUCCIONES DE IDIOMA (IMPORTANTE):
+      Detecta el idioma de la "Descripción del Trabajo (Job Description)" y escribe las propuestas EN ESE MISMO IDIOMA.
+      
+      INSTRUCCIONES DE FORMATO:
+      ${platformInstructions}
+      ${greetingInstruction}
+
+      Genera 3 variantes:
+      1. Formal: Corporativa, seria, enfocada en garantías y seguridad.
+      2. Corto: Para clientes ocupados. "Hola, entiendo que necesitas X. Yo hago X así. Hablemos."
+      3. Valor: Enfocada en el beneficio (ROI, ahorro de tiempo, más ventas).
+            
+            Genera un JSON con este schema:
+            { "proposals": [ { "type": "Formal", "title": "...", "content": "..." }, ... ] }
+        `
+
+        const result = await model.generateContent(prompt)
+        const text = result.response
+            .text()
+            .replace(/```json/g, '')
+            .replace(/```/g, '')
+            .trim()
+        const parsed = JSON.parse(text)
+        let finalProposals = parsed.proposals || parsed
+
+        if (platform === 'Workana') {
+            finalProposals = finalProposals.map((p: any) => ({
+                ...p,
+                content: sanitizeWorkanaContent(p.content),
+            }))
+        }
+        return finalProposals
+    } catch (error) {
+        console.error('Error generating proposals:', error)
+        throw error
+    }
+}
+
+// --- FUNCIÓN 2: ANALIZAR DOCUMENTOS ---
+export const analyzeDocument = async (
+    text: string,
+    mode: 'resumen' | 'riesgos' | 'accion' | 'mejora'
+): Promise<string> => {
+    try {
+        const model = genAI.getGenerativeModel({ model: MODEL_NAME })
+        const prompt = `
+            Tarea: ${mode.toUpperCase()}
+            Idioma: Español.
+            Documento: "${text.substring(0, 30000)}"
+        `
+        const result = await model.generateContent(prompt)
+        return result.response.text()
+    } catch (error) {
+        console.error('Error analyzing document:', error)
+        throw error
+    }
+}
+
+// --- FUNCIÓN 3: FINANZAS ---
+export const analyzeFinancialHealth = async (
+    transactions: any[],
+    summary: { income: number; expense: number; balance: number },
+    pending: { toCollect: number; toPay: number }
+): Promise<string> => {
+    try {
+        const model = genAI.getGenerativeModel({ model: MODEL_NAME })
+
+        // Obtenemos fecha actual para que la IA sepa en qué mes estamos
+        const today = new Date().toLocaleDateString('es-ES', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+        })
+
+        const dataStr = JSON.stringify(
+            transactions.slice(0, 50).map((t) => ({
+                fecha: t.date,
+                tipo: t.type === 'income' ? 'INGRESO' : 'GASTO',
+                estado: t.status === 'pending' ? 'PENDIENTE' : 'REAL',
+                monto: t.amount,
+                descripcion: t.description,
+            }))
+        )
+
+        const prompt = `
+            Actúa como asesor financiero.
+            FECHA ACTUAL: ${today}
+            
+            REALIDAD: Balance $${summary.balance}.
+            FUTURO: Por Cobrar $${pending.toCollect}, Por Pagar $${pending.toPay}.
+            HISTORIAL: ${dataStr}
+
+            Tarea: Diagnóstico de liquidez, estrategia de cobros y 3 consejos.
+        `
+
+        const result = await model.generateContent(prompt)
+        return result.response.text()
+    } catch (error) {
+        console.error('Error en finanzas:', error)
+        throw error
+    }
+}
+
+// --- FUNCIÓN 4: CHATBOT ASISTENTE (OPTIMIZADA Y ROBUSTA) ---
+export const chatWithAssistant = async (
+    message: string,
+    history: { role: 'user' | 'model'; text: string }[],
+    contextData: {
+        finances: string
+        agenda: string
+        notes: string
+        history: string
+        currentTime: string
+        currentDate: string
+    }
+): Promise<string> => {
+    try {
+        // 1. Inicializamos el modelo SIN systemInstruction en la config
+        // (Esto evita el error de tipos si la librería es vieja)
+        const model = genAI.getGenerativeModel({
+            model: MODEL_NAME,
+            safetySettings: [
+                {
+                    category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+                    threshold: HarmBlockThreshold.BLOCK_NONE,
+                },
+                {
+                    category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                    threshold: HarmBlockThreshold.BLOCK_NONE,
+                },
+                {
+                    category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+                    threshold: HarmBlockThreshold.BLOCK_NONE,
+                },
+                {
+                    category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                    threshold: HarmBlockThreshold.BLOCK_NONE,
+                },
+            ],
+        })
+
+        // 2. Creamos el contexto como un mensaje de usuario inicial "Falso"
+        const systemContext = `
+            Eres "FreelanceBot", el asistente OPERATIVO de ModoFreelanceOS.
+            
+            🔴 FECHA/HORA ACTUAL: ${contextData.currentDate} ${contextData.currentTime}
+
+            TUS FUENTES DE INFORMACIÓN:
+            
+            1. 📜 HISTORIAL DE TRABAJO (IMPORTANTE):
+            ${contextData.history}
+            *Instrucción:* Si preguntan por trabajos pasados (logos, facturas, propuestas), BUSCA AQUÍ.
+
+            2. 💰 FINANZAS: ${contextData.finances}
+            3. 📅 AGENDA: ${contextData.agenda}
+            4. 📌 NOTAS: ${contextData.notes}
+
+            HERRAMIENTAS (Responde SOLO con JSON si piden acción):
+            - Agendar: { "action": "create_event", "title": "...", "date": "YYYY-MM-DD", "time": "HH:MM", "desc": "..." }
+            - Nota: { "action": "create_note", "title": "...", "content": "..." }
+            
+            INSTRUCCIONES:
+            - Responde brevemente.
+            - Usa los datos provistos.
+        `
+
+        // 3. Construimos el historial formateado para el SDK
+        // Convertimos tu historial simple ({role, text}) al formato de Google ({role, parts: [{text}]})
+        const chatHistory = [
+            {
+                role: 'user',
+                parts: [{ text: systemContext }], // Inyectamos el sistema aquí
+            },
+            {
+                role: 'model',
+                parts: [
+                    {
+                        text: 'Entendido. Tengo acceso a tus datos e historial. ¿En qué te ayudo?',
+                    },
+                ],
+            },
+            ...history.map((msg) => ({
+                role: msg.role === 'user' ? 'user' : 'model',
+                parts: [{ text: msg.text }],
+            })),
+        ]
+
+        // 4. Iniciamos el chat con el historial ya construido
+        const chat = model.startChat({
+            history: chatHistory,
+            generationConfig: { maxOutputTokens: 600 },
+        })
+
+        // 5. Enviamos el mensaje nuevo
+        const result = await chat.sendMessage(message)
+        const responseText = result.response.text()
+
+        if (!responseText || responseText.trim() === '') {
+            return 'No pude generar una respuesta. Por favor intenta de nuevo.'
+        }
+
+        return responseText
+    } catch (error) {
+        console.error('Error en chat asistente:', error)
+        return 'Tuve un problema de conexión. Intenta de nuevo.'
+    }
+}
