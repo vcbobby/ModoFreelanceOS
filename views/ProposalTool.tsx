@@ -279,7 +279,7 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
                             placeholder="Resumen de tu experiencia... (Ej: Soy experto en Branding, 5 años de exp...)"
                             value={userProfile}
                             onChange={(e) => setUserProfile(e.target.value)}
-                            onBlur={saveProfile} // <--- MAGIA: Guarda cuando el usuario hace clic fuera
+                            onBlur={saveProfile}
                         />
                     </div>
 
