@@ -21,7 +21,10 @@ import {
     Zap,
     FileSearch,
     DollarSign,
+    Moon,
+    Sun,
 } from 'lucide-react'
+import { useTheme } from './context/ThemeContext'
 import { DashboardTips } from './components/DashboardTips'
 import { ProposalTool } from './views/ProposalTool'
 import { FinanceView } from './views/FinanceView'
@@ -79,6 +82,7 @@ const App = () => {
     const showAlert = (title: string, message: string) => {
         setAlertModal({ isOpen: true, title, message })
     }
+    const { theme, toggleTheme } = useTheme()
     // 1. Escuchar autenticación al cargar
     // 1. Escuchar autenticación al cargar
     useEffect(() => {
@@ -388,7 +392,7 @@ const App = () => {
                         <h2 className="text-2xl font-bold text-slate-900 mb-6">
                             Plantillas & Contratos
                         </h2>
-                        <div className="p-12 bg-white rounded-xl border border-slate-200 text-center">
+                        <div className="p-12 bg-white dark:bg-slate-800 dark:text-white dark:border-slate-200 rounded-xl border border-slate-200 text-center">
                             <Code className="w-12 h-12 text-slate-300 mx-auto mb-4" />
                             <h3 className="text-lg font-medium text-slate-900">
                                 Sección de Plantillas
@@ -581,45 +585,54 @@ const App = () => {
     }
 
     return (
-        <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
+        <div className="flex h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 transition-colors duration-300">
             {/* Mobile Header */}
-            <div className="md:hidden fixed top-0 w-full bg-white border-b border-slate-200 z-50 px-4 py-3 flex justify-between items-center gap-4">
+            <div className="md:hidden fixed top-0 w-full bg-white border-slate-200 dark:bg-slate-900 border-b dark:border-slate-800 z-50 px-4 py-3 flex justify-between items-center gap-4 transition-colors">
                 <span // 1. AGREGAMOS EL EVENTO CLICK AQUÍ
                     onClick={() => {
                         setCurrentView(AppView.DASHBOARD)
                         setIsMobileMenuOpen(false)
                     }}
                     // 2. AGREGAMOS 'cursor-pointer' PARA QUE SE VEA CLICKEABLE
-                    className="font-bold text-xl tracking-tight text-slate-900 cursor-pointer"
+                    className="text-slate-900 dark:text-white font-bold text-xl tracking-tight text-slate-900 cursor-pointer dark:text-white"
                 >
                     ModoFreelance<span className="text-brand-600">OS</span>
                 </span>
                 <div className="flex items-center gap-4 relative">
                     {/* TOAST FLOTANTE "NO HAY EVENTOS" */}
                     {showNoEventsToast && (
-                        <div className="absolute top-10 right-0 w-48 bg-slate-800 text-white text-xs p-2 rounded-lg shadow-xl z-50 text-center animate-in fade-in slide-in-from-top-2">
-                            <span className="block font-bold">
+                        <div className="dark:bg-slate-900 dark:border-slate-800 absolute top-10 right-0 w-48 bg-slate-800 text-white text-xs p-2 rounded-lg shadow-xl z-50 text-center animate-in fade-in slide-in-from-top-2">
+                            <span className="text-slate-900 dark:text-white block font-bold">
                                 Todo tranquilo 😎
                             </span>
                             No hay eventos próximos.
                             {/* Triangulito decorativo */}
-                            <div className="absolute -top-1 right-8 w-2 h-2 bg-slate-800 rotate-45"></div>
+                            <div className="text-slate-900 dark:text-white absolute -top-1 right-8 w-2 h-2 bg-slate-800 rotate-45"></div>
                         </div>
                     )}
-
+                    <button
+                        onClick={toggleTheme}
+                        className="text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 p-1 rounded-full transition-colors"
+                    >
+                        {theme === 'dark' ? (
+                            <Sun className="w-6 h-6" />
+                        ) : (
+                            <Moon className="w-6 h-6" />
+                        )}
+                    </button>
                     {/* CAMPANA */}
                     <div className="relative">
                         {' '}
                         {/* Importante: El div relative para posicionar el modal */}
                         <button
                             onClick={handleBellClick}
-                            className="relative text-slate-600 hover:bg-slate-100 p-1 rounded-full transition-colors"
+                            className="text-slate-600 dark:text-slate-300 relative text-slate-600 hover:bg-slate-100 p-1 rounded-full transition-colors"
                         >
                             <Bell className="w-6 h-6" />
 
                             {/* CORRECCIÓN: Usamos notifications.length */}
                             {notifications.length > 0 && (
-                                <span className="absolute top-0 right-0 flex h-3 w-3 items-center justify-center rounded-full bg-red-500 text-[8px] text-white animate-bounce ring-2 ring-white">
+                                <span className="text-slate-600 dark:text-slate-300 absolute top-0 right-0 flex h-3 w-3 items-center justify-center rounded-full bg-red-500 text-[8px] text-white animate-bounce ring-2 ring-white">
                                     {notifications.length}
                                 </span>
                             )}
@@ -635,7 +648,7 @@ const App = () => {
                     {/* BOTÓN MENÚ */}
                     <button
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                        className="text-slate-900"
+                        className="text-slate-900 text-slate-900 dark:text-white"
                     >
                         {isMobileMenuOpen ? <X /> : <Menu />}
                     </button>
@@ -810,12 +823,37 @@ const App = () => {
                     </div>
 
                     {/* Botón Cerrar Sesión */}
-                    <button
+                    {/* <button
                         onClick={handleLogout}
                         className="flex items-center justify-center w-full py-2 text-sm text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
                     >
                         <LogOut className="w-4 h-4 mr-2" /> Cerrar Sesión
-                    </button>
+                    </button> */}
+                    <div className="flex items-center gap-2 mt-2">
+                        {/* Botón Cerrar Sesión (Ahora ocupa el espacio sobrante con flex-1) */}
+                        <button
+                            onClick={handleLogout}
+                            className="flex-1 flex items-center justify-center py-2 text-sm text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+                        >
+                            <LogOut className="w-4 h-4 mr-2" />
+                            <span className="truncate">Salir</span>
+                        </button>
+
+                        {/* Botón Tema Desktop (Cuadrado, al lado) */}
+                        <button
+                            onClick={toggleTheme}
+                            className="p-2 text-slate-400 hover:text-yellow-400 hover:bg-slate-800 rounded-lg transition-colors"
+                            title={
+                                theme === 'dark' ? 'Modo Claro' : 'Modo Oscuro'
+                            }
+                        >
+                            {theme === 'dark' ? (
+                                <Sun className="w-5 h-5" />
+                            ) : (
+                                <Moon className="w-5 h-5" />
+                            )}
+                        </button>
+                    </div>
                 </div>
             </aside>
 
@@ -848,6 +886,17 @@ const App = () => {
                 confirmText="Entendido"
                 cancelText="" // Truco para ocultar botón cancelar
             />
+            {/* <button
+                onClick={toggleTheme}
+                className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 transition-colors"
+                title="Cambiar tema"
+            >
+                {theme === 'dark' ? (
+                    <Sun className="w-5 h-5" />
+                ) : (
+                    <Moon className="w-5 h-5" />
+                )}
+            </button> */}
         </div>
     )
 }

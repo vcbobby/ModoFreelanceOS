@@ -1,13 +1,16 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App'
+import { ThemeProvider } from './context/ThemeContext'
 
-const rootElement = document.getElementById('root');
-if (!rootElement) throw new Error('Failed to find the root element');
+const rootElement = document.getElementById('root')
+if (!rootElement) throw new Error('Failed to find the root element')
 
-const root = ReactDOM.createRoot(rootElement);
+const root = ReactDOM.createRoot(rootElement)
 root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+    <React.StrictMode>
+        <ThemeProvider>
+            <App />
+        </ThemeProvider>
+    </React.StrictMode>
+)

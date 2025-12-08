@@ -33,7 +33,7 @@ export const Button: React.FC<ButtonProps> = ({
         secondary:
             'bg-slate-900 text-white hover:bg-slate-800 focus:ring-slate-900 shadow-sm',
         outline:
-            'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 focus:ring-brand-500',
+            'border focus:ring-brand-500 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700',
         ghost: 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
         danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 shadow-sm',
     }
@@ -56,7 +56,7 @@ export const Card: React.FC<{
     className?: string
 }> = ({ children, className = '' }) => (
     <div
-        className={`bg-white rounded-xl border border-slate-200 shadow-sm ${className}`}
+        className={`bg-white rounded-xl dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm ${className}`}
     >
         {children}
     </div>
@@ -89,16 +89,18 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     return (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
             <div
-                className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+                className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="p-6">
-                    <h3 className="text-lg font-bold text-slate-900 mb-2">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
                         {title}
                     </h3>
-                    <p className="text-slate-600 text-sm">{message}</p>
+                    <p className="text-slate-600 dark:text-slate-300 text-sm">
+                        {message}
+                    </p>
                 </div>
-                <div className="bg-slate-50 p-4 flex justify-end gap-3 border-t border-slate-100">
+                <div className="bg-slate-50 dark:bg-slate-900 dark:border-slate-700 p-4 flex justify-end gap-3 border-t border-slate-100">
                     {cancelText && (
                         <button
                             onClick={onClose}
@@ -144,7 +146,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-300">
             <div
                 // CAMBIOS AQUÍ: max-h-[90vh] y overflow-y-auto
-                className="bg-white rounded-2xl shadow-2xl w-full max-w-lg relative animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto custom-scrollbar flex flex-col"
+                className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg relative animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto custom-scrollbar flex flex-col"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Botón cerrar flotante (Sticky para que baje con el scroll) */}
@@ -176,13 +178,13 @@ export const PricingModal: React.FC<PricingModalProps> = ({
                 <div className="p-6 md:p-8">
                     <div className="text-center mb-8">
                         <div className="flex items-center justify-center gap-2">
-                            <span className="text-lg text-slate-400 line-through font-medium">
+                            <span className="text-lg text-slate-400 line-through font-medium dark:text-white">
                                 $19.99
                             </span>
-                            <span className="text-5xl font-extrabold text-slate-900">
+                            <span className="text-5xl font-extrabold text-slate-900 dark:text-white">
                                 $10
                             </span>
-                            <span className="text-md text-slate-400 font-medium">
+                            <span className="text-md text-slate-400 font-medium dark:text-white">
                                 USD
                             </span>
                         </div>
