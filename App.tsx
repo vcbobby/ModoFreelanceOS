@@ -836,7 +836,7 @@ const App = () => {
                             className="flex-1 flex items-center justify-center py-2 text-sm text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
                         >
                             <LogOut className="w-4 h-4 mr-2" />
-                            <span className="truncate">Salir</span>
+                            <span className="truncate">Cerrar Sesión</span>
                         </button>
 
                         {/* Botón Tema Desktop (Cuadrado, al lado) */}
