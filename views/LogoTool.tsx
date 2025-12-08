@@ -41,32 +41,22 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
 
     const handleGenerate = async () => {
         if (!prompt) return
-
         const canProceed = await onUsage(2)
         if (!canProceed) return
-
         setIsGenerating(true)
         setGeneratedImages([])
 
         setTimeout(() => {
             try {
                 const newImages = []
-
                 const userDetails = details
                     ? `, featuring elements: ${details}`
                     : ''
                 let enhancedPrompt = ''
 
-                // --- LÓGICA DE PROMPT CAMBIADA ---
                 if (noText) {
-                    // ESTRATEGIA SIN TEXTO:
-                    // 1. No usamos la palabra "brand name" para que no intente escribirlo.
-                    // 2. Usamos "pictorial symbol" o "icon representing".
-                    // 3. Agregamos instrucciones negativas agresivas contra el texto.
                     enhancedPrompt = `pictorial vector symbol representing the concept of "${prompt}"${userDetails}, style ${style}, NO TEXT, no letters, no typography, no words, visual icon only, standalone graphic, white background, high quality, centered, vector art`
                 } else {
-                    // ESTRATEGIA CON TEXTO:
-                    // Forzamos a que escriba el nombre.
                     const textInstruction = `, with the text "${prompt}" written clearly, bold typography, perfect spelling, legible font`
                     enhancedPrompt = `professional vector logo for brand "${prompt}"${userDetails}${textInstruction}, style ${style}, clean lines, minimalist, on white background, high quality, centered, no realistic photo details`
                 }
@@ -76,15 +66,12 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
 
                 for (let i = 0; i < 3; i++) {
                     const seed = Math.floor(Math.random() * 9999999)
-                    // Mantenemos nologo=true como refuerzo
                     const imageUrl = `https://image.pollinations.ai/prompt/${safePrompt}?seed=${seed}&width=1024&height=1024&nologo=true&model=flux&enhance=true&t=${timestamp}`
-
                     newImages.push({
                         url: imageUrl,
                         id: `img-${timestamp}-${i}-${seed}`,
                     })
                 }
-
                 setGeneratedImages(newImages)
                 setIsGenerating(false)
             } catch (error) {
@@ -99,12 +86,12 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
             try {
                 await addDoc(collection(db, 'users', userId, 'history'), {
                     createdAt: new Date().toISOString(),
-                    category: 'logo', // Marcamos que es un logo
-                    clientName: prompt, // Nombre de la marca
+                    category: 'logo',
+                    clientName: prompt,
                     platform: 'Logo Creator',
-                    type: style, // El estilo visual (Minimalista, etc)
-                    content: details || 'Sin detalles adicionales', // Descripción
-                    imageUrl: url, // Guardamos la URL para verlo después
+                    type: style,
+                    content: details || 'Sin detalles adicionales',
+                    imageUrl: url,
                 })
             } catch (e) {
                 console.error('Error guardando en historial', e)
@@ -129,30 +116,29 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
     return (
         <div className="max-w-6xl mx-auto">
             <div className="mb-8">
-                <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <Palette className="w-6 h-6 text-brand-600" />
                     Generador de Logos IA (Beta)
                 </h2>
-                <p className="text-slate-600 mt-1">
+                <p className="text-slate-600 dark:text-slate-400 mt-1">
                     Crea logotipos usando el modelo <strong>Flux</strong>.
-                    <span className="bg-brand-100 text-brand-800 text-xs font-bold px-2 py-0.5 rounded ml-2">
+                    <span className="bg-brand-100 dark:bg-brand-900/30 text-brand-800 dark:text-brand-300 text-xs font-bold px-2 py-0.5 rounded ml-2">
                         Costo: 2 Créditos
                     </span>
                 </p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* PANEL DE CONTROL */}
                 <div className="lg:col-span-1 space-y-6">
                     <Card className="p-6 shadow-md sticky top-6">
                         <div className="space-y-4">
                             <div>
-                                <label className="text-sm font-semibold text-slate-700 mb-2 block">
+                                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 block">
                                     Nombre de la Marca
                                 </label>
                                 <input
                                     type="text"
-                                    className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none"
+                                    className="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none bg-white dark:bg-slate-900 dark:text-white"
                                     placeholder="Ej: Aroma..."
                                     value={prompt}
                                     onChange={(e) => setPrompt(e.target.value)}
@@ -162,8 +148,8 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
                             <div
                                 className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-all ${
                                     noText
-                                        ? 'bg-brand-50 border-brand-200'
-                                        : 'bg-slate-50 border-slate-200'
+                                        ? 'bg-brand-50 dark:bg-brand-900/20 border-brand-200 dark:border-brand-800'
+                                        : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
                                 }`}
                                 onClick={() => setNoText(!noText)}
                             >
@@ -171,7 +157,7 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
                                     className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
                                         noText
                                             ? 'bg-brand-600 border-brand-600'
-                                            : 'bg-white border-slate-300'
+                                            : 'bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600'
                                     }`}
                                 >
                                     {noText && (
@@ -179,10 +165,10 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
                                     )}
                                 </div>
                                 <div className="flex-1">
-                                    <span className="text-sm font-semibold text-slate-700 select-none">
+                                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 select-none">
                                         Solo Icono (Sin texto)
                                     </span>
-                                    <p className="text-[10px] text-slate-500 leading-tight">
+                                    <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">
                                         Genera un símbolo limpio para editar
                                         después.
                                     </p>
@@ -190,12 +176,12 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
                             </div>
 
                             <div>
-                                <label className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
                                     <PenLine className="w-4 h-4" /> Detalles
                                     (Opcional)
                                 </label>
                                 <textarea
-                                    className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none h-24 text-sm resize-none"
+                                    className="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none h-24 text-sm resize-none bg-white dark:bg-slate-900 dark:text-white"
                                     placeholder="Ej: Una taza de café humeante, colores azul y dorado..."
                                     value={details}
                                     onChange={(e) => setDetails(e.target.value)}
@@ -203,7 +189,7 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
                             </div>
 
                             <div>
-                                <label className="text-sm font-semibold text-slate-700 mb-2 block">
+                                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 block">
                                     Estilo Visual
                                 </label>
                                 <div className="grid grid-cols-2 gap-2">
@@ -213,8 +199,8 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
                                             onClick={() => setStyle(s)}
                                             className={`p-2 text-xs font-medium rounded-lg border transition-all ${
                                                 style === s
-                                                    ? 'bg-brand-50 border-brand-500 text-brand-700'
-                                                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                                                    ? 'bg-brand-50 dark:bg-brand-900/20 border-brand-500 text-brand-700 dark:text-brand-300'
+                                                    : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                                             }`}
                                         >
                                             {s}
@@ -223,7 +209,7 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
                                 </div>
                             </div>
 
-                            <div className="bg-blue-50 p-3 rounded-lg text-xs text-blue-800 border border-blue-100 flex gap-2">
+                            <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg text-xs text-blue-800 dark:text-blue-300 border border-blue-100 dark:border-blue-800 flex gap-2">
                                 <Wand2 className="w-4 h-4 shrink-0" />
                                 <p>
                                     Consejo: Si la IA escribe mal tu nombre,
@@ -245,12 +231,11 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
                     </Card>
                 </div>
 
-                {/* RESULTADOS */}
                 <div className="lg:col-span-2">
                     {generatedImages.length === 0 && !isGenerating ? (
-                        <div className="h-64 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center text-slate-400 text-center p-6">
+                        <div className="h-64 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 text-center p-6">
                             <ImageIcon className="w-12 h-12 mb-2 opacity-50" />
-                            <p className="font-medium text-slate-600">
+                            <p className="font-medium text-slate-600 dark:text-slate-300">
                                 Comienza a diseñar tu logo
                             </p>
                             <p className="text-sm mt-1">
@@ -278,9 +263,9 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
                                     .map((_, i) => (
                                         <div
                                             key={i}
-                                            className="aspect-square bg-slate-100 rounded-xl animate-pulse flex flex-col items-center justify-center text-slate-400 gap-2"
+                                            className="aspect-square bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse flex flex-col items-center justify-center text-slate-400 gap-2"
                                         >
-                                            <RefreshCw className="w-8 h-8 text-slate-300 animate-spin" />
+                                            <RefreshCw className="w-8 h-8 text-slate-300 dark:text-slate-600 animate-spin" />
                                             <span className="text-xs font-medium">
                                                 Creando Arte Vectorial...
                                             </span>
@@ -333,10 +318,10 @@ const AutoRetryImage = ({
     }
 
     return (
-        <div className="group relative bg-white p-3 rounded-xl border border-slate-200 shadow-sm hover:shadow-lg transition-all">
-            <div className="aspect-square bg-slate-50 rounded-lg overflow-hidden relative flex items-center justify-center">
+        <div className="group relative bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-lg transition-all">
+            <div className="aspect-square bg-slate-50 dark:bg-slate-900 rounded-lg overflow-hidden relative flex items-center justify-center">
                 {status === 'loading' && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 bg-slate-50 z-10 p-4 text-center">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 z-10 p-4 text-center">
                         <RefreshCw className="w-8 h-8 animate-spin mb-3 text-brand-600" />
                         <span className="text-xs font-bold animate-pulse">
                             Generando Alta Calidad...
@@ -347,7 +332,7 @@ const AutoRetryImage = ({
                     </div>
                 )}
                 {status === 'error' && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center text-red-400 p-4 text-center bg-white z-20">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-red-400 p-4 text-center bg-white dark:bg-slate-800 z-20">
                         <AlertCircle className="w-8 h-8 mb-2" />
                         <span className="text-xs font-medium mb-2">
                             Servidor saturado
@@ -358,7 +343,7 @@ const AutoRetryImage = ({
                                 handleError()
                                 setStatus('loading')
                             }}
-                            className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs rounded-full transition-colors flex items-center gap-1"
+                            className="px-3 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 text-xs rounded-full transition-colors flex items-center gap-1"
                         >
                             <RefreshCw className="w-3 h-3" /> Reintentar
                         </button>

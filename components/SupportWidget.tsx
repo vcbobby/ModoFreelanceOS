@@ -18,7 +18,7 @@ export const SupportWidget = () => {
     )
     const [legalModalOpen, setLegalModalOpen] = useState(false)
     const [legalContent, setLegalContent] = useState({ title: '', text: '' })
-    // DATOS: Preguntas Frecuentes
+
     const faqs = [
         {
             q: '¿Cómo funcionan los créditos?',
@@ -57,6 +57,7 @@ export const SupportWidget = () => {
             a: "Ve a 'Notas Rápidas'. Puedes agregar eventos con fecha/hora y enlaces a Zoom/Meet. Recibirás avisos visuales 1 hora antes.",
         },
     ]
+
     const openLegal = (type: 'terms' | 'privacy') => {
         if (type === 'terms') {
             setLegalContent({
@@ -71,7 +72,7 @@ export const SupportWidget = () => {
         }
         setLegalModalOpen(true)
     }
-    // DATOS: Mensajes predefinidos para WhatsApp
+
     const supportOptions = [
         {
             label: 'Reportar un error técnico',
@@ -101,7 +102,7 @@ export const SupportWidget = () => {
         <div className="fixed bottom-24 right-6 z-50 flex flex-col items-end">
             {/* VENTANA DEL WIDGET */}
             {isOpen && (
-                <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-80 sm:w-96 mb-4 overflow-hidden animate-in slide-in-from-bottom-5 fade-in duration-200 flex flex-col max-h-[400px]">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 w-80 sm:w-96 mb-4 overflow-hidden animate-in slide-in-from-bottom-5 fade-in duration-200 flex flex-col max-h-[400px]">
                     {/* HEADER */}
                     <div className="bg-slate-900 p-4 flex justify-between items-center text-white shrink-0">
                         <h3 className="font-bold flex items-center gap-2">
@@ -117,13 +118,13 @@ export const SupportWidget = () => {
                     </div>
 
                     {/* TABS */}
-                    <div className="flex border-b border-slate-100 shrink-0">
+                    <div className="flex border-b border-slate-100 dark:border-slate-700 shrink-0">
                         <button
                             onClick={() => setActiveTab('faq')}
                             className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider ${
                                 activeTab === 'faq'
-                                    ? 'text-brand-600 border-b-2 border-brand-600 bg-brand-50'
-                                    : 'text-slate-500 hover:bg-slate-50'
+                                    ? 'text-brand-600 dark:text-brand-400 border-b-2 border-brand-600 bg-brand-50 dark:bg-brand-900/20'
+                                    : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
                             }`}
                         >
                             Preguntas
@@ -132,8 +133,8 @@ export const SupportWidget = () => {
                             onClick={() => setActiveTab('support')}
                             className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider ${
                                 activeTab === 'support'
-                                    ? 'text-brand-600 border-b-2 border-brand-600 bg-brand-50'
-                                    : 'text-slate-500 hover:bg-slate-50'
+                                    ? 'text-brand-600 dark:text-brand-400 border-b-2 border-brand-600 bg-brand-50 dark:bg-brand-900/20'
+                                    : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
                             }`}
                         >
                             Soporte
@@ -142,8 +143,8 @@ export const SupportWidget = () => {
                             onClick={() => setActiveTab('legal')}
                             className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider ${
                                 activeTab === 'legal'
-                                    ? 'text-brand-600 border-b-2 border-brand-600 bg-brand-50'
-                                    : 'text-slate-500 hover:bg-slate-50'
+                                    ? 'text-brand-600 dark:text-brand-400 border-b-2 border-brand-600 bg-brand-50 dark:bg-brand-900/20'
+                                    : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
                             }`}
                         >
                             Legal
@@ -168,7 +169,7 @@ export const SupportWidget = () => {
                         {/* 2. SECCIÓN SOPORTE (WHATSAPP) */}
                         {activeTab === 'support' && (
                             <div className="space-y-4">
-                                <div className="bg-green-50 p-3 rounded-lg border border-green-100 text-sm text-green-800 mb-4">
+                                <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-100 dark:border-green-800 text-sm text-green-800 dark:text-green-300 mb-4">
                                     <p>
                                         Estamos disponibles de Lunes a Viernes
                                         para ayudarte.
@@ -181,7 +182,7 @@ export const SupportWidget = () => {
                                     <button
                                         key={i}
                                         onClick={() => openWhatsApp(opt.text)}
-                                        className="w-full text-left p-3 rounded-xl border border-slate-200 hover:border-green-500 hover:bg-green-50 hover:text-green-900 transition-all flex items-center justify-between group"
+                                        className="w-full text-left p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-900 dark:hover:text-green-300 transition-all flex items-center justify-between group dark:text-slate-300"
                                     >
                                         <span className="text-sm font-medium">
                                             {opt.label}
@@ -194,9 +195,9 @@ export const SupportWidget = () => {
 
                         {/* 3. SECCIÓN LEGAL */}
                         {activeTab === 'legal' && (
-                            <div className="space-y-4 text-sm text-slate-600">
-                                <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
-                                    <h4 className="font-bold text-slate-800 flex items-center gap-2 mb-2">
+                            <div className="space-y-4 text-sm text-slate-600 dark:text-slate-300">
+                                <div className="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-700">
+                                    <h4 className="font-bold text-slate-800 dark:text-white flex items-center gap-2 mb-2">
                                         <FileText className="w-4 h-4" />{' '}
                                         Términos y Condiciones
                                     </h4>
@@ -208,15 +209,15 @@ export const SupportWidget = () => {
                                     </p>
                                     <button
                                         onClick={() => openLegal('terms')}
-                                        className="text-brand-600 text-xs font-bold hover:underline flex items-center gap-1"
+                                        className="text-brand-600 dark:text-brand-400 text-xs font-bold hover:underline flex items-center gap-1"
                                     >
                                         Leer documento completo{' '}
                                         <ExternalLink className="w-3 h-3" />
                                     </button>
                                 </div>
 
-                                <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
-                                    <h4 className="font-bold text-slate-800 flex items-center gap-2 mb-2">
+                                <div className="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-700">
+                                    <h4 className="font-bold text-slate-800 dark:text-white flex items-center gap-2 mb-2">
                                         <FileText className="w-4 h-4" />{' '}
                                         Política de Privacidad
                                     </h4>
@@ -228,7 +229,7 @@ export const SupportWidget = () => {
                                     </p>
                                     <button
                                         onClick={() => openLegal('privacy')}
-                                        className="text-brand-600 text-xs font-bold hover:underline flex items-center gap-1"
+                                        className="text-brand-600 dark:text-brand-400 text-xs font-bold hover:underline flex items-center gap-1"
                                     >
                                         Leer documento completo{' '}
                                         <ExternalLink className="w-3 h-3" />
@@ -243,7 +244,7 @@ export const SupportWidget = () => {
             {/* BOTÓN FLOTANTE */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className={`p-4 rounded-full shadow-lg shadow-brand-200 transition-all duration-300 flex items-center justify-center ${
+                className={`p-4 rounded-full shadow-lg shadow-brand-200 dark:shadow-none transition-all duration-300 flex items-center justify-center ${
                     isOpen
                         ? 'bg-slate-800 rotate-90'
                         : 'bg-brand-600 hover:bg-brand-700 hover:scale-110'
@@ -275,12 +276,12 @@ const FAQItem = ({
 }) => {
     const [isOpen, setIsOpen] = useState(false)
     return (
-        <div className="border border-slate-200 rounded-lg overflow-hidden">
+        <div className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="w-full flex justify-between items-center p-3 text-left bg-white hover:bg-slate-50 transition-colors"
+                className="w-full flex justify-between items-center p-3 text-left bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
             >
-                <span className="text-sm font-semibold text-slate-700">
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
                     {question}
                 </span>
                 {isOpen ? (
@@ -290,7 +291,7 @@ const FAQItem = ({
                 )}
             </button>
             {isOpen && (
-                <div className="p-3 bg-slate-50 text-xs text-slate-600 border-t border-slate-100 leading-relaxed">
+                <div className="p-3 bg-slate-50 dark:bg-slate-900/50 text-xs text-slate-600 dark:text-slate-400 border-t border-slate-100 dark:border-slate-700 leading-relaxed">
                     {answer}
                 </div>
             )}

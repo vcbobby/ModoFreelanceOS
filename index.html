@@ -3,22 +3,13 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-        <!-- DESCRIPCIÓN (En una sola línea para evitar errores visuales) -->
         <meta
             name="description"
             content="ModoFreelanceOS, el sistema operativo todo en uno para freelancers. Gestiona proyectos, facturación, clientes y más."
         />
-
-        <!-- TÍTULO -->
         <title>ModoFreelanceOS - El Sistema Operativo para Freelancers</title>
-
-        <!-- FAVICON -->
-        <!-- Asegúrate de que el archivo favicon.png esté en la carpeta /public -->
         <link rel="icon" type="image/png" href="/favicon.png" />
         <link rel="apple-touch-icon" href="/favicon.png" />
-
-        <!-- OPEN GRAPH (Redes Sociales) -->
         <meta
             property="og:title"
             content="ModoFreelanceOS - Tu oficina virtual"
@@ -33,16 +24,13 @@
         />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
-
-        <!-- PWA -->
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#16a34a" />
 
-        <!-- ESTILOS Y FUENTES -->
         <script src="https://cdn.tailwindcss.com"></script>
         <script>
             tailwind.config = {
-                darkMode: 'class',
+                darkMode: 'class', // Importante para el toggle manual
                 theme: {
                     extend: {
                         colors: {
@@ -70,19 +58,14 @@
             .custom-scrollbar::-webkit-scrollbar {
                 display: none;
             }
-
             .custom-scrollbar {
-                -ms-overflow-style: none; /* IE and Edge */
-                scrollbar-width: none; /* Firefox */
+                -ms-overflow-style: none;
+                scrollbar-width: none;
             }
         </style>
     </head>
-    <body>
+    <body class="bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
         <div id="root"></div>
-
-        <!-- IMPORTANTE: Verifica si tu archivo está en 'src' o en la raíz -->
-        <!-- Si usas la estructura estándar de Vite, suele ser /src/index.tsx o /src/main.tsx -->
-
         <script type="module" src="/index.tsx"></script>
         <script>
             if ('serviceWorker' in navigator) {

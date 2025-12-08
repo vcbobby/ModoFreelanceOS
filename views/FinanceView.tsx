@@ -19,13 +19,11 @@ import {
     Trash2,
     BrainCircuit,
     CheckCircle,
-    Calendar,
     Clock,
-    ArrowRight,
     Eye,
-    EyeOff, // <--- Agregamos iconos de ojo
+    EyeOff,
 } from 'lucide-react'
-import { Button, Card } from '../components/ui' // Importamos desde tu archivo ui.tsx
+import { Button, Card } from '../components/ui'
 import { analyzeFinancialHealth } from '../services/geminiService'
 import ReactMarkdown from 'react-markdown'
 
@@ -35,10 +33,7 @@ interface FinanceViewProps {
 
 export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
     const [transactions, setTransactions] = useState<any[]>([])
-
-    // --- MODO PRIVACIDAD (Por defecto oculto para seguridad) ---
     const [privacyMode, setPrivacyMode] = useState(true)
-
     const [amount, setAmount] = useState('')
     const [description, setDescription] = useState('')
     const [type, setType] = useState<'income' | 'expense'>('expense')
@@ -46,7 +41,6 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
     const [date, setDate] = useState(getLocalDate())
     const [isRecurring, setIsRecurring] = useState(false)
     const [status, setStatus] = useState<'paid' | 'pending'>('paid')
-
     const [aiAnalysis, setAiAnalysis] = useState('')
     const [analyzing, setAnalyzing] = useState(false)
     const [filterPeriod, setFilterPeriod] = useState<'month' | 'year' | 'all'>(
@@ -70,7 +64,6 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
         return () => unsubscribe()
     }, [userId])
 
-    // --- LÓGICA DE FILTRADO ---
     const now = new Date()
     const currentMonth = now.getMonth()
     const currentYear = now.getFullYear()
@@ -101,20 +94,21 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
         .filter((t) => t.type === 'expense')
         .reduce((acc, t) => acc + t.amount, 0)
 
-    // --- FUNCIÓN DE MÁSCARA PARA DINERO ---
     const formatMoney = (val: number) => {
         if (privacyMode) return '****'
         return `$${val.toFixed(2)}`
     }
 
-    // Semáforo
-    let healthColor = 'bg-emerald-50 border-emerald-500 text-emerald-700'
+    let healthColor =
+        'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-500 text-emerald-700 dark:text-emerald-400'
     let healthText = 'Saludable 🟢'
     if (balance < 0) {
-        healthColor = 'bg-red-50 border-red-500 text-red-700'
+        healthColor =
+            'bg-red-50 dark:bg-red-900/20 border-red-500 text-red-700 dark:text-red-400'
         healthText = 'En Riesgo 🔴'
     } else if (balance > 0 && balance < totalIncome * 0.2) {
-        healthColor = 'bg-yellow-50 border-yellow-500 text-yellow-700'
+        healthColor =
+            'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500 text-yellow-700 dark:text-yellow-400'
         healthText = 'Precaución 🟡'
     }
 
@@ -170,19 +164,17 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
 
     return (
         <div className="max-w-6xl mx-auto min-h-screen pb-20">
-            {/* HEADER + CONTROL DE PRIVACIDAD */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                 <div className="flex items-center gap-3">
-                    <div className="p-3 bg-emerald-100 rounded-xl text-emerald-700">
+                    <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl text-emerald-700 dark:text-emerald-400">
                         <DollarSign className="w-8 h-8" />
                     </div>
                     <div>
-                        <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                             Finanzas
-                            {/* BOTÓN OJO */}
                             <button
                                 onClick={() => setPrivacyMode(!privacyMode)}
-                                className="ml-2 p-1.5 rounded-full hover:bg-slate-200 text-slate-500 transition-colors"
+                                className="ml-2 p-1.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors"
                                 title={
                                     privacyMode
                                         ? 'Mostrar montos'
@@ -196,7 +188,7 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                                 )}
                             </button>
                         </h2>
-                        <p className="text-slate-500 text-sm">
+                        <p className="text-slate-500 dark:text-slate-400 text-sm">
                             {privacyMode
                                 ? 'Montos ocultos por seguridad.'
                                 : 'Control de flujo de caja inteligente.'}
@@ -204,13 +196,13 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                     </div>
                 </div>
 
-                <div className="flex bg-white p-1 rounded-lg border border-slate-200">
+                <div className="flex bg-white dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700">
                     <button
                         onClick={() => setFilterPeriod('month')}
                         className={`px-4 py-1.5 text-xs font-bold rounded-md transition-colors ${
                             filterPeriod === 'month'
-                                ? 'bg-slate-900 text-white'
-                                : 'text-slate-500 hover:bg-slate-50'
+                                ? 'bg-slate-900 text-white dark:bg-slate-700'
+                                : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
                         }`}
                     >
                         Mes
@@ -219,8 +211,8 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                         onClick={() => setFilterPeriod('year')}
                         className={`px-4 py-1.5 text-xs font-bold rounded-md transition-colors ${
                             filterPeriod === 'year'
-                                ? 'bg-slate-900 text-white'
-                                : 'text-slate-500 hover:bg-slate-50'
+                                ? 'bg-slate-900 text-white dark:bg-slate-700'
+                                : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
                         }`}
                     >
                         Año
@@ -229,8 +221,8 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                         onClick={() => setFilterPeriod('all')}
                         className={`px-4 py-1.5 text-xs font-bold rounded-md transition-colors ${
                             filterPeriod === 'all'
-                                ? 'bg-slate-900 text-white'
-                                : 'text-slate-500 hover:bg-slate-50'
+                                ? 'bg-slate-900 text-white dark:bg-slate-700'
+                                : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
                         }`}
                     >
                         Histórico
@@ -238,15 +230,14 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                 </div>
             </div>
 
-            {/* DASHBOARD PRINCIPAL (Con montos enmascarados) */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <Card className="p-5 border-l-4 border-l-green-500">
                     <div className="flex justify-between">
                         <div>
-                            <p className="text-xs font-bold text-slate-400 uppercase">
+                            <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase">
                                 Ingresos Reales
                             </p>
-                            <h3 className="text-2xl font-bold text-slate-900">
+                            <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
                                 {formatMoney(totalIncome)}
                             </h3>
                         </div>
@@ -257,10 +248,10 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                 <Card className="p-5 border-l-4 border-l-red-500">
                     <div className="flex justify-between">
                         <div>
-                            <p className="text-xs font-bold text-slate-400 uppercase">
+                            <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase">
                                 Gastos Reales
                             </p>
-                            <h3 className="text-2xl font-bold text-slate-900">
+                            <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
                                 {formatMoney(totalExpense)}
                             </h3>
                         </div>
@@ -271,14 +262,14 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                 <Card className={`p-5 border-l-4 ${healthColor}`}>
                     <div className="flex justify-between">
                         <div>
-                            <p className="text-xs font-bold opacity-70 uppercase">
+                            <p className="text-xs font-bold opacity-70 uppercase dark:text-white/70">
                                 Caja Disponible
                             </p>
-                            <h3 className="text-2xl font-bold">
+                            <h3 className="text-2xl font-bold dark:text-white">
                                 {formatMoney(balance)}
                             </h3>
                         </div>
-                        <Wallet className="w-6 h-6 opacity-80" />
+                        <Wallet className="w-6 h-6 opacity-80 dark:text-white" />
                     </div>
                     <div className="mt-2 text-xs font-bold uppercase tracking-wide">
                         {healthText}
@@ -287,9 +278,9 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
             </div>
 
             {(pendingIncome > 0 || pendingExpense > 0) && (
-                <div className="grid grid-cols-2 gap-4 mb-8 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                    <div className="flex items-center justify-between px-4 border-r border-slate-200">
-                        <span className="text-xs font-bold text-slate-500 uppercase">
+                <div className="grid grid-cols-2 gap-4 mb-8 bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <div className="flex items-center justify-between px-4 border-r border-slate-200 dark:border-slate-700">
+                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
                             Por Cobrar
                         </span>
                         <span className="text-lg font-bold text-orange-600">
@@ -297,7 +288,7 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                         </span>
                     </div>
                     <div className="flex items-center justify-between px-4">
-                        <span className="text-xs font-bold text-slate-500 uppercase">
+                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
                             Por Pagar
                         </span>
                         <span className="text-lg font-bold text-red-600">
@@ -310,18 +301,18 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="space-y-6">
                     <Card className="p-6 shadow-sm sticky top-6">
-                        <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <h3 className="font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
                             Registrar Movimiento
                         </h3>
                         <form onSubmit={handleAdd} className="space-y-3">
-                            <div className="flex gap-2 bg-slate-50 p-1 rounded-lg">
+                            <div className="flex gap-2 bg-slate-50 dark:bg-slate-900 p-1 rounded-lg">
                                 <button
                                     type="button"
                                     onClick={() => setType('income')}
                                     className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${
                                         type === 'income'
-                                            ? 'bg-white text-green-600 shadow-sm'
-                                            : 'text-slate-400'
+                                            ? 'bg-white dark:bg-slate-800 text-green-600 shadow-sm'
+                                            : 'text-slate-400 dark:text-slate-500'
                                     }`}
                                 >
                                     Ingreso
@@ -331,19 +322,19 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                                     onClick={() => setType('expense')}
                                     className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${
                                         type === 'expense'
-                                            ? 'bg-white text-red-600 shadow-sm'
-                                            : 'text-slate-400'
+                                            ? 'bg-white dark:bg-slate-800 text-red-600 shadow-sm'
+                                            : 'text-slate-400 dark:text-slate-500'
                                     }`}
                                 >
                                     Gasto
                                 </button>
                             </div>
-                            <div className="flex items-center gap-2 mb-2 p-2 border border-slate-100 rounded-lg">
-                                <span className="text-xs font-bold text-slate-500 uppercase">
+                            <div className="flex items-center gap-2 mb-2 p-2 border border-slate-100 dark:border-slate-700 rounded-lg">
+                                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
                                     ¿Ya ocurrió?
                                 </span>
                                 <div className="flex gap-3">
-                                    <label className="flex items-center gap-1 text-sm cursor-pointer">
+                                    <label className="flex items-center gap-1 text-sm cursor-pointer dark:text-slate-300">
                                         <input
                                             type="radio"
                                             name="status"
@@ -353,7 +344,7 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                                         />
                                         <span>Sí, pagado</span>
                                     </label>
-                                    <label className="flex items-center gap-1 text-sm cursor-pointer">
+                                    <label className="flex items-center gap-1 text-sm cursor-pointer dark:text-slate-300">
                                         <input
                                             type="radio"
                                             name="status"
@@ -374,7 +365,7 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                                 step="0.01"
                                 required
                                 placeholder="0.00"
-                                className="w-full p-3 border rounded-lg text-lg font-bold"
+                                className="w-full p-3 border dark:border-slate-600 dark:bg-slate-900 dark:text-white rounded-lg text-lg font-bold"
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}
                             />
@@ -386,7 +377,7 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                                         ? 'Cliente / Proyecto'
                                         : 'Servicio / Compra'
                                 }
-                                className="w-full p-3 border rounded-lg text-sm"
+                                className="w-full p-3 border dark:border-slate-600 dark:bg-slate-900 dark:text-white rounded-lg text-sm"
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
                             />
@@ -399,21 +390,21 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                                 <input
                                     type="date"
                                     required
-                                    className="w-full p-3 border rounded-lg text-sm"
+                                    className="w-full p-3 border dark:border-slate-600 dark:bg-slate-900 dark:text-white rounded-lg text-sm"
                                     value={date}
                                     onChange={(e) => setDate(e.target.value)}
                                 />
                             </div>
                             {type === 'expense' && (
                                 <div
-                                    className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer p-2 hover:bg-slate-50 rounded"
+                                    className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 cursor-pointer p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded"
                                     onClick={() => setIsRecurring(!isRecurring)}
                                 >
                                     <div
                                         className={`w-4 h-4 border rounded flex items-center justify-center ${
                                             isRecurring
-                                                ? 'bg-slate-800 border-slate-800 text-white'
-                                                : 'border-slate-300'
+                                                ? 'bg-slate-800 border-slate-800 text-white dark:bg-slate-700 dark:border-slate-600'
+                                                : 'border-slate-300 dark:border-slate-600'
                                         }`}
                                     >
                                         {isRecurring && (
@@ -436,7 +427,7 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                                     : 'Registrar'}
                             </Button>
                         </form>
-                        <div className="mt-6 pt-6 border-t border-slate-100">
+                        <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-700">
                             <Button
                                 onClick={handleAIAnalysis}
                                 isLoading={analyzing}
@@ -452,25 +443,25 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
 
                 <div className="lg:col-span-2 space-y-6">
                     {aiAnalysis && (
-                        <div className="bg-white rounded-xl border border-indigo-200 shadow-sm p-6 animate-in fade-in relative">
+                        <div className="bg-white dark:bg-slate-800 rounded-xl border border-indigo-200 dark:border-indigo-900 shadow-sm p-6 animate-in fade-in relative">
                             <button
                                 onClick={() => setAiAnalysis('')}
-                                className="absolute top-4 right-4 text-xs text-slate-400 hover:text-slate-600"
+                                className="absolute top-4 right-4 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                             >
                                 Cerrar
                             </button>
-                            <div className="prose prose-sm prose-indigo max-w-none text-slate-700">
+                            <div className="prose prose-sm prose-indigo dark:prose-invert max-w-none text-slate-700 dark:text-slate-300">
                                 <ReactMarkdown>{aiAnalysis}</ReactMarkdown>
                             </div>
                         </div>
                     )}
-                    <div className="flex border-b border-slate-200">
+                    <div className="flex border-b border-slate-200 dark:border-slate-700">
                         <button
                             onClick={() => setActiveTab('cashflow')}
                             className={`px-6 py-3 text-sm font-bold border-b-2 transition-colors ${
                                 activeTab === 'cashflow'
-                                    ? 'border-slate-900 text-slate-900'
-                                    : 'border-transparent text-slate-400 hover:text-slate-600'
+                                    ? 'border-slate-900 text-slate-900 dark:border-white dark:text-white'
+                                    : 'border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
                             }`}
                         >
                             Historial Real ({realTransactions.length})
@@ -480,50 +471,52 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                             className={`px-6 py-3 text-sm font-bold border-b-2 transition-colors ${
                                 activeTab === 'pending'
                                     ? 'border-orange-500 text-orange-600'
-                                    : 'border-transparent text-slate-400 hover:text-slate-600'
+                                    : 'border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
                             }`}
                         >
                             Pendientes ({pendingTransactions.length})
                         </button>
                     </div>
                     {activeTab === 'pending' && (
-                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
                             {pendingTransactions.length === 0 ? (
                                 <div className="p-8 text-center text-slate-400 text-sm">
                                     Nada pendiente.
                                 </div>
                             ) : (
-                                <div className="divide-y divide-slate-100">
+                                <div className="divide-y divide-slate-100 dark:divide-slate-700">
                                     {pendingTransactions.map((t) => {
                                         const daysLeft = getDaysDiff(t.date)
                                         const isLate = daysLeft < 0
                                         return (
                                             <div
                                                 key={t.id}
-                                                className={`p-4 flex flex-col sm:flex-row sm:items-center justify-between hover:bg-slate-50 transition-colors gap-4 ${
-                                                    isLate ? 'bg-red-50/50' : ''
+                                                className={`p-4 flex flex-col sm:flex-row sm:items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors gap-4 ${
+                                                    isLate
+                                                        ? 'bg-red-50/50 dark:bg-red-900/10'
+                                                        : ''
                                                 }`}
                                             >
                                                 <div className="flex items-center gap-3">
                                                     <div
                                                         className={`p-2 rounded-lg ${
                                                             t.type === 'income'
-                                                                ? 'bg-orange-100 text-orange-600'
-                                                                : 'bg-red-100 text-red-600'
+                                                                ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/30'
+                                                                : 'bg-red-100 text-red-600 dark:bg-red-900/30'
                                                         }`}
                                                     >
                                                         <Clock className="w-5 h-5" />
                                                     </div>
                                                     <div>
-                                                        <p className="font-bold text-slate-800 text-sm">
+                                                        <p className="font-bold text-slate-800 dark:text-white text-sm">
                                                             {t.description}
                                                         </p>
                                                         <div className="flex items-center gap-2 text-xs">
                                                             <span
                                                                 className={`font-bold ${
                                                                     isLate
-                                                                        ? 'text-red-600'
-                                                                        : 'text-slate-500'
+                                                                        ? 'text-red-600 dark:text-red-400'
+                                                                        : 'text-slate-500 dark:text-slate-400'
                                                                 }`}
                                                             >
                                                                 {isLate
@@ -542,7 +535,7 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-3 self-end sm:self-auto">
-                                                    <span className="font-bold text-slate-700">
+                                                    <span className="font-bold text-slate-700 dark:text-slate-300">
                                                         {formatMoney(t.amount)}
                                                     </span>
                                                     <button
@@ -552,7 +545,7 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                                                         className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-white transition-colors ${
                                                             t.type === 'income'
                                                                 ? 'bg-green-600 hover:bg-green-700'
-                                                                : 'bg-slate-700 hover:bg-slate-800'
+                                                                : 'bg-slate-700 hover:bg-slate-800 dark:bg-slate-600 dark:hover:bg-slate-500'
                                                         }`}
                                                     >
                                                         <CheckCircle className="w-3 h-3" />{' '}
@@ -577,24 +570,24 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                         </div>
                     )}
                     {activeTab === 'cashflow' && (
-                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
                             {realTransactions.length === 0 ? (
                                 <div className="p-8 text-center text-slate-400 text-sm">
                                     Sin movimientos.
                                 </div>
                             ) : (
-                                <div className="divide-y divide-slate-100">
+                                <div className="divide-y divide-slate-100 dark:divide-slate-700">
                                     {realTransactions.map((t) => (
                                         <div
                                             key={t.id}
-                                            className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors group"
+                                            className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group"
                                         >
                                             <div className="flex items-center gap-3">
                                                 <div
                                                     className={`p-2 rounded-full ${
                                                         t.type === 'income'
-                                                            ? 'bg-green-100 text-green-600'
-                                                            : 'bg-red-100 text-red-600'
+                                                            ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'
+                                                            : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
                                                     }`}
                                                 >
                                                     {t.type === 'income' ? (
@@ -604,10 +597,10 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                                                     )}
                                                 </div>
                                                 <div>
-                                                    <p className="font-bold text-slate-800 text-sm">
+                                                    <p className="font-bold text-slate-800 dark:text-white text-sm">
                                                         {t.description}
                                                     </p>
-                                                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                                                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                                                         <span>{t.date}</span>
                                                     </div>
                                                 </div>
@@ -616,8 +609,8 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                                                 <span
                                                     className={`font-bold ${
                                                         t.type === 'income'
-                                                            ? 'text-green-600'
-                                                            : 'text-red-600'
+                                                            ? 'text-green-600 dark:text-green-400'
+                                                            : 'text-red-600 dark:text-red-400'
                                                     }`}
                                                 >
                                                     {t.type === 'income'

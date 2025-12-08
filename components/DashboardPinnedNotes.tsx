@@ -13,7 +13,7 @@ export const DashboardPinnedNotes: React.FC<DashboardPinnedNotesProps> = ({
     onGoToNotes,
 }) => {
     const [pinnedNotes, setPinnedNotes] = useState<any[]>([])
-    const [selectedNote, setSelectedNote] = useState<any>(null) // Estado para el modal
+    const [selectedNote, setSelectedNote] = useState<any>(null)
 
     useEffect(() => {
         if (!userId) return
@@ -34,12 +34,12 @@ export const DashboardPinnedNotes: React.FC<DashboardPinnedNotesProps> = ({
     return (
         <div className="mb-8">
             <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-bold text-slate-700 flex items-center gap-2">
+                <h3 className="text-lg font-bold text-slate-700 dark:text-white flex items-center gap-2">
                     <StickyNote className="w-5 h-5 text-brand-600" /> Fijado
                 </h3>
                 <button
                     onClick={onGoToNotes}
-                    className="text-sm text-brand-600 hover:underline flex items-center gap-1"
+                    className="text-sm text-brand-600 hover:underline flex items-center gap-1 dark:text-brand-400"
                 >
                     Ver todas <ArrowRight className="w-3 h-3" />
                 </button>
@@ -53,7 +53,8 @@ export const DashboardPinnedNotes: React.FC<DashboardPinnedNotesProps> = ({
                     return (
                         <div
                             key={note.id}
-                            onClick={() => setSelectedNote(note)} // Abrir modal al clic
+                            onClick={() => setSelectedNote(note)}
+                            // Forzamos texto oscuro (slate-800) porque el fondo de la nota siempre es claro (amarillo, azul, etc.)
                             className={`p-4 rounded-xl border ${borderColor} ${note.color} shadow-sm cursor-pointer hover:shadow-md transition-all h-32 flex flex-col`}
                         >
                             {note.title && (
@@ -80,6 +81,7 @@ export const DashboardPinnedNotes: React.FC<DashboardPinnedNotesProps> = ({
                     onClick={() => setSelectedNote(null)}
                 >
                     <div
+                        // Igual aquí, mantenemos el color de la nota, no aplicamos dark:bg-slate-800 al contenedor de la nota
                         className={`w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden ${selectedNote.color} relative`}
                         onClick={(e) => e.stopPropagation()}
                     >

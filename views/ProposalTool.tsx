@@ -13,7 +13,7 @@ import {
 import { generateProposals } from '../services/geminiService'
 import { Proposal } from '../types'
 import { Button, Card } from '../components/ui'
-import { doc, getDoc, setDoc, collection, addDoc } from 'firebase/firestore' // Importamos Firestore
+import { doc, getDoc, setDoc, collection, addDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import ReactMarkdown from 'react-markdown'
 import { ConfirmationModal } from '../components/ui/ConfirmationModal'
@@ -67,7 +67,7 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
         const loadProfile = async () => {
             if (!userId) return
             try {
-                const docRef = doc(db, 'user_profiles', userId) // Usamos una colección separada
+                const docRef = doc(db, 'user_profiles', userId)
                 const docSnap = await getDoc(docRef)
                 if (docSnap.exists()) {
                     setUserProfile(docSnap.data().profile || '')
@@ -98,11 +98,10 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
             '¿Limpiar campos?',
             'Esto borrará la descripción del trabajo y el nombre del cliente actual. Tu perfil se mantendrá intacto.',
             () => {
-                // Esta es la acción que se ejecutará si dicen "SÍ"
                 setJobDescription('')
                 setClientName('')
             },
-            true, // true = botón rojo (acción destructiva)
+            true,
             'Sí, limpiar',
             'Cancelar'
         )
@@ -110,19 +109,10 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
 
     const handleGenerate = async () => {
         if (!jobDescription || !userProfile) return
-
-        // --- CORRECCIÓN AQUÍ ---
-
-        // 1. Esperamos a que App.tsx nos diga si puede pasar (await)
         const canProceed = await onUsage()
-
-        // 2. Si nos devuelve FALSE (no tiene créditos o cerró el modal), detenemos todo.
         if (!canProceed) {
             return
         }
-
-        // -----------------------
-
         setIsGenerating(true)
         setProposals(null)
 
@@ -140,19 +130,14 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
             setProposals(repairedResults)
             setActiveTab(0)
             if (userId) {
-                // Guardamos las 3 propuestas o solo la seleccionada?
-                // Para ser más útil, guardemos las 3 como un lote o individualmente.
-                // Aquí guardaremos cada variante para que el usuario no pierda nada.
                 const historyRef = collection(db, 'users', userId, 'history')
-
-                // Usamos Promise.all para guardar las 3 rápido y sin bloquear mucho
                 await Promise.all(
                     repairedResults.map((prop) =>
                         addDoc(historyRef, {
                             createdAt: new Date().toISOString(),
                             clientName: clientName || 'Cliente Desconocido',
                             platform: platform,
-                            type: prop.type, // Formal, Corto, etc.
+                            type: prop.type,
                             content: prop.content,
                         })
                     )
@@ -160,14 +145,13 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
             }
         } catch (e) {
             console.error(e)
-            // --- ERROR DE GENERACIÓN (Con Modal) ---
             openModal(
                 'Error de Generación',
                 'No pudimos generar las propuestas en este momento. Es posible que los servidores de IA estén saturados. Por favor, intenta de nuevo en unos segundos.',
-                () => {}, // No hace nada al confirmar, solo cierra
-                true, // Rojo (Alerta)
+                () => {},
+                true,
                 'Entendido',
-                '' // <--- Pasamos string vacío para ocultar el botón cancelar
+                ''
             )
         } finally {
             setIsGenerating(false)
@@ -181,43 +165,28 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
         setTimeout(() => setCopiedIndex(null), 2000)
     }
     const cleanMarkdownForClipboard = (text: string) => {
-        return (
-            text
-                // 1. Eliminar negritas (**texto**)
-                .replace(/\*\*/g, '')
-                // 2. Eliminar cursivas (*texto* o _texto_)
-                .replace(/(\*|_)(.*?)\1/g, '$2')
-                // 3. Eliminar encabezados de Markdown (### Titulo) dejando solo el texto
-                .replace(/^#+\s/gm, '')
-                // 4. (Opcional) Convertir listas de Markdown en algo más limpio si es necesario
-                // Pero normalmente los guiones (-) se ven bien en texto plano.
-                .trim()
-        )
+        return text
+            .replace(/\*\*/g, '')
+            .replace(/(\*|_)(.*?)\1/g, '$2')
+            .replace(/^#+\s/gm, '')
+            .trim()
     }
     const repairTextFormatting = (text: string) => {
-        return (
-            text
-                // 1. Asegurar espacio después de punto (si falta)
-                .replace(/\.([A-ZÁÉÍÓÚ])/g, '. $1')
-                // 2. Asegurar espacio después de coma (si falta)
-                .replace(/\,([A-Za-z])/g, ', $1')
-                // 3. Convertir saltos de línea literales en saltos reales
-                .replace(/\\n/g, '\n')
-            // 4. Asegurar que los párrafos tengan doble salto
-            // .replace(/\n(?!\n)/g, '\n\n')
-        )
+        return text
+            .replace(/\.([A-ZÁÉÍÓÚ])/g, '. $1')
+            .replace(/\,([A-Za-z])/g, ', $1')
+            .replace(/\\n/g, '\n')
     }
 
     return (
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 h-full items-start">
-            {/* Input Section */}
             <div className="flex flex-col gap-6 lg:sticky lg:top-6">
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                         <Wand2 className="w-6 h-6 text-brand-600" />
                         Generador de Propuestas
                     </h2>
-                    <p className="text-slate-600 mt-1">
+                    <p className="text-slate-600 dark:text-slate-400 mt-1">
                         Personaliza tu propuesta según la plataforma.
                     </p>
                 </div>
@@ -225,12 +194,12 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
                 <Card className="p-6 flex-1 flex flex-col gap-4 shadow-md">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                            <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
                                 <Globe className="w-4 h-4" />
                                 Plataforma
                             </label>
                             <select
-                                className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm bg-white"
+                                className="w-full p-2.5 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm bg-white dark:bg-slate-900 dark:text-white"
                                 value={platform}
                                 onChange={(e) => setPlatform(e.target.value)}
                             >
@@ -242,13 +211,13 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                            <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
                                 <Hash className="w-4 h-4" />
                                 Cliente (Opcional)
                             </label>
                             <input
                                 type="text"
-                                className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm bg-white"
+                                className="w-full p-2.5 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm bg-white dark:bg-slate-900 dark:text-white"
                                 placeholder="Nombre o Empresa"
                                 value={clientName}
                                 onChange={(e) => setClientName(e.target.value)}
@@ -257,12 +226,12 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                        <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
                             <Briefcase className="w-4 h-4" />
                             Descripción del trabajo (Job Description)
                         </label>
                         <textarea
-                            className="w-full h-32 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none text-sm bg-white"
+                            className="w-full h-32 p-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none text-sm bg-white dark:bg-slate-900 dark:text-white"
                             placeholder="Pega aquí lo que escribió el cliente... (Ej: Busco diseñador para logo de tienda de café...)"
                             value={jobDescription}
                             onChange={(e) => setJobDescription(e.target.value)}
@@ -270,12 +239,12 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
                     </div>
 
                     <div className="space-y-2 flex-1">
-                        <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                        <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
                             <User className="w-4 h-4" />
                             Tu Perfil / Habilidades Clave
                         </label>
                         <textarea
-                            className="w-full h-24 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none text-sm bg-white"
+                            className="w-full h-24 p-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none text-sm bg-white dark:bg-slate-900 dark:text-white"
                             placeholder="Resumen de tu experiencia... (Ej: Soy experto en Branding, 5 años de exp...)"
                             value={userProfile}
                             onChange={(e) => setUserProfile(e.target.value)}
@@ -284,17 +253,15 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
                     </div>
 
                     <div className="flex gap-3 mt-2">
-                        {/* BOTÓN LIMPIAR */}
                         <button
                             onClick={handleClear}
                             disabled={!jobDescription && !clientName}
-                            className="px-4 py-2 border border-slate-300 text-slate-600 rounded-xl hover:bg-slate-50 hover:text-red-600 transition-colors flex items-center gap-2 disabled:opacity-50"
+                            className="px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-red-600 transition-colors flex items-center gap-2 disabled:opacity-50"
                             title="Limpiar campos"
                         >
                             <Trash2 className="w-5 h-5" />
                         </button>
 
-                        {/* BOTÓN GENERAR */}
                         <Button
                             onClick={handleGenerate}
                             isLoading={isGenerating}
@@ -310,10 +277,10 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
             </div>
 
             {/* Output Section */}
-            <div className="bg-slate-50 rounded-2xl border border-slate-200 p-6 flex flex-col h-[600px] lg:h-auto">
+            <div className="bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 flex flex-col h-[600px] lg:h-auto">
                 {!proposals ? (
                     <div className="flex-1 flex flex-col items-center justify-center text-slate-400 text-center p-8">
-                        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                        <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
                             <RefreshCw
                                 className={`w-8 h-8 ${
                                     isGenerating
@@ -323,7 +290,7 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
                             />
                         </div>
                         {isGenerating ? (
-                            <p className="font-medium text-slate-600">
+                            <p className="font-medium text-slate-600 dark:text-slate-300">
                                 Creando propuesta para {platform}...
                                 <br />
                                 <span className="text-xs text-slate-400 font-normal">
@@ -336,15 +303,15 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
                     </div>
                 ) : (
                     <div className="flex flex-col h-full">
-                        <div className="flex space-x-2 bg-slate-200 p-1 rounded-lg mb-4">
+                        <div className="flex space-x-2 bg-slate-200 dark:bg-slate-700 p-1 rounded-lg mb-4">
                             {proposals.map((p, idx) => (
                                 <button
                                     key={idx}
                                     onClick={() => setActiveTab(idx)}
                                     className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
                                         activeTab === idx
-                                            ? 'bg-white text-brand-700 shadow-sm'
-                                            : 'text-slate-600 hover:text-slate-900'
+                                            ? 'bg-white dark:bg-slate-800 text-brand-700 dark:text-brand-400 shadow-sm'
+                                            : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                                     }`}
                                 >
                                     {p.type}
@@ -353,16 +320,14 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
                         </div>
 
                         <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                            <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-                                <h3 className="font-bold text-lg text-slate-900 mb-4">
+                            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-6 shadow-sm">
+                                <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-4">
                                     {proposals[activeTab].title}
                                 </h3>
 
-                                {/* REEMPLAZA EL CONTENIDO VIEJO POR ESTO: */}
-                                <div className="prose prose-slate prose-sm max-w-none text-slate-700 leading-relaxed">
+                                <div className="prose prose-slate dark:prose-invert prose-sm max-w-none text-slate-700 dark:text-slate-300 leading-relaxed">
                                     <ReactMarkdown
                                         components={{
-                                            // Personalizamos cómo se ven los elementos
                                             p: ({ node, ...props }) => (
                                                 <p
                                                     className="mb-4"
@@ -389,7 +354,7 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
                                             ),
                                             strong: ({ node, ...props }) => (
                                                 <strong
-                                                    className="font-bold text-slate-900"
+                                                    className="font-bold text-slate-900 dark:text-white"
                                                     {...props}
                                                 />
                                             ),
@@ -427,8 +392,6 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
                     </div>
                 )}
             </div>
-            {/* --- AGREGAR AQUÍ EL MODAL --- */}
-            {/* --- MODAL DE CONFIRMACIÓN / ERROR --- */}
             <ConfirmationModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}

@@ -222,10 +222,10 @@ export const NotesView: React.FC<NotesViewProps> = ({
                 <div className="flex items-center gap-3">
                     <StickyNote className="w-8 h-8 text-brand-600" />
                     <div>
-                        <h2 className="text-2xl font-bold text-slate-900">
+                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
                             Tablero de Notas
                         </h2>
-                        <p className="text-slate-500 text-sm">
+                        <p className="text-slate-500 dark:text-slate-400 text-sm">
                             Organización visual para tu día a día.
                         </p>
                     </div>
@@ -254,10 +254,10 @@ export const NotesView: React.FC<NotesViewProps> = ({
                     >
                         <form
                             onSubmit={handleAddNote}
-                            className={`bg-white border shadow-sm rounded-2xl overflow-hidden transition-all ${
+                            className={`bg-white dark:bg-slate-800 border shadow-sm rounded-2xl overflow-hidden transition-all ${
                                 isInputExpanded
                                     ? 'ring-2 ring-brand-500 shadow-lg'
-                                    : 'border-slate-200'
+                                    : 'border-slate-200 dark:border-slate-700'
                             }`}
                             onClick={() => setIsInputExpanded(true)}
                         >
@@ -265,7 +265,7 @@ export const NotesView: React.FC<NotesViewProps> = ({
                                 <input
                                     type="text"
                                     placeholder="Título..."
-                                    className="w-full px-4 pt-4 pb-2 text-lg font-bold text-slate-800 outline-none placeholder:text-slate-400"
+                                    className="w-full px-4 pt-4 pb-2 text-lg font-bold text-slate-800 dark:text-white dark:bg-slate-800 outline-none placeholder:text-slate-400"
                                     value={newNote.title}
                                     onChange={(e) =>
                                         setNewNote({
@@ -277,7 +277,7 @@ export const NotesView: React.FC<NotesViewProps> = ({
                             )}
                             <textarea
                                 placeholder="Escribe una nota..."
-                                className={`w-full px-4 py-3 resize-none outline-none text-slate-700 placeholder:text-slate-500 ${
+                                className={`w-full px-4 py-3 resize-none outline-none text-slate-700 dark:text-slate-200 dark:bg-slate-800 placeholder:text-slate-500 ${
                                     isInputExpanded ? 'h-32' : 'h-12'
                                 }`}
                                 value={newNote.content}
@@ -289,7 +289,7 @@ export const NotesView: React.FC<NotesViewProps> = ({
                                 }
                             />
                             {isInputExpanded && (
-                                <div className="flex flex-wrap items-center justify-between px-3 py-2 bg-slate-50 border-t border-slate-100 gap-4">
+                                <div className="flex flex-wrap items-center justify-between px-3 py-2 bg-slate-50 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-700 gap-4">
                                     <div className="flex gap-1">
                                         {Object.keys(COLOR_MAP).map(
                                             (colorKey) => (
@@ -323,7 +323,7 @@ export const NotesView: React.FC<NotesViewProps> = ({
                                                 e.stopPropagation()
                                                 setIsInputExpanded(false)
                                             }}
-                                            className="px-3 py-1 text-sm text-slate-500 hover:text-slate-700"
+                                            className="px-3 py-1 text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
                                         >
                                             Cancelar
                                         </button>
@@ -552,7 +552,6 @@ const NoteCard = ({ note, onDelete, onPin, onPrivacy, onClick }: any) => {
     )
 }
 
-// --- AGENDA WIDGET CORREGIDO (LÓGICA TEMPORAL) ---
 const AgendaWidget = ({ userId }: { userId?: string }) => {
     const [events, setEvents] = useState<any[]>([])
     const [newEvent, setNewEvent] = useState({
@@ -564,7 +563,7 @@ const AgendaWidget = ({ userId }: { userId?: string }) => {
     })
     const [currentDate, setCurrentDate] = useState(new Date())
     const [selectedDate, setSelectedDate] = useState<string | null>(null)
-    const [currentTime, setCurrentTime] = useState(new Date()) // Reloj interno
+    const [currentTime, setCurrentTime] = useState(new Date())
 
     useEffect(() => {
         if (!userId) return
@@ -580,47 +579,34 @@ const AgendaWidget = ({ userId }: { userId?: string }) => {
         return () => unsubscribe()
     }, [userId])
 
-    // RELOJ: Actualiza cada 30 segundos para que las alertas se refresquen
     useEffect(() => {
         const interval = setInterval(() => setCurrentTime(new Date()), 30000)
         return () => clearInterval(interval)
     }, [])
 
-    // --- LÓGICA DE ALERTAS CORREGIDA ---
     const getEventStatus = (dateStr: string, timeStr: string) => {
         if (!timeStr) return null
-
-        // Creamos fechas comparables
         const eventDate = new Date(`${dateStr}T${timeStr}`)
         const now = new Date()
-
-        // Diferencia en minutos
         const diffMs = eventDate.getTime() - now.getTime()
         const diffMins = Math.floor(diffMs / 60000)
 
-        // 1. AVISO PREVIO: Si faltan entre 0 y 60 min
         if (diffMins > 0 && diffMins <= 60) {
             return {
                 type: 'soon',
                 label: `En ${diffMins} min`,
-                color: 'text-orange-600 bg-orange-50 border-orange-200',
+                color: 'text-orange-600 bg-orange-50 dark:bg-orange-900/30 border-orange-200 dark:border-orange-800',
                 animate: true,
             }
         }
-
-        // 2. EN CURSO: Desde el minuto 0 hasta 60 min después (-60)
-        // Ejemplo: Si son las 10:30 y el evento fue 10:00, diffMins es -30. (Mostrar "En curso")
-        // Si son las 11:01, diffMins es -61. (Ocultar)
         if (diffMins <= 0 && diffMins > -60) {
             return {
                 type: 'now',
                 label: 'En curso',
-                color: 'text-red-600 bg-red-50 border-red-200',
+                color: 'text-red-600 bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800',
                 animate: true,
             }
         }
-
-        // Si diffMins < -60 (ya pasó hace más de una hora), retorna null (sin alerta)
         return null
     }
 
@@ -654,18 +640,14 @@ const AgendaWidget = ({ userId }: { userId?: string }) => {
         month: 'long',
         year: 'numeric',
     })
-
-    // Corregimos la comparación de fechas usando Strings simples para evitar problemas de zona horaria
     const todayStr = new Date().toLocaleDateString('en-CA')
-
     const displayEvents = selectedDate
         ? events.filter((e) => e.date === selectedDate)
         : events.filter((e) => e.date >= todayStr)
 
     return (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden sticky top-6">
-            {/* (El resto del JSX del calendario se mantiene igual) */}
-            <div className="bg-slate-50 p-4 border-b border-slate-100">
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden sticky top-6">
+            <div className="bg-slate-50 dark:bg-slate-900 p-4 border-b border-slate-100 dark:border-slate-700">
                 <div className="flex justify-between items-center mb-4">
                     <button
                         onClick={() =>
@@ -677,11 +659,11 @@ const AgendaWidget = ({ userId }: { userId?: string }) => {
                                 )
                             )
                         }
-                        className="p-1 hover:bg-slate-200 rounded"
+                        className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-600 dark:text-slate-300"
                     >
                         <ChevronLeft className="w-4 h-4" />
                     </button>
-                    <span className="font-bold text-slate-800 capitalize text-sm">
+                    <span className="font-bold text-slate-800 dark:text-white capitalize text-sm">
                         {monthName}
                     </span>
                     <button
@@ -694,14 +676,17 @@ const AgendaWidget = ({ userId }: { userId?: string }) => {
                                 )
                             )
                         }
-                        className="p-1 hover:bg-slate-200 rounded"
+                        className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-600 dark:text-slate-300"
                     >
                         <ChevronRight className="w-4 h-4" />
                     </button>
                 </div>
                 <div className="grid grid-cols-7 text-center text-xs gap-1 mb-1">
                     {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map((d, i) => (
-                        <span key={i} className="text-slate-400 font-bold">
+                        <span
+                            key={i}
+                            className="text-slate-400 dark:text-slate-500 font-bold"
+                        >
                             {d}
                         </span>
                     ))}
@@ -744,8 +729,8 @@ const AgendaWidget = ({ userId }: { userId?: string }) => {
                                         isSelected
                                             ? 'bg-brand-600 text-white font-bold'
                                             : isToday
-                                            ? 'bg-brand-100 text-brand-700 font-bold'
-                                            : 'hover:bg-slate-100 text-slate-700'
+                                            ? 'bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-400 font-bold'
+                                            : 'hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
                                     }`}
                                 >
                                     {day}
@@ -760,7 +745,7 @@ const AgendaWidget = ({ userId }: { userId?: string }) => {
                     <div className="mt-3 text-center">
                         <button
                             onClick={() => setSelectedDate(null)}
-                            className="text-xs text-brand-600 hover:underline"
+                            className="text-xs text-brand-600 dark:text-brand-400 hover:underline"
                         >
                             Ver todos los eventos
                         </button>
@@ -770,13 +755,13 @@ const AgendaWidget = ({ userId }: { userId?: string }) => {
             <div className="p-4 space-y-4 max-h-[500px] overflow-y-auto custom-scrollbar">
                 <form
                     onSubmit={handleAddEvent}
-                    className="space-y-2 bg-slate-50 p-3 rounded-lg border border-slate-200"
+                    className="space-y-2 bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-700"
                 >
                     <input
                         type="text"
                         required
                         placeholder="Título..."
-                        className="w-full p-2 text-sm border rounded"
+                        className="w-full p-2 text-sm border dark:border-slate-600 dark:bg-slate-800 dark:text-white rounded"
                         value={newEvent.title}
                         onChange={(e) =>
                             setNewEvent({ ...newEvent, title: e.target.value })
@@ -785,7 +770,7 @@ const AgendaWidget = ({ userId }: { userId?: string }) => {
                     <div className="relative">
                         <textarea
                             placeholder="Descripción (Opcional)"
-                            className="w-full p-2 text-sm border rounded h-16 resize-none"
+                            className="w-full p-2 text-sm border dark:border-slate-600 dark:bg-slate-800 dark:text-white rounded h-16 resize-none"
                             value={newEvent.desc}
                             onChange={(e) =>
                                 setNewEvent({
@@ -799,7 +784,7 @@ const AgendaWidget = ({ userId }: { userId?: string }) => {
                         <input
                             type="date"
                             required
-                            className="flex-1 p-2 text-sm border rounded"
+                            className="flex-1 p-2 text-sm border dark:border-slate-600 dark:bg-slate-800 dark:text-white rounded"
                             value={newEvent.date}
                             onChange={(e) =>
                                 setNewEvent({
@@ -810,7 +795,7 @@ const AgendaWidget = ({ userId }: { userId?: string }) => {
                         />
                         <input
                             type="time"
-                            className="w-20 p-2 text-sm border rounded"
+                            className="w-20 p-2 text-sm border dark:border-slate-600 dark:bg-slate-800 dark:text-white rounded"
                             value={newEvent.time}
                             onChange={(e) =>
                                 setNewEvent({
@@ -823,7 +808,7 @@ const AgendaWidget = ({ userId }: { userId?: string }) => {
                     <input
                         type="url"
                         placeholder="Link de Reunión (Meet/Zoom)"
-                        className="w-full p-2 text-sm border rounded"
+                        className="w-full p-2 text-sm border dark:border-slate-600 dark:bg-slate-800 dark:text-white rounded"
                         value={newEvent.link}
                         onChange={(e) =>
                             setNewEvent({ ...newEvent, link: e.target.value })
@@ -831,7 +816,7 @@ const AgendaWidget = ({ userId }: { userId?: string }) => {
                     />
                     <button
                         type="submit"
-                        className="w-full bg-slate-800 text-white py-1.5 rounded text-xs font-bold hover:bg-black flex items-center justify-center gap-1"
+                        className="w-full bg-slate-800 dark:bg-slate-700 text-white py-1.5 rounded text-xs font-bold hover:bg-black dark:hover:bg-slate-600 flex items-center justify-center gap-1"
                     >
                         <Plus className="w-3 h-3" /> Agregar a la agenda
                     </button>
@@ -843,22 +828,20 @@ const AgendaWidget = ({ userId }: { userId?: string }) => {
                 ) : (
                     <div className="space-y-2">
                         {displayEvents.map((ev) => {
-                            // AQUÍ LLAMAMOS A LA FUNCIÓN QUE SE ACTUALIZA CON 'currentTime'
                             const status = getEventStatus(ev.date, ev.time)
-
                             return (
                                 <div
                                     key={ev.id}
-                                    className={`group relative flex flex-col gap-1 p-3 rounded-lg border transition-colors bg-white ${
+                                    className={`group relative flex flex-col gap-1 p-3 rounded-lg border transition-colors bg-white dark:bg-slate-800 ${
                                         status?.type === 'now'
-                                            ? 'border-red-300 shadow-sm'
-                                            : 'border-slate-100 hover:border-brand-200'
+                                            ? 'border-red-300 dark:border-red-800 shadow-sm'
+                                            : 'border-slate-100 dark:border-slate-700 hover:border-brand-200 dark:hover:border-brand-800'
                                     }`}
                                 >
                                     <div className="flex items-start justify-between">
                                         <div className="flex items-center gap-2">
-                                            <div className="text-center bg-slate-100 px-2 py-1 rounded min-w-[40px]">
-                                                <span className="block text-[10px] text-slate-500 uppercase">
+                                            <div className="text-center bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded min-w-[40px]">
+                                                <span className="block text-[10px] text-slate-500 dark:text-slate-400 uppercase">
                                                     {new Date(
                                                         ev.date
                                                     ).toLocaleString('es-ES', {
@@ -866,24 +849,23 @@ const AgendaWidget = ({ userId }: { userId?: string }) => {
                                                         timeZone: 'UTC',
                                                     })}
                                                 </span>
-                                                <span className="block text-sm font-bold text-slate-800">
+                                                <span className="block text-sm font-bold text-slate-800 dark:text-white">
                                                     {new Date(
                                                         ev.date
                                                     ).getUTCDate()}
                                                 </span>
                                             </div>
                                             <div>
-                                                <p className="text-sm font-bold text-slate-800 leading-tight">
+                                                <p className="text-sm font-bold text-slate-800 dark:text-white leading-tight">
                                                     {ev.title}
                                                 </p>
                                                 <div className="flex items-center gap-2 mt-0.5">
                                                     {ev.time && (
-                                                        <span className="flex items-center gap-1 text-xs text-slate-500">
+                                                        <span className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
                                                             <Clock className="w-3 h-3" />{' '}
                                                             {ev.time}
                                                         </span>
                                                     )}
-                                                    {/* ALERTA VISUAL */}
                                                     {status && (
                                                         <span
                                                             className={`text-[10px] font-bold px-1.5 py-0.5 rounded border flex items-center gap-1 relative ${status.color}`}
@@ -908,7 +890,7 @@ const AgendaWidget = ({ userId }: { userId?: string }) => {
                                         </button>
                                     </div>
                                     {ev.desc && (
-                                        <div className="mt-1 text-xs text-slate-600 bg-slate-50 p-2 rounded border border-slate-100 flex gap-2 items-start">
+                                        <div className="mt-1 text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-700/50 p-2 rounded border border-slate-100 dark:border-slate-700 flex gap-2 items-start">
                                             <AlignLeft className="w-3 h-3 mt-0.5 text-slate-400 shrink-0" />
                                             <p className="leading-relaxed">
                                                 {ev.desc}
@@ -920,7 +902,7 @@ const AgendaWidget = ({ userId }: { userId?: string }) => {
                                             href={ev.link}
                                             target="_blank"
                                             rel="noreferrer"
-                                            className="mt-1 w-fit inline-flex items-center gap-1 text-[10px] text-brand-700 bg-brand-50 px-2 py-1 rounded-full hover:bg-brand-100 border border-brand-100"
+                                            className="mt-1 w-fit inline-flex items-center gap-1 text-[10px] text-brand-700 dark:text-brand-300 bg-brand-50 dark:bg-brand-900/30 px-2 py-1 rounded-full hover:bg-brand-100 dark:hover:bg-brand-900/50 border border-brand-100 dark:border-brand-800"
                                         >
                                             <Video className="w-3 h-3" /> Unirse
                                             a reunión

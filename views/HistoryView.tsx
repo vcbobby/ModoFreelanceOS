@@ -22,9 +22,7 @@ import {
     Search,
     ChevronLeft,
     ChevronRight,
-    AlertTriangle,
     Image as ImageIcon,
-    ExternalLink, // Nuevos iconos
     Download,
     FileText,
     QrCode,
@@ -40,8 +38,6 @@ interface HistoryViewProps {
 export const HistoryView: React.FC<HistoryViewProps> = ({ userId }) => {
     const [history, setHistory] = useState<HistoryItem[]>([])
     const [loading, setLoading] = useState(true)
-
-    // Estados para Buscador y Paginación
     const [searchTerm, setSearchTerm] = useState('')
     const [currentPage, setCurrentPage] = useState(1)
     const itemsPerPage = 5
@@ -53,7 +49,6 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ userId }) => {
         isDanger: false,
     })
 
-    // 1. CARGAR HISTORIAL (Limitado a los últimos 100 para optimizar)
     useEffect(() => {
         const fetchHistory = async () => {
             if (!userId) return
@@ -61,18 +56,16 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ userId }) => {
                 const q = query(
                     collection(db, 'users', userId, 'history'),
                     orderBy('createdAt', 'desc'),
-                    limit(100) // TRAEMOS SOLO LOS ÚLTIMOS 100
+                    limit(100)
                 )
                 const querySnapshot = await getDocs(q)
                 const loadedHistory: HistoryItem[] = []
-
                 querySnapshot.forEach((doc) => {
                     loadedHistory.push({
                         id: doc.id,
                         ...doc.data(),
                     } as HistoryItem)
                 })
-
                 setHistory(loadedHistory)
             } catch (error) {
                 console.error('Error cargando historial', error)
@@ -80,11 +73,9 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ userId }) => {
                 setLoading(false)
             }
         }
-
         fetchHistory()
     }, [userId])
 
-    // 2. BORRAR UN ITEM
     const handleDelete = (id: string) => {
         if (!userId) return
         confirmAction(
@@ -94,7 +85,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ userId }) => {
                 await deleteDoc(doc(db, 'users', userId, 'history', id))
                 setHistory((prev) => prev.filter((item) => item.id !== id))
             },
-            true // es peligroso (rojo)
+            true
         )
     }
     const confirmAction = (
@@ -106,7 +97,6 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ userId }) => {
         setModalConfig({ title, message, action, isDanger })
         setIsModalOpen(true)
     }
-    // 3. VACIAR TODO EL HISTORIAL (Batch Delete)
     const handleClearAll = () => {
         if (!userId || history.length === 0) return
         confirmAction(
@@ -134,11 +124,10 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ userId }) => {
                     setLoading(false)
                 }
             },
-            true // es peligroso
+            true
         )
     }
 
-    // 4. LÓGICA DE FILTRADO
     const filteredHistory = history.filter((item) => {
         const term = searchTerm.toLowerCase()
         return (
@@ -148,7 +137,6 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ userId }) => {
         )
     })
 
-    // 5. LÓGICA DE PAGINACIÓN
     const totalPages = Math.ceil(filteredHistory.length / itemsPerPage)
     const startIndex = (currentPage - 1) * itemsPerPage
     const currentItems = filteredHistory.slice(
@@ -156,33 +144,34 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ userId }) => {
         startIndex + itemsPerPage
     )
 
-    // Resetear a página 1 si buscas algo nuevo
     useEffect(() => {
         setCurrentPage(1)
     }, [searchTerm])
 
     if (loading)
-        return <div className="p-8 text-center text-slate-500">Cargando...</div>
+        return (
+            <div className="p-8 text-center text-slate-500 dark:text-slate-400">
+                Cargando...
+            </div>
+        )
 
     return (
         <div className="max-w-4xl mx-auto min-h-screen pb-20">
-            {/* ENCABEZADO Y BUSCADOR */}
             <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                         <span className="text-brand-600">📜</span> Historial
                     </h2>
-                    <p className="text-sm text-slate-500 mt-1">
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
                         Tus últimas 100 generaciones guardadas.
                     </p>
                 </div>
 
                 <div className="flex gap-2 w-full md:w-auto">
-                    {/* Botón Vaciar */}
                     {history.length > 0 && (
                         <button
                             onClick={handleClearAll}
-                            className="px-3 py-2 text-red-600 border border-red-200 bg-red-50 rounded-lg hover:bg-red-100 transition-colors flex items-center gap-2 text-sm font-medium"
+                            className="px-3 py-2 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/10 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors flex items-center gap-2 text-sm font-medium"
                             title="Vaciar Historial"
                         >
                             <Trash2 className="w-4 h-4" />
@@ -192,34 +181,31 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ userId }) => {
                 </div>
             </div>
 
-            {/* BARRA DE BÚSQUEDA */}
             <div className="relative mb-6">
                 <Search className="absolute left-3 top-3 text-slate-400 w-5 h-5" />
                 <input
                     type="text"
                     placeholder="Buscar por cliente, contenido o tipo..."
-                    className="w-full pl-10 p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none text-slate-700 bg-white shadow-sm"
+                    className="w-full pl-10 p-3 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
             </div>
 
-            {/* LISTA VACÍA */}
             {filteredHistory.length === 0 && (
-                <div className="text-center py-20 bg-white rounded-xl border border-slate-200">
-                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-300 mb-4">
+                <div className="text-center py-20 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <div className="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto text-slate-300 dark:text-slate-500 mb-4">
                         <Search className="w-8 h-8" />
                     </div>
-                    <h3 className="text-lg font-bold text-slate-700">
+                    <h3 className="text-lg font-bold text-slate-700 dark:text-slate-300">
                         No se encontraron resultados
                     </h3>
-                    <p className="text-slate-500">
+                    <p className="text-slate-500 dark:text-slate-400">
                         Intenta con otra búsqueda o genera una nueva propuesta.
                     </p>
                 </div>
             )}
 
-            {/* ITEMS DEL HISTORIAL */}
             <div className="space-y-4">
                 {currentItems.map((item) => {
                     if (item.category === 'logo')
@@ -230,7 +216,6 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ userId }) => {
                                 onDelete={() => handleDelete(item.id)}
                             />
                         )
-                    // NUEVO: Si es factura
                     if (item.category === 'invoice')
                         return (
                             <InvoiceHistoryCard
@@ -250,7 +235,6 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ userId }) => {
                 })}
             </div>
 
-            {/* PAGINACIÓN */}
             {filteredHistory.length > itemsPerPage && (
                 <div className="flex justify-center items-center gap-4 mt-8">
                     <button
@@ -258,12 +242,12 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ userId }) => {
                             setCurrentPage((p) => Math.max(1, p - 1))
                         }
                         disabled={currentPage === 1}
-                        className="p-2 rounded-lg border border-slate-200 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        <ChevronLeft className="w-5 h-5 text-slate-600" />
+                        <ChevronLeft className="w-5 h-5 text-slate-600 dark:text-slate-400" />
                     </button>
 
-                    <span className="text-sm font-medium text-slate-600">
+                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
                         Página {currentPage} de {totalPages}
                     </span>
 
@@ -272,13 +256,12 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ userId }) => {
                             setCurrentPage((p) => Math.min(totalPages, p + 1))
                         }
                         disabled={currentPage === totalPages}
-                        className="p-2 rounded-lg border border-slate-200 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        <ChevronRight className="w-5 h-5 text-slate-600" />
+                        <ChevronRight className="w-5 h-5 text-slate-600 dark:text-slate-400" />
                     </button>
                 </div>
             )}
-            {/* MODAL GLOBAL */}
             <ConfirmationModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
@@ -292,7 +275,6 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ userId }) => {
     )
 }
 
-// --- COMPONENTE TARJETA (Igual que antes, con pequeña mejora visual) ---
 const HistoryCard = ({
     item,
     onDelete,
@@ -304,7 +286,6 @@ const HistoryCard = ({
     const [copied, setCopied] = useState(false)
 
     const handleCopy = () => {
-        // Limpieza básica antes de copiar
         const cleanText = item.content
             .replace(/\*\*/g, '')
             .replace(/^#+\s/gm, '')
@@ -322,24 +303,24 @@ const HistoryCard = ({
         })
 
     return (
-        <div className="bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-            <div className="p-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+            <div className="p-4 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
                 <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
                     <span
                         className={`text-xs font-bold px-2 py-1 rounded-md uppercase w-fit ${
                             item.type === 'Formal'
-                                ? 'bg-blue-100 text-blue-700'
+                                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
                                 : item.type === 'Corto'
-                                ? 'bg-orange-100 text-orange-700'
-                                : 'bg-purple-100 text-purple-700'
+                                ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'
+                                : 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
                         }`}
                     >
                         {item.type}
                     </span>
-                    <div className="flex items-center gap-1 text-xs text-slate-500">
+                    <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
                         <Calendar className="w-3 h-3" /> {dateStr}
                     </div>
-                    <div className="flex items-center gap-1 text-xs font-bold text-slate-700">
+                    <div className="flex items-center gap-1 text-xs font-bold text-slate-700 dark:text-slate-300">
                         <User className="w-3 h-3" />{' '}
                         {item.clientName || 'Cliente'}
                     </div>
@@ -356,7 +337,7 @@ const HistoryCard = ({
 
             <div className="p-5">
                 <div
-                    className={`prose prose-sm max-w-none text-slate-600 ${
+                    className={`prose prose-sm dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 ${
                         !expanded ? 'line-clamp-3' : ''
                     }`}
                 >
@@ -383,10 +364,10 @@ const HistoryCard = ({
                     )}
                 </div>
 
-                <div className="mt-4 flex justify-between items-center border-t border-slate-100 pt-3">
+                <div className="mt-4 flex justify-between items-center border-t border-slate-100 dark:border-slate-700 pt-3">
                     <button
                         onClick={() => setExpanded(!expanded)}
-                        className="text-sm font-bold text-brand-600 hover:text-brand-800 flex items-center gap-1"
+                        className="text-sm font-bold text-brand-600 dark:text-brand-400 hover:text-brand-800 dark:hover:text-brand-300 flex items-center gap-1"
                     >
                         {expanded ? (
                             <>
@@ -402,10 +383,10 @@ const HistoryCard = ({
                     {expanded && (
                         <button
                             onClick={handleCopy}
-                            className="text-sm text-slate-500 hover:text-slate-900 flex items-center gap-1"
+                            className="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-1"
                         >
                             {copied ? (
-                                <CheckCircle2 className="w-4 h-4 text-green-600" />
+                                <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
                             ) : (
                                 <Copy className="w-4 h-4" />
                             )}
@@ -417,7 +398,7 @@ const HistoryCard = ({
         </div>
     )
 }
-// --- COMPONENTE TARJETA DE LOGO (MEJORADO) ---
+
 const LogoHistoryCard = ({
     item,
     onDelete,
@@ -428,10 +409,7 @@ const LogoHistoryCard = ({
     const [showImage, setShowImage] = useState(false)
     const [copied, setCopied] = useState(false)
     const [isDownloading, setIsDownloading] = useState(false)
-
-    // DETECTAR SI ES UN QR (Basado en la plataforma o tipo guardado)
     const isQR = item.platform === 'QR Generator' || item.type === 'QR Code'
-
     const dateStr =
         new Date(item.createdAt).toLocaleDateString() +
         ' ' +
@@ -444,14 +422,12 @@ const LogoHistoryCard = ({
         const textToCopy = `Tipo: ${isQR ? 'QR' : 'Logo'}\nNombre: ${
             item.clientName
         }\nContenido: ${item.content}`
-
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(textToCopy).then(() => {
                 setCopied(true)
                 setTimeout(() => setCopied(false), 2000)
             })
         } else {
-            // Fallback simple
             alert('Texto copiado: ' + textToCopy)
         }
     }
@@ -465,7 +441,6 @@ const LogoHistoryCard = ({
             const blobUrl = window.URL.createObjectURL(blob)
             const link = document.createElement('a')
             link.href = blobUrl
-            // Cambiamos el nombre del archivo según si es QR o Logo
             link.download = `${isQR ? 'qr' : 'logo'}-${item.clientName
                 .replace(/\s+/g, '-')
                 .toLowerCase()}-${Date.now()}.png`
@@ -481,16 +456,14 @@ const LogoHistoryCard = ({
     }
 
     return (
-        <div className="bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-            {/* ENCABEZADO */}
-            <div className="p-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+            <div className="p-4 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
                 <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
-                    {/* ETIQUETA DINÁMICA (QR o LOGO) */}
                     <span
                         className={`text-xs font-bold px-2 py-1 rounded-md uppercase flex items-center gap-1 w-fit ${
                             isQR
-                                ? 'bg-slate-200 text-slate-700'
-                                : 'bg-purple-100 text-purple-700'
+                                ? 'bg-slate-200 text-slate-700 dark:bg-slate-600 dark:text-slate-200'
+                                : 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
                         }`}
                     >
                         {isQR ? (
@@ -501,10 +474,10 @@ const LogoHistoryCard = ({
                         {isQR ? 'QR' : 'LOGO'}
                     </span>
 
-                    <div className="flex items-center gap-1 text-xs text-slate-500">
+                    <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
                         <Calendar className="w-3 h-3" /> {dateStr}
                     </div>
-                    <span className="text-sm font-bold text-slate-800">
+                    <span className="text-sm font-bold text-slate-800 dark:text-white">
                         {item.clientName}
                     </span>
                 </div>
@@ -517,12 +490,10 @@ const LogoHistoryCard = ({
                 </button>
             </div>
 
-            {/* CUERPO */}
             <div className="p-5 flex flex-col sm:flex-row gap-6 items-start">
-                {/* IMAGEN */}
                 <div className="w-full sm:w-40 shrink-0">
                     <div
-                        className="aspect-square bg-slate-100 rounded-lg overflow-hidden border border-slate-200 flex items-center justify-center relative group cursor-pointer"
+                        className="aspect-square bg-slate-100 dark:bg-slate-900 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 flex items-center justify-center relative group cursor-pointer"
                         onClick={() => setShowImage(!showImage)}
                     >
                         {item.imageUrl ? (
@@ -535,7 +506,7 @@ const LogoHistoryCard = ({
                                 loading="lazy"
                             />
                         ) : (
-                            <ImageIcon className="w-10 h-10 text-slate-300" />
+                            <ImageIcon className="w-10 h-10 text-slate-300 dark:text-slate-600" />
                         )}
 
                         {!showImage && (
@@ -546,7 +517,7 @@ const LogoHistoryCard = ({
                     <button
                         onClick={handleReDownload}
                         disabled={isDownloading}
-                        className="mt-2 w-full py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-md flex items-center justify-center gap-1 transition-colors"
+                        className="mt-2 w-full py-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-md flex items-center justify-center gap-1 transition-colors"
                     >
                         {isDownloading ? (
                             <span className="animate-pulse">Bajando...</span>
@@ -558,33 +529,32 @@ const LogoHistoryCard = ({
                     </button>
                 </div>
 
-                {/* DATOS */}
                 <div className="flex-1 w-full">
                     <div className="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                                 Tipo
                             </span>
-                            <p className="text-sm font-medium text-slate-700">
+                            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
                                 {item.type}
                             </p>
                         </div>
                         <div>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                                 Nombre
                             </span>
-                            <p className="text-sm font-medium text-slate-700">
+                            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
                                 {item.clientName}
                             </p>
                         </div>
                     </div>
 
                     <div className="mb-4">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                             {isQR ? 'Contenido del QR' : 'Prompt / Detalles'}
                         </span>
                         <div
-                            className={`text-sm text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 italic ${
+                            className={`text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border border-slate-100 dark:border-slate-700 italic ${
                                 !showImage ? 'line-clamp-2' : ''
                             } break-all`}
                         >
@@ -594,10 +564,10 @@ const LogoHistoryCard = ({
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-3 pt-2 border-t border-slate-100">
+                    <div className="flex flex-wrap gap-3 pt-2 border-t border-slate-100 dark:border-slate-700">
                         <button
                             onClick={() => setShowImage(!showImage)}
-                            className="text-sm font-bold text-brand-600 hover:text-brand-800 flex items-center gap-1"
+                            className="text-sm font-bold text-brand-600 dark:text-brand-400 hover:text-brand-800 dark:hover:text-brand-300 flex items-center gap-1"
                         >
                             {showImage ? (
                                 <>
@@ -613,10 +583,10 @@ const LogoHistoryCard = ({
 
                         <button
                             onClick={handleCopyDescription}
-                            className="text-sm text-slate-500 hover:text-slate-900 flex items-center gap-1 ml-auto"
+                            className="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-1 ml-auto"
                         >
                             {copied ? (
-                                <CheckCircle2 className="w-4 h-4 text-green-600" />
+                                <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
                             ) : (
                                 <Copy className="w-4 h-4" />
                             )}
@@ -625,7 +595,7 @@ const LogoHistoryCard = ({
                     </div>
 
                     {showImage && item.imageUrl && (
-                        <div className="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200 flex justify-center">
+                        <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 flex justify-center">
                             <img
                                 src={item.imageUrl}
                                 alt="Full Size"
@@ -638,6 +608,7 @@ const LogoHistoryCard = ({
         </div>
     )
 }
+
 const InvoiceHistoryCard = ({
     item,
     onDelete,
@@ -648,7 +619,6 @@ const InvoiceHistoryCard = ({
     const [isDownloading, setIsDownloading] = useState(false)
     const dateStr = new Date(item.createdAt).toLocaleDateString()
 
-    // Función para regenerar el PDF desde el JSON guardado
     const handleRedownload = () => {
         setIsDownloading(true)
         const data = item.invoiceData
@@ -665,12 +635,9 @@ const InvoiceHistoryCard = ({
             'text-align: left; padding: 10px; background-color: #f8f8f8; font-weight: bold; font-size: 12px; border-bottom: 2px solid #ddd;'
         const cellStyle =
             'padding: 10px; border-bottom: 1px solid #eee; font-size: 13px;'
-        // Creamos un HTML temporal en memoria para imprimir
         const content = document.createElement('div')
         content.innerHTML = `
             <div style="${containerStyle}">
-                
-                <!-- HEADER -->
                 <div style="${headerStyle}">
                     <div style="width: 50%;">
                         ${
@@ -682,8 +649,6 @@ const InvoiceHistoryCard = ({
                             <strong>${
                                 data.sender.name || 'Emisor'
                             }</strong><br/>
-                            
-                            <!-- SOLO DATOS PUROS -->
                             ${
                                 data.sender.idDoc
                                     ? `${data.sender.idDoc}<br/>`
@@ -694,7 +659,6 @@ const InvoiceHistoryCard = ({
                                     ? `${data.sender.phone}<br/>`
                                     : ''
                             }
-                            
                             ${data.sender.email}<br/>
                             <span style="white-space: pre-line;">${
                                 data.sender.address
@@ -715,27 +679,20 @@ const InvoiceHistoryCard = ({
                         </div>
                     </div>
                 </div>
-
-                <!-- CLIENTE -->
                 <div style="margin-bottom: 40px;">
                     <div style="${labelStyle}">FACTURAR A:</div>
                     <div style="font-size: 18px; font-weight: bold; margin-bottom: 5px;">${
                         data.client.name
                     }</div>
                     <div style="font-size: 14px; color: #555; line-height: 1.4;">
-                        
-                        <!-- SOLO DATOS PUROS -->
                         ${data.client.idDoc ? `${data.client.idDoc}<br/>` : ''}
                         ${data.client.phone ? `${data.client.phone}<br/>` : ''}
-                        
                         ${data.client.email}<br/>
                         <span style="white-space: pre-line;">${
                             data.client.address
                         }</span>
                     </div>
                 </div>
-
-                <!-- TABLA (Igual que antes) -->
                 <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
                     <thead>
                         <tr>
@@ -766,8 +723,6 @@ const InvoiceHistoryCard = ({
                             .join('')}
                     </tbody>
                 </table>
-
-                <!-- TOTALES (Igual que antes) -->
                 <div style="display: flex; justify-content: flex-end;">
                     <div style="width: 250px;">
                         <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee;">
@@ -795,8 +750,6 @@ const InvoiceHistoryCard = ({
                         </div>
                     </div>
                 </div>
-
-                <!-- NOTAS -->
                 <div style="margin-top: 50px; padding-top: 20px; border-top: 1px solid #ddd;">
                     <div style="${labelStyle}">NOTAS / TÉRMINOS</div>
                     <p style="font-size: 13px; color: #666; white-space: pre-line;">${
@@ -805,7 +758,6 @@ const InvoiceHistoryCard = ({
                 </div>
             </div>
         `
-
         const opt = {
             margin: 10,
             filename: `copia-factura-${data.invoiceNumber}.pdf`,
@@ -813,7 +765,6 @@ const InvoiceHistoryCard = ({
             html2canvas: { scale: 2 },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         }
-
         html2pdf()
             .set(opt)
             .from(content)
@@ -824,16 +775,16 @@ const InvoiceHistoryCard = ({
     }
 
     return (
-        <div className="bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-            <div className="p-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+            <div className="p-4 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
                 <div className="flex items-center gap-3">
-                    <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-md uppercase flex items-center gap-1">
+                    <span className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-bold px-2 py-1 rounded-md uppercase flex items-center gap-1">
                         <FileText className="w-3 h-3" /> FACTURA
                     </span>
-                    <span className="text-xs text-slate-500 font-medium">
+                    <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                         {dateStr}
                     </span>
-                    <span className="text-sm font-bold text-slate-800">
+                    <span className="text-sm font-bold text-slate-800 dark:text-white">
                         {item.clientName}
                     </span>
                 </div>
@@ -845,12 +796,14 @@ const InvoiceHistoryCard = ({
                 </button>
             </div>
             <div className="p-5">
-                <p className="text-sm text-slate-600 mb-4">{item.content}</p>
+                <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">
+                    {item.content}
+                </p>
                 <div className="flex gap-3">
                     <button
                         onClick={handleRedownload}
                         disabled={isDownloading}
-                        className="text-sm font-bold text-brand-600 hover:text-brand-800 flex items-center gap-2 border border-brand-200 px-3 py-1.5 rounded-lg hover:bg-brand-50 transition-colors"
+                        className="text-sm font-bold text-brand-600 dark:text-brand-400 hover:text-brand-800 dark:hover:text-brand-300 flex items-center gap-2 border border-brand-200 dark:border-brand-800 px-3 py-1.5 rounded-lg hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors"
                     >
                         {isDownloading ? (
                             <span className="animate-pulse">Generando...</span>
