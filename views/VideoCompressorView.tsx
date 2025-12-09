@@ -14,7 +14,9 @@ import { Button, Card } from '../components/ui'
 import ReactMarkdown from 'react-markdown'
 // Importar FFmpeg
 // import { FFmpeg } from '@ffmpeg/ffmpeg'
-import { toBlobURL } from '@ffmpeg/util'
+// import { toBlobURL } from '@ffmpeg/util'
+declare const FFmpeg: any
+declare const toBlobURL: any
 
 interface VideoCompressorViewProps {
     onUsage: (cost: number) => Promise<boolean>
@@ -42,10 +44,10 @@ export const VideoCompressorView: React.FC<VideoCompressorViewProps> = ({
     // --- 1. Inicializar FFmpeg ---
     useEffect(() => {
         const loadFFmpeg = async () => {
-            // Importación dinámica SÍ funciona con Vercel/Vite
+            // Importamos dinámicamente y la instancia de la librería
             const { FFmpeg } = await import('@ffmpeg/ffmpeg')
+            const { toBlobURL } = await import('@ffmpeg/util')
 
-            // Creamos la instancia
             const ffmpeg = new FFmpeg()
             ffmpegRef.current = ffmpeg
 
