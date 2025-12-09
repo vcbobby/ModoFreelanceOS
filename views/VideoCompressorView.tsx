@@ -12,11 +12,17 @@ import {
 } from 'lucide-react'
 import { Button, Card } from '../components/ui'
 import ReactMarkdown from 'react-markdown'
-// Importar FFmpeg
-// import { FFmpeg } from '@ffmpeg/ffmpeg'
-// import { toBlobURL } from '@ffmpeg/util'
 declare const FFmpeg: any
 declare const toBlobURL: any
+
+interface FFmpegInterface {
+    load: (options: { coreURL: string; wasmURL: string }) => Promise<void>
+    on: (type: string, callback: (log: { message: string }) => void) => void
+    writeFile: (name: string, data: Uint8Array) => Promise<void>
+    exec: (args: string[]) => Promise<void>
+    readFile: (name: string) => Promise<Uint8Array>
+    deleteFile: (name: string) => Promise<void>
+}
 
 interface VideoCompressorViewProps {
     onUsage: (cost: number) => Promise<boolean>
@@ -38,15 +44,17 @@ export const VideoCompressorView: React.FC<VideoCompressorViewProps> = ({
     const [statusMessage, setStatusMessage] = useState<string | null>(null)
 
     // FFmpeg Instance
-    const ffmpegRef = useRef<FFmpeg | null>(null) // Usamos null al inicio
+    const ffmpegRef = useRef<FFmpegInterface | null>(null)
     const messageRef = useRef<HTMLDivElement>(null)
 
     // --- 1. Inicializar FFmpeg ---
     useEffect(() => {
         const loadFFmpeg = async () => {
             // Importamos dinámicamente y la instancia de la librería
-            const { FFmpeg } = await import('@ffmpeg/ffmpeg')
-            const { toBlobURL } = await import('@ffmpeg/util')
+            const [{ FFmpeg }, { toBlobURL }] = await Promise.all([
+                import('@ffmpeg/ffmpeg'),
+                import('@ffmpeg/util'),
+            ])
 
             const ffmpeg = new FFmpeg()
             ffmpegRef.current = ffmpeg
@@ -54,7 +62,8 @@ export const VideoCompressorView: React.FC<VideoCompressorViewProps> = ({
             const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm'
 
             try {
-                // Monta los core files
+                setStatusMessage('Cargando motor de video (20MB)...')
+
                 await ffmpeg.load({
                     coreURL: await toBlobURL(
                         `${baseURL}/ffmpeg-core.js`,
@@ -70,14 +79,17 @@ export const VideoCompressorView: React.FC<VideoCompressorViewProps> = ({
             } catch (error) {
                 console.error('Error al cargar FFmpeg', error)
                 setStatusMessage(
-                    'Error: No se pudo cargar la herramienta de video.'
+                    'Error: No se pudo cargar la herramienta de video. Intenta recargar.'
                 )
             }
         }
 
-        loadFFmpeg()
-        // Limpiar URL del blob al desmontar
+        if (!ffmpegRef.current) {
+            loadFFmpeg()
+        }
+
         return () => {
+            // Limpieza
             if (videoBlobUrl) URL.revokeObjectURL(videoBlobUrl)
         }
     }, [])
@@ -157,7 +169,13 @@ export const VideoCompressorView: React.FC<VideoCompressorViewProps> = ({
         content: string,
         newFileName: string
     ) => {
-        if (!selectedFile || isFFmpegLoading) return
+        // Doble chequeo
+        if (!selectedFile || isFFmpegLoading || !ffmpegRef.current) {
+            setStatusMessage(
+                'Error: Motor de FFmpeg no cargado o archivo no seleccionado.'
+            )
+            return
+        }
 
         setLoading(true)
         const ffmpeg = ffmpegRef.current
@@ -169,16 +187,18 @@ export const VideoCompressorView: React.FC<VideoCompressorViewProps> = ({
                 selectedFile.name,
                 new Uint8Array(await selectedFile.arrayBuffer())
             )
-            setStatusMessage('Archivo de video cargado en memoria.')
+            setStatusMessage(
+                'Archivo de video cargado en memoria. Procesando...'
+            )
 
             // Ejecuta el comando de compresión o corte
             await ffmpeg.exec(ffmpegArgs)
-            setStatusMessage('Procesamiento completado.')
+            setStatusMessage('Procesamiento completado. Descargando...')
 
             // Lee el resultado y crea un Blob
             const data = await ffmpeg.readFile(outputFileName)
             const blob = new Blob([data], { type: 'video/mp4' })
-            const url = URL.createObjectURL(blob)
+            const url = window.URL.createObjectURL(blob) // Usamos window.URL para evitar la importación toBlobURL
 
             // Descarga el archivo
             const a = document.createElement('a')
@@ -187,12 +207,14 @@ export const VideoCompressorView: React.FC<VideoCompressorViewProps> = ({
             document.body.appendChild(a)
             a.click()
             a.remove()
+
+            setStatusMessage(
+                `✅ Éxito: ${newFileName} descargado. Listo para otro.`
+            )
         } catch (error) {
             console.error('FFmpeg ERROR:', error)
             setStatusMessage(
-                `⚠️ Error en FFmpeg: ${
-                    (error as Error).message
-                }. Archivo no procesado.`
+                `⚠️ Error en FFmpeg: El procesamiento falló. Intenta con un archivo MP4 más pequeño.`
             )
         } finally {
             setLoading(false)
@@ -335,7 +357,7 @@ export const VideoCompressorView: React.FC<VideoCompressorViewProps> = ({
 
                 {/* Log de Procesamiento */}
                 <div className="mt-6 p-4 bg-slate-50 dark:bg-slate-900 rounded-lg h-32 overflow-y-auto border border-slate-200 dark:border-slate-700">
-                    <h4 className="text-xs font-bold uppercase text-slate-500 mb-1">
+                    <h4 className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">
                         Estado de Procesamiento:
                     </h4>
                     <div ref={messageRef}>
