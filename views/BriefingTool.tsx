@@ -62,16 +62,16 @@ export const BriefingTool: React.FC<BriefingToolProps> = ({
         style: '',
     })
 
-    const BACKEND_URL = 'https://backend-freelanceos.onrender.com'
+    const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
     const updateForm = (field: string, value: string) => {
         setFormData((prev) => ({ ...prev, [field]: value }))
     }
 
     const handleDownloadPDF = () => {
-        const element = document.getElementById('brief-document')
+        const element = document.getElementById('brief-document-full-size') // Usamos el ID del documento invisible
         const opt = {
-            margin: 0, // Márgenes controlados por el CSS del div
+            margin: 0,
             filename: `brief-${formData.clientName
                 .replace(/\s+/g, '-')
                 .toLowerCase()}.pdf`,
@@ -80,7 +80,7 @@ export const BriefingTool: React.FC<BriefingToolProps> = ({
                 scale: 2,
                 useCORS: true,
                 scrollY: 0,
-                windowWidth: 1200, // <--- ESTO SOLUCIONA EL CORTE
+                windowWidth: 1200, // Asegura renderizado completo para A4
             },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         }
@@ -138,6 +138,98 @@ export const BriefingTool: React.FC<BriefingToolProps> = ({
     const nextStep = () => setStep((s) => s + 1)
     const prevStep = () => setStep((s) => s - 1)
 
+    // --- SUB-COMPONENTE: EL DOCUMENTO A4 INVISIBLE (Solo para impresión) ---
+    const A4Document = () => (
+        <div
+            id="brief-document-full-size"
+            className="bg-white text-slate-900 w-[210mm] min-h-[297mm] p-[20mm] shadow-2xl"
+            style={{ fontFamily: 'Inter, sans-serif' }}
+        >
+            <div className="border-b-2 border-slate-900 pb-6 mb-8 flex justify-between items-start">
+                <div>
+                    <h1 className="text-4xl font-extrabold uppercase tracking-tight mb-2">
+                        Briefing
+                    </h1>
+                    <p className="text-sm text-slate-500 font-medium">
+                        Documento de Requerimientos
+                    </p>
+                </div>
+                <div className="text-right">
+                    <p className="font-bold text-lg">{formData.clientName}</p>
+                    <p className="text-sm text-slate-500">
+                        {new Date().toLocaleDateString()}
+                    </p>
+                </div>
+            </div>
+            <div className="space-y-10">
+                <section>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 border-b border-slate-100 pb-1">
+                        Detalles Generales
+                    </h3>
+                    <div className="grid grid-cols-2 gap-y-6 gap-x-8">
+                        <div>
+                            <span className="block text-xs font-bold text-slate-500 mb-1">
+                                Tipo de Proyecto
+                            </span>
+                            <p className="text-base font-medium">
+                                {formData.projectType}
+                            </p>
+                        </div>
+                        <div>
+                            <span className="block text-xs font-bold text-slate-500 mb-1">
+                                Fecha Límite
+                            </span>
+                            <p className="text-base font-medium">
+                                {formData.deadline || 'A definir'}
+                            </p>
+                        </div>
+                        <div>
+                            <span className="block text-xs font-bold text-slate-500 mb-1">
+                                Presupuesto Estimado
+                            </span>
+                            <p className="text-base font-medium">
+                                {formData.budget || 'A definir'}
+                            </p>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 border-b border-slate-100 pb-1">
+                        Objetivos & Alcance
+                    </h3>
+                    <div className="bg-slate-50 p-6 rounded-lg border border-slate-100">
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                            {formData.goals || 'Sin objetivos definidos.'}
+                        </p>
+                    </div>
+                </section>
+                <section className="grid grid-cols-2 gap-8">
+                    <div>
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 border-b border-slate-100 pb-1">
+                            Público Objetivo
+                        </h3>
+                        <p className="text-sm leading-relaxed">
+                            {formData.audience || 'No especificado.'}
+                        </p>
+                    </div>
+                    <div>
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 border-b border-slate-100 pb-1">
+                            Estilo Visual
+                        </h3>
+                        <p className="text-sm leading-relaxed">
+                            {formData.style || 'No especificado.'}
+                        </p>
+                    </div>
+                </section>
+            </div>
+            <div className="mt-24 pt-8 border-t border-slate-200 flex justify-between items-center text-xs text-slate-400">
+                <p>Generado con ModoFreelanceOS</p>
+                <p>Página 1 de 1</p>
+            </div>
+        </div>
+    )
+    // --- FIN DEL DOCUMENTO A4 INVISIBLE ---
+
     if (isFinished) {
         return (
             <div className="max-w-5xl mx-auto pt-8 pb-20">
@@ -149,7 +241,8 @@ export const BriefingTool: React.FC<BriefingToolProps> = ({
                         ¡Proyecto Iniciado!
                     </h2>
                     <p className="text-slate-600 dark:text-slate-300">
-                        Nota creada. Aquí tienes la vista previa del documento.
+                        Nota creada. Abajo tienes una vista previa del
+                        documento.
                     </p>
                 </div>
 
@@ -169,113 +262,87 @@ export const BriefingTool: React.FC<BriefingToolProps> = ({
                     </Button>
                 </div>
 
-                {/* CONTENEDOR CON SCROLL PARA QUE NO ROMPA EL LAYOUT MÓVIL */}
-                <div className="flex justify-center bg-slate-200 dark:bg-slate-800 p-4 md:p-8 rounded-xl overflow-x-auto border border-slate-300 dark:border-slate-700">
-                    {/* HOJA A4 EXACTA (210mm ancho) */}
-                    <div
-                        id="brief-document"
-                        className="bg-white text-slate-900 w-[210mm] min-h-[297mm] p-[20mm] shadow-2xl shrink-0"
-                        style={{ fontFamily: 'Inter, sans-serif' }}
-                    >
-                        {/* Header Documento */}
-                        <div className="border-b-2 border-slate-900 pb-6 mb-8 flex justify-between items-start">
-                            <div>
-                                <h1 className="text-4xl font-extrabold uppercase tracking-tight mb-2">
-                                    Briefing
-                                </h1>
-                                <p className="text-sm text-slate-500 font-medium">
-                                    Documento de Requerimientos
-                                </p>
-                            </div>
-                            <div className="text-right">
-                                <p className="font-bold text-lg">
-                                    {formData.clientName}
-                                </p>
-                                <p className="text-sm text-slate-500">
-                                    {new Date().toLocaleDateString()}
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Cuerpo Documento */}
-                        <div className="space-y-10">
-                            <section>
-                                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 border-b border-slate-100 pb-1">
-                                    Detalles Generales
-                                </h3>
-                                <div className="grid grid-cols-2 gap-y-6 gap-x-8">
-                                    <div>
-                                        <span className="block text-xs font-bold text-slate-500 mb-1">
-                                            Tipo de Proyecto
-                                        </span>
-                                        <p className="text-base font-medium">
-                                            {formData.projectType}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <span className="block text-xs font-bold text-slate-500 mb-1">
-                                            Fecha Límite
-                                        </span>
-                                        <p className="text-base font-medium">
-                                            {formData.deadline || 'A definir'}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <span className="block text-xs font-bold text-slate-500 mb-1">
-                                            Presupuesto Estimado
-                                        </span>
-                                        <p className="text-base font-medium">
-                                            {formData.budget || 'A definir'}
-                                        </p>
-                                    </div>
-                                </div>
-                            </section>
-
-                            <section>
-                                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 border-b border-slate-100 pb-1">
-                                    Objetivos & Alcance
-                                </h3>
-                                <div className="bg-slate-50 p-6 rounded-lg border border-slate-100">
-                                    <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                                        {formData.goals ||
-                                            'Sin objetivos definidos.'}
-                                    </p>
-                                </div>
-                            </section>
-
-                            <section className="grid grid-cols-2 gap-8">
+                {/* VISTA PREVIA RESPONSIVE (Escala al 100% del ancho del móvil/contenedor) */}
+                <Card
+                    id="brief-summary"
+                    className="p-6 md:p-8 dark:bg-slate-900 shadow-xl"
+                >
+                    <div className="text-slate-900 dark:text-slate-200">
+                        <h1 className="text-xl md:text-2xl font-bold mb-4 uppercase tracking-widest text-brand-600 dark:text-brand-400">
+                            Brief de Proyecto
+                        </h1>
+                        <div className="space-y-4 text-sm">
+                            {/* Diseño de 1 columna en móvil, 2 en desktop */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-b border-slate-200 dark:border-slate-700 pb-4">
                                 <div>
-                                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 border-b border-slate-100 pb-1">
-                                        Público Objetivo
-                                    </h3>
-                                    <p className="text-sm leading-relaxed">
-                                        {formData.audience ||
-                                            'No especificado.'}
+                                    <span className="block font-bold text-xs uppercase text-slate-400">
+                                        Cliente
+                                    </span>
+                                    <p className="font-medium text-slate-700 dark:text-slate-300">
+                                        {formData.clientName}
                                     </p>
                                 </div>
                                 <div>
-                                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 border-b border-slate-100 pb-1">
-                                        Estilo Visual
-                                    </h3>
-                                    <p className="text-sm leading-relaxed">
-                                        {formData.style || 'No especificado.'}
+                                    <span className="block font-bold text-xs uppercase text-slate-400">
+                                        Tipo
+                                    </span>
+                                    <p className="font-medium text-slate-700 dark:text-slate-300">
+                                        {formData.projectType}
                                     </p>
                                 </div>
-                            </section>
+                                <div>
+                                    <span className="block font-bold text-xs uppercase text-slate-400">
+                                        Presupuesto
+                                    </span>
+                                    <p className="font-medium text-slate-700 dark:text-slate-300">
+                                        {formData.budget || 'A definir'}
+                                    </p>
+                                </div>
+                                <div>
+                                    <span className="block font-bold text-xs uppercase text-slate-400">
+                                        Fecha Límite
+                                    </span>
+                                    <p className="font-medium text-slate-700 dark:text-slate-300">
+                                        {formData.deadline || 'No definida'}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="space-y-3 pt-3">
+                                <h3 className="font-bold text-slate-800 dark:text-white mb-1">
+                                    Objetivos:
+                                </h3>
+                                <p className="text-slate-600 dark:text-slate-400">
+                                    {formData.goals}
+                                </p>
+                                <h3 className="font-bold text-slate-800 dark:text-white mb-1">
+                                    Público Objetivo:
+                                </h3>
+                                <p className="text-slate-600 dark:text-slate-400">
+                                    {formData.audience}
+                                </p>
+                                <h3 className="font-bold text-slate-800 dark:text-white mb-1">
+                                    Estilo Clave:
+                                </h3>
+                                <p className="text-slate-600 dark:text-slate-400">
+                                    {formData.style}
+                                </p>
+                            </div>
                         </div>
-
-                        {/* Footer Documento */}
-                        <div className="mt-24 pt-8 border-t border-slate-200 flex justify-between items-center text-xs text-slate-400">
-                            <p>Generado con ModoFreelanceOS</p>
-                            <p>Página 1 de 1</p>
+                        <div className="mt-8 pt-4 border-t border-slate-200 dark:border-slate-700 text-center text-xs text-slate-400">
+                            Generado por ModoFreelanceOS
                         </div>
                     </div>
+                </Card>
+
+                {/* Contenedor del documento A4 (INVISIBLE EN LA APP) */}
+                <div className="fixed top-0 left-0 -z-50 opacity-0 pointer-events-none">
+                    <A4Document />
                 </div>
             </div>
         )
     }
 
-    // --- WIZARD ---
+    // --- WIZARD (Pasos de formulario, sin cambios grandes) ---
     return (
         <div className="max-w-3xl mx-auto">
             <ConfirmationModal
@@ -498,6 +565,12 @@ export const BriefingTool: React.FC<BriefingToolProps> = ({
                     )}
                 </div>
             </Card>
+            {/* Contenedor del documento A4 (INVISIBLE EN LA APP) */}
+            {isFinished && (
+                <div className="fixed top-0 left-0 -z-50 opacity-0 pointer-events-none">
+                    <A4Document />
+                </div>
+            )}
         </div>
     )
 }

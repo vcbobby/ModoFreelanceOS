@@ -11,9 +11,9 @@ export enum AppView {
     OPTIMIZER = 'optimizer',
     ANALYZER = 'analyzer',
     FINANCES = 'finances',
-    BACKGROUND_REMOVER = 'BACKGROUND_REMOVER',
     PORTFOLIO = 'PORTFOLIO',
     BRIEFING = 'BRIEFING',
+    VIDEO_COMPRESSOR = 'VIDEO_COMPRESSOR',
 }
 
 export interface Proposal {

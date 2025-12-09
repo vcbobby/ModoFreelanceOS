@@ -23,6 +23,7 @@ import {
     Eraser,
     Briefcase,
     ClipboardList,
+    Film,
 } from 'lucide-react'
 import { useTheme } from './context/ThemeContext'
 import { DashboardTips } from './components/DashboardTips'
@@ -46,11 +47,11 @@ import { AIAssistant } from './components/AIAssistant'
 import { DashboardUpcomingEvents } from './components/DashboardUpcomingEvents'
 import { PortfolioTool } from './views/PortfolioTool'
 import { BriefingTool } from './views/BriefingTool'
+import { VideoCompressorView } from './views/VideoCompressorView'
 // Firebase
 import { auth, db } from './firebase'
 import { onAuthStateChanged, signOut, User } from 'firebase/auth'
 import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore'
-import { BackgroundRemoverView } from './views/BackgroundRemoverView'
 const GUMROAD_LINK = 'https://modofreelanceos.gumroad.com/l/pro-plan'
 const WORDPRESS_URL = 'http://modofreelanceos.com/'
 
@@ -369,9 +370,9 @@ const App = () => {
                 )
             case AppView.FINANCES:
                 return <FinanceView userId={firebaseUser?.uid} />
-            case AppView.BACKGROUND_REMOVER:
+            case AppView.VIDEO_COMPRESSOR: // Asume que agregaste 'VIDEO_COMPRESSOR' a AppView
                 return (
-                    <BackgroundRemoverView
+                    <VideoCompressorView
                         onUsage={handleFeatureUsage}
                         userId={firebaseUser?.uid}
                     />
@@ -695,11 +696,11 @@ const App = () => {
                         }}
                     />
                     <NavItem
-                        icon={<Eraser />} // Usa el icono importado
-                        label="Quitar Fondo"
-                        active={currentView === AppView.BACKGROUND_REMOVER}
+                        icon={<Film />} // Usamos el nuevo icono
+                        label="Compresor Video"
+                        active={currentView === AppView.VIDEO_COMPRESSOR}
                         onClick={() => {
-                            setCurrentView(AppView.BACKGROUND_REMOVER)
+                            setCurrentView(AppView.VIDEO_COMPRESSOR)
                             setIsMobileMenuOpen(false)
                         }}
                     />
