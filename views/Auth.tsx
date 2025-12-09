@@ -34,7 +34,7 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
     const [loading, setLoading] = useState(false)
 
     // URL DE TU BACKEND (Cámbialo al subir a producción)
-    const BACKEND_URL = 'http://localhost:8000'
+    const BACKEND_URL = 'https://backend-freelanceos.onrender.com'
 
     // Función para avisar al backend (Fire and Forget)
     const notifyBackendSignup = async (userEmail: string) => {

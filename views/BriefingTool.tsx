@@ -62,7 +62,7 @@ export const BriefingTool: React.FC<BriefingToolProps> = ({
         style: '',
     })
 
-    const BACKEND_URL = 'http://localhost:8000'
+    const BACKEND_URL = 'https://backend-freelanceos.onrender.com'
 
     const updateForm = (field: string, value: string) => {
         setFormData((prev) => ({ ...prev, [field]: value }))

@@ -25,7 +25,7 @@ export const BackgroundRemoverView: React.FC<BackgroundRemoverViewProps> = ({
     const [error, setError] = useState<string | null>(null)
 
     // URL de tu Backend (Cámbialo cuando subas a Render)
-    const BACKEND_URL = 'http://localhost:8000'
+    const BACKEND_URL = 'https://backend-freelanceos.onrender.com'
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {

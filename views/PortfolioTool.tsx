@@ -59,7 +59,7 @@ export const PortfolioTool: React.FC<PortfolioToolProps> = ({
         })
     }
 
-    const BACKEND_URL = 'http://localhost:8000'
+    const BACKEND_URL = 'https://backend-freelanceos.onrender.com'
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
