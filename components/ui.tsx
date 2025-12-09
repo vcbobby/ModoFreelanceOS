@@ -267,7 +267,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({
                                     onClick={onSubscribe}
                                 >
                                     <Zap className="w-5 h-5 mr-2 fill-current" />{' '}
-                                    Pago automatico con Gumroad
+                                    Pago automático con Gumroad
                                 </Button>
                                 <BenefitItem text="Asistente Personal IA 24/7 con memoria." />
                                 <BenefitItem text="Generador de Portafolios & Casos de Estudio." />
