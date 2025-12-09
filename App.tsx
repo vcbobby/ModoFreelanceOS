@@ -370,7 +370,7 @@ const App = () => {
                 )
             case AppView.FINANCES:
                 return <FinanceView userId={firebaseUser?.uid} />
-            case AppView.VIDEO_COMPRESSOR: // Asume que agregaste 'VIDEO_COMPRESSOR' a AppView
+            case AppView.VIDEO_COMPRESSOR:
                 return (
                     <VideoCompressorView
                         onUsage={handleFeatureUsage}
@@ -696,7 +696,7 @@ const App = () => {
                         }}
                     />
                     <NavItem
-                        icon={<Film />} // Usamos el nuevo icono
+                        icon={<Film />} // Usamos el icono Film
                         label="Compresor Video"
                         active={currentView === AppView.VIDEO_COMPRESSOR}
                         onClick={() => {

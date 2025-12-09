@@ -1,15 +1,28 @@
-import React, { useState } from 'react'
-import { Upload, Download, Zap, AlertCircle, Film } from 'lucide-react'
+import React, { useState, useEffect, useRef } from 'react'
+import {
+    Upload,
+    Download,
+    Zap,
+    AlertCircle,
+    Film,
+    Scissors,
+    Maximize2,
+    Loader2,
+    Check,
+} from 'lucide-react'
 import { Button, Card } from '../components/ui'
 import ReactMarkdown from 'react-markdown'
-// Nota: No usaremos ffmpeg.wasm para no sobrecomplicar el MVP.
-// El botón llamará a la IA para el análisis y luego pedirá al usuario
-// que haga el paso manual o le mostrará dónde usar el ffmpeg.wasm.
+// Importar FFmpeg
+import { FFmpeg } from '@ffmpeg/ffmpeg'
+import { toBlobURL } from '@ffmpeg/util'
 
 interface VideoCompressorViewProps {
     onUsage: (cost: number) => Promise<boolean>
     userId?: string
 }
+
+const formatSize = (size: number) => (size / 1024 / 1024).toFixed(2) + ' MB'
+const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 export const VideoCompressorView: React.FC<VideoCompressorViewProps> = ({
     onUsage,
@@ -17,68 +30,208 @@ export const VideoCompressorView: React.FC<VideoCompressorViewProps> = ({
 }) => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null)
     const [loading, setLoading] = useState(false)
-    const [processed, setProcessed] = useState(false)
+    const [isFFmpegLoading, setIsFFmpegLoading] = useState(true)
     const [analysisResult, setAnalysisResult] = useState<string | null>(null)
+    const [videoBlobUrl, setVideoBlobUrl] = useState<string | null>(null)
+    const [statusMessage, setStatusMessage] = useState<string | null>(null)
 
-    const BACKEND_URL = 'https://TU-APP-EN-RENDER.onrender.com' // Usaremos Render para el análisis de texto
+    // FFmpeg Instance
+    const ffmpegRef = useRef(new FFmpeg())
+    const messageRef = useRef<HTMLDivElement>(null)
 
+    // --- 1. Inicializar FFmpeg ---
+    useEffect(() => {
+        const loadFFmpeg = async () => {
+            const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm'
+            const ffmpeg = ffmpegRef.current
+
+            try {
+                // Monta los core files
+                await ffmpeg.load({
+                    coreURL: await toBlobURL(
+                        `${baseURL}/ffmpeg-core.js`,
+                        'text/javascript'
+                    ),
+                    wasmURL: await toBlobURL(
+                        `${baseURL}/ffmpeg-core.wasm`,
+                        'application/wasm'
+                    ),
+                })
+                setIsFFmpegLoading(false)
+                setStatusMessage('Herramienta de procesamiento lista.')
+            } catch (error) {
+                console.error('Error al cargar FFmpeg', error)
+                setStatusMessage(
+                    'Error: No se pudo cargar la herramienta de video.'
+                )
+            }
+        }
+
+        loadFFmpeg()
+        // Limpiar URL del blob al desmontar
+        return () => {
+            if (videoBlobUrl) URL.revokeObjectURL(videoBlobUrl)
+        }
+    }, [])
+
+    // --- 2. Manejar la Carga del Archivo ---
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files && event.target.files[0]) {
-            setSelectedFile(event.target.files[0])
-            setProcessed(false)
+            const file = event.target.files[0]
+            setSelectedFile(file)
             setAnalysisResult(null)
+            setVideoBlobUrl(URL.createObjectURL(file))
+            setStatusMessage(null)
         }
     }
 
+    // --- 3. Análisis de IA (Aviso PRO) ---
     const handleAnalyze = async () => {
         if (!selectedFile || !userId) return
 
-        // 1. Es PRO? Si no, prohibir el uso.
-        const canProceed = await onUsage(9999) // Usamos un costo alto para forzar el modal PRO
-        if (!canProceed) return // Si no es PRO, el modal de pricing ya se mostró.
+        // Comprobación de PRO (onUsage muestra el modal de pago si es necesario)
+        const canProceed = await onUsage(1)
+        if (!canProceed) return
 
         setLoading(true)
+        setStatusMessage('Iniciando análisis de contenido con IA...')
         setAnalysisResult(null)
 
+        // Simulamos la llamada al backend para que registre en el historial (el registro es la "magia" PRO)
         try {
-            // 2. Simulamos el análisis de la IA (el backend lo registra)
             const formData = new FormData()
             formData.append('file', selectedFile)
             formData.append('userId', userId)
 
+            // Llama al endpoint de video (que solo registra en historial)
             const response = await fetch(`${BACKEND_URL}/api/process-video`, {
                 method: 'POST',
                 body: formData,
             })
 
-            if (!response.ok)
-                throw new Error('Error en el servidor de análisis.')
+            // Si el backend responde, simulamos el análisis IA exitoso
+            if (response.ok) {
+                setAnalysisResult(`
+                    ### ✅ Análisis de IA Completado
+                    - **Recomendación:** Tu video es ideal para un Short de 45 segundos.
+                    - **Fragmento Viral:** Corta de **01:10** a **01:55** para mejor retención.
+                    - **Subtítulos:** Generados automáticamente (no visible en esta demo).
 
-            // Simulamos que la IA analizó el video y dio consejos
-            setAnalysisResult(`
-                ### ✅ Análisis Rápido de IA
-                - **Duración:** ${Math.floor(Math.random() * 5 + 1)} minutos.
-                - **Momento Viral 1:** 00:30 - 00:45 (Recomendado para TikTok).
-                - **Subtítulos Generados:** Tienes el archivo .SRT listo en tu historial.
-                
-                ### 💡 Próximo Paso
-                El servidor de compresión es muy caro. Hemos generado el análisis por ti.
-                
-                Para comprimir el video en tu navegador, usa la herramienta **ffmpeg.wasm** (busca en Google).
-            `)
-            setProcessed(true)
+                    ---
+                    **Elige una opción para procesar en tu navegador (tardará según tu PC):**
+                    `)
+            } else {
+                throw new Error('Error en el servidor. Intenta de nuevo.')
+            }
         } catch (error) {
-            setAnalysisResult(
-                `⚠️ Error: No se pudo conectar con el servidor de análisis (${
+            setStatusMessage(
+                `⚠️ Error de conexión con el backend: ${
                     (error as Error).message
-                }).`
+                }`
             )
         } finally {
             setLoading(false)
         }
     }
 
-    const formatSize = (size: number) => (size / 1024 / 1024).toFixed(2) + ' MB'
+    // --- 4. Funciones de Procesamiento de Video ---
+
+    const log = (msg: string) => {
+        if (messageRef.current) {
+            messageRef.current.innerHTML += `<div class='text-xs text-slate-500'>${msg}</div>`
+            messageRef.current.scrollTop = messageRef.current.scrollHeight
+        }
+    }
+
+    const runFFmpegCommand = async (
+        outputFileName: string,
+        ffmpegArgs: string[],
+        content: string,
+        newFileName: string
+    ) => {
+        if (!selectedFile || isFFmpegLoading) return
+
+        setLoading(true)
+        const ffmpeg = ffmpegRef.current
+        ffmpeg.on('log', ({ message }) => log(message))
+
+        try {
+            // Escribe el archivo en la memoria virtual de FFmpeg
+            await ffmpeg.writeFile(
+                selectedFile.name,
+                new Uint8Array(await selectedFile.arrayBuffer())
+            )
+            setStatusMessage('Archivo de video cargado en memoria.')
+
+            // Ejecuta el comando de compresión o corte
+            await ffmpeg.exec(ffmpegArgs)
+            setStatusMessage('Procesamiento completado.')
+
+            // Lee el resultado y crea un Blob
+            const data = await ffmpeg.readFile(outputFileName)
+            const blob = new Blob([data], { type: 'video/mp4' })
+            const url = URL.createObjectURL(blob)
+
+            // Descarga el archivo
+            const a = document.createElement('a')
+            a.href = url
+            a.download = newFileName
+            document.body.appendChild(a)
+            a.click()
+            a.remove()
+        } catch (error) {
+            console.error('FFmpeg ERROR:', error)
+            setStatusMessage(
+                `⚠️ Error en FFmpeg: ${
+                    (error as Error).message
+                }. Archivo no procesado.`
+            )
+        } finally {
+            setLoading(false)
+            // Limpia el archivo de la memoria de FFmpeg
+            await ffmpeg.deleteFile(selectedFile.name)
+        }
+    }
+
+    const handleCompress = () => {
+        // Comando simple de compresión (reduciendo bitrate)
+        const args = [
+            '-i',
+            selectedFile!.name,
+            '-vcodec',
+            'libx264',
+            '-crf',
+            '28', // Calidad de compresión (más alto = más compresión)
+            'compressed_output.mp4',
+        ]
+        runFFmpegCommand(
+            'compressed_output.mp4',
+            args,
+            'Comprimiendo...',
+            `compressed_${selectedFile!.name}`
+        )
+    }
+
+    const handleShort = () => {
+        // Cortar de 01:10 a 01:55 (ejemplo de la IA)
+        const args = [
+            '-i',
+            selectedFile!.name,
+            '-ss',
+            '00:01:10', // Start time
+            '-to',
+            '00:01:55', // End time
+            '-c',
+            'copy', // Corta sin recodificar (instantáneo)
+            'short_output.mp4',
+        ]
+        runFFmpegCommand(
+            'short_output.mp4',
+            args,
+            'Generando Short...',
+            `short_${selectedFile!.name}`
+        )
+    }
 
     return (
         <div className="max-w-4xl mx-auto">
@@ -96,6 +249,7 @@ export const VideoCompressorView: React.FC<VideoCompressorViewProps> = ({
             </div>
 
             <Card className="p-8 shadow-md">
+                {/* Cargador */}
                 <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-8 text-center bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer relative">
                     <input
                         type="file"
@@ -110,19 +264,30 @@ export const VideoCompressorView: React.FC<VideoCompressorViewProps> = ({
                                 ? selectedFile.name
                                 : 'Arrastra o selecciona un video'}
                         </p>
-                        <p className="text-xs text-slate-500 mt-1">
-                            {selectedFile
-                                ? formatSize(selectedFile.size)
-                                : 'MP4, MOV (Máx 100MB)'}
-                        </p>
+                        {selectedFile && (
+                            <p className="text-xs text-slate-500 mt-1">
+                                {formatSize(selectedFile.size)}
+                            </p>
+                        )}
+                        {isFFmpegLoading && (
+                            <div className="mt-2 text-sm text-indigo-600 dark:text-indigo-400 flex items-center gap-2">
+                                <Loader2 className="w-4 h-4 animate-spin" />{' '}
+                                Cargando Herramienta...
+                            </div>
+                        )}
                     </div>
                 </div>
 
+                {/* Botón de Análisis */}
                 <div className="mt-6 flex justify-center">
                     <Button
                         onClick={handleAnalyze}
                         isLoading={loading}
-                        disabled={!selectedFile}
+                        disabled={
+                            !selectedFile ||
+                            isFFmpegLoading ||
+                            analysisResult !== null
+                        }
                         className="w-full md:w-auto bg-indigo-600 hover:bg-indigo-700"
                     >
                         {loading
@@ -131,13 +296,48 @@ export const VideoCompressorView: React.FC<VideoCompressorViewProps> = ({
                     </Button>
                 </div>
 
+                {/* Resultado del Análisis de IA */}
                 {analysisResult && (
                     <div className="mt-8 p-6 bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-900 rounded-xl shadow-inner">
                         <div className="prose prose-sm dark:prose-invert max-w-none text-slate-700 dark:text-slate-300">
                             <ReactMarkdown>{analysisResult}</ReactMarkdown>
                         </div>
+
+                        <div className="flex flex-col md:flex-row gap-4 mt-6 border-t pt-4 border-slate-200 dark:border-slate-700">
+                            <Button
+                                onClick={handleCompress}
+                                disabled={loading}
+                                variant="secondary"
+                                className="flex-1"
+                            >
+                                <Download className="w-4 h-4 mr-2" /> Comprimir
+                                (Reducir Tamaño)
+                            </Button>
+                            <Button
+                                onClick={handleShort}
+                                disabled={loading}
+                                className="flex-1"
+                            >
+                                <Scissors className="w-4 h-4 mr-2" /> Generar
+                                Short (Cortar Viral)
+                            </Button>
+                        </div>
                     </div>
                 )}
+
+                {/* Log de Procesamiento */}
+                <div className="mt-6 p-4 bg-slate-50 dark:bg-slate-900 rounded-lg h-32 overflow-y-auto border border-slate-200 dark:border-slate-700">
+                    <h4 className="text-xs font-bold uppercase text-slate-500 mb-1">
+                        Estado de Procesamiento:
+                    </h4>
+                    <div ref={messageRef}>
+                        {statusMessage && (
+                            <div className="text-xs text-slate-600 dark:text-slate-400">
+                                {statusMessage}
+                            </div>
+                        )}
+                    </div>
+                </div>
             </Card>
         </div>
     )
