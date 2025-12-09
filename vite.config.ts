@@ -10,9 +10,7 @@ export default defineConfig(({ mode }) => {
             host: '0.0.0.0',
         },
         plugins: [react()],
-        optimizeDeps: {
-            exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/core', '@ffmpeg/util'],
-        },
+
         build: {
             rollupOptions: {
                 external: ['@ffmpeg/ffmpeg', '@ffmpeg/core', '@ffmpeg/util'],
