@@ -14,7 +14,7 @@ import { analyzeDocument } from '../services/geminiService'
 import ReactMarkdown from 'react-markdown'
 import { addDoc, collection } from 'firebase/firestore'
 import { db } from '../firebase'
-import { ConfirmationModal } from '../components/ui/ConfirmationModal' // 1. IMPORTAR MODAL
+import { ConfirmationModal } from '../components/ui/ConfirmationModal'
 
 interface AnalyzerToolProps {
     onUsage: (cost: number) => Promise<boolean>
@@ -32,18 +32,15 @@ export const AnalyzerTool: React.FC<AnalyzerToolProps> = ({
     const [mode, setMode] = useState<
         'resumen' | 'riesgos' | 'accion' | 'mejora'
     >('resumen')
-
-    // 2. ESTADOS DEL MODAL
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [modalConfig, setModalConfig] = useState({
         title: '',
         message: '',
         action: () => {},
         isDanger: false,
-        singleButton: false, // Nuevo: Para usarlo como alerta simple
+        singleButton: false,
     })
 
-    // Función auxiliar para mostrar mensajes
     const showModal = (
         title: string,
         message: string,
@@ -58,18 +55,15 @@ export const AnalyzerTool: React.FC<AnalyzerToolProps> = ({
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0]
         if (!selectedFile) return
-
         setFile(selectedFile)
         setAnalysis('')
         setText('')
-
         if (selectedFile.type === 'application/pdf') {
             try {
                 const extracted = await extractTextFromPdf(selectedFile)
                 setText(extracted)
             } catch (error) {
                 console.error(error)
-                // USO DEL MODAL PARA ERROR
                 showModal(
                     'Error de Lectura',
                     'No pudimos leer el PDF. Asegúrate de que no esté encriptado o protegido con contraseña.',
@@ -86,27 +80,22 @@ export const AnalyzerTool: React.FC<AnalyzerToolProps> = ({
 
     const handleAnalyzeClick = () => {
         if (!text) return
-
-        // CONFIRMACIÓN DE GASTO DE CRÉDITOS
         showModal(
             'Analizar Documento',
             'Esta acción consumirá 2 Créditos. ¿Deseas continuar?',
-            () => executeAnalysis(), // Si dice sí, ejecutamos
+            () => executeAnalysis(),
             false,
-            false // Mostrar dos botones (Cancelar/Confirmar)
+            false
         )
     }
 
     const executeAnalysis = async () => {
-        // 1. Cobrar
         const canProceed = await onUsage(2)
         if (!canProceed) return
-
         setIsAnalyzing(true)
         try {
             const result = await analyzeDocument(text, mode)
             setAnalysis(result)
-
             if (userId && file) {
                 addDoc(collection(db, 'users', userId, 'history'), {
                     createdAt: new Date().toISOString(),
@@ -132,23 +121,22 @@ export const AnalyzerTool: React.FC<AnalyzerToolProps> = ({
 
     return (
         <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-            {/* COLUMNA IZQUIERDA */}
             <div className="lg:col-span-1 space-y-6">
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                         <FileSearch className="w-6 h-6 text-brand-600" />{' '}
                         Analizador IA
                     </h2>
-                    <p className="text-slate-600 mt-1 text-sm">
+                    <p className="text-slate-600 dark:text-slate-400 mt-1 text-sm">
                         Sube un contrato o brief para analizarlo.
-                        <span className="block mt-1 bg-brand-100 text-brand-800 text-xs font-bold px-2 py-0.5 rounded w-fit">
+                        <span className="block mt-1 bg-brand-100 dark:bg-brand-900/30 text-brand-800 dark:text-brand-300 text-xs font-bold px-2 py-0.5 rounded w-fit">
                             Costo: 2 Créditos
                         </span>
                     </p>
                 </div>
 
                 <Card className="p-6 space-y-6 shadow-md">
-                    <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer relative">
+                    <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-6 text-center bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer relative">
                         <input
                             type="file"
                             accept=".pdf,.txt,.md"
@@ -156,14 +144,14 @@ export const AnalyzerTool: React.FC<AnalyzerToolProps> = ({
                             className="absolute inset-0 opacity-0 cursor-pointer"
                         />
                         <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                        <p className="text-sm font-bold text-slate-700 truncate px-2">
+                        <p className="text-sm font-bold text-slate-700 dark:text-slate-300 truncate px-2">
                             {file ? file.name : 'Subir PDF o TXT'}
                         </p>
                         <p className="text-xs text-slate-500 mt-1">Máx 5MB</p>
                     </div>
 
                     <div>
-                        <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">
+                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2 block">
                             Tipo de Análisis
                         </label>
                         <div className="grid grid-cols-2 gap-2">
@@ -205,18 +193,17 @@ export const AnalyzerTool: React.FC<AnalyzerToolProps> = ({
                 </Card>
             </div>
 
-            {/* COLUMNA DERECHA */}
             <div className="lg:col-span-2">
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm min-h-[500px] p-8">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm min-h-[500px] p-8">
                     {!analysis ? (
                         <div className="h-full flex flex-col items-center justify-center text-slate-400 opacity-60 mt-20">
                             <FileSearch className="w-16 h-16 mb-4" />
                             <p>El resultado aparecerá aquí.</p>
                         </div>
                     ) : (
-                        <div className="prose prose-slate max-w-none text-sm">
-                            <div className="flex items-center gap-2 mb-6 border-b border-slate-100 pb-4">
-                                <span className="bg-brand-100 text-brand-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                        <div className="prose prose-slate dark:prose-invert max-w-none text-sm text-slate-700 dark:text-slate-300">
+                            <div className="flex items-center gap-2 mb-6 border-b border-slate-100 dark:border-slate-700 pb-4">
+                                <span className="bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
                                     {mode}
                                 </span>
                                 <span className="text-slate-400 text-xs">
@@ -229,7 +216,6 @@ export const AnalyzerTool: React.FC<AnalyzerToolProps> = ({
                 </div>
             </div>
 
-            {/* 3. COMPONENTE MODAL AL FINAL */}
             <ConfirmationModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
@@ -238,7 +224,7 @@ export const AnalyzerTool: React.FC<AnalyzerToolProps> = ({
                 message={modalConfig.message}
                 isDanger={modalConfig.isDanger}
                 confirmText="Continuar"
-                cancelText={modalConfig.singleButton ? '' : 'Cancelar'} // Truco para ocultar cancelar si es alerta simple
+                cancelText={modalConfig.singleButton ? '' : 'Cancelar'}
             />
         </div>
     )
@@ -249,8 +235,8 @@ const ModeButton = ({ active, onClick, icon, label }: any) => (
         onClick={onClick}
         className={`flex flex-col items-center justify-center gap-1 p-3 rounded-lg border text-xs font-medium transition-all ${
             active
-                ? 'bg-brand-50 border-brand-500 text-brand-700'
-                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                ? 'bg-brand-50 dark:bg-brand-900/20 border-brand-500 text-brand-700 dark:text-brand-300'
+                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
         }`}
     >
         {icon}

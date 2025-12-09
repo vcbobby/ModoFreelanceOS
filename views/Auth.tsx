@@ -3,9 +3,9 @@ import { auth, db } from '../firebase'
 import {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
-    signInWithPopup, // <--- Nuevo
-    GoogleAuthProvider, // <--- Nuevo
-    sendPasswordResetEmail, // <--- Nuevo
+    signInWithPopup,
+    GoogleAuthProvider,
+    sendPasswordResetEmail,
 } from 'firebase/auth'
 import { doc, setDoc, getDoc } from 'firebase/firestore'
 import {
@@ -33,13 +33,30 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
     const [successMsg, setSuccessMsg] = useState('')
     const [loading, setLoading] = useState(false)
 
-    // Función auxiliar para crear/verificar usuario en DB tras Login social
+    // URL DE TU BACKEND (Cámbialo al subir a producción)
+    const BACKEND_URL = 'http://localhost:8000'
+
+    // Función para avisar al backend (Fire and Forget)
+    const notifyBackendSignup = async (userEmail: string) => {
+        try {
+            const formData = new FormData()
+            formData.append('email', userEmail)
+            // No usamos await aquí para no bloquear la UI si el backend falla
+            fetch(`${BACKEND_URL}/api/notify-signup`, {
+                method: 'POST',
+                body: formData,
+            })
+        } catch (e) {
+            console.error('No se pudo notificar al backend', e)
+        }
+    }
+
     const handleUserInDb = async (user: any) => {
         const docRef = doc(db, 'users', user.uid)
         const docSnap = await getDoc(docRef)
 
         if (!docSnap.exists()) {
-            // Si es nuevo (ej: primera vez con Google), le damos los créditos gratis
+            // Usuario Nuevo
             await setDoc(docRef, {
                 email: user.email,
                 credits: 3,
@@ -47,6 +64,8 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
                 createdAt: new Date().toISOString(),
                 lastReset: Date.now(),
             })
+            // Notificamos al backend que hay un nuevo usuario
+            notifyBackendSignup(user.email)
         }
     }
 
@@ -73,7 +92,7 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
                 setSuccessMsg(
                     '¡Listo! Revisa tu correo para restablecer la contraseña.'
                 )
-                setLoading(false) // Detenemos loading aquí porque no redirigimos
+                setLoading(false)
                 return
             }
         } catch (err: any) {
@@ -108,29 +127,29 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4 font-sans relative">
+        <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 p-4 font-sans relative">
             <button
                 onClick={onBack}
-                className="absolute top-6 left-6 text-slate-500 hover:text-slate-800 flex items-center gap-2 text-sm font-medium transition-colors"
+                className="absolute top-6 left-6 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-2 text-sm font-medium transition-colors"
             >
                 ← Volver al inicio
             </button>
 
-            <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-100">
+            <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-100 dark:border-slate-700">
                 <div className="text-center mb-8">
-                    <div className="bg-brand-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-brand-100">
+                    <div className="bg-brand-50 dark:bg-brand-900/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-brand-100 dark:border-brand-800">
                         {viewState === 'forgot' ? (
-                            <KeyRound className="w-8 h-8 text-brand-600" />
+                            <KeyRound className="w-8 h-8 text-brand-600 dark:text-brand-400" />
                         ) : (
-                            <User className="w-8 h-8 text-brand-600" />
+                            <User className="w-8 h-8 text-brand-600 dark:text-brand-400" />
                         )}
                     </div>
-                    <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
                         {viewState === 'register' && 'Crear Cuenta Gratis'}
                         {viewState === 'login' && 'Bienvenido de nuevo'}
                         {viewState === 'forgot' && 'Recuperar Contraseña'}
                     </h2>
-                    <p className="text-slate-500 text-sm mt-2">
+                    <p className="text-slate-500 dark:text-slate-400 text-sm mt-2">
                         {viewState === 'forgot'
                             ? 'Ingresa tu email y te enviaremos un enlace.'
                             : 'Gestiona tu vida freelance con IA.'}
@@ -138,35 +157,34 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
                 </div>
 
                 {error && (
-                    <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-sm text-center border border-red-100 font-medium">
+                    <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-lg mb-6 text-sm text-center border border-red-100 dark:border-red-800 font-medium">
                         {error}
                     </div>
                 )}
 
                 {successMsg && (
-                    <div className="bg-green-50 text-green-700 p-3 rounded-lg mb-6 text-sm text-center border border-green-100 font-medium">
+                    <div className="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 p-3 rounded-lg mb-6 text-sm text-center border border-green-100 dark:border-green-800 font-medium">
                         {successMsg}
                     </div>
                 )}
 
-                {/* LOGIN CON GOOGLE */}
                 {viewState !== 'forgot' && (
                     <div className="mb-6">
                         <button
                             type="button"
                             onClick={handleGoogleLogin}
                             disabled={loading}
-                            className="w-full py-2.5 border border-slate-300 rounded-xl hover:bg-slate-50 transition-colors flex items-center justify-center gap-3 text-slate-700 font-medium"
+                            className="w-full py-2.5 border border-slate-300 dark:border-slate-600 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-3 text-slate-700 dark:text-slate-200 font-medium bg-white dark:bg-slate-800"
                         >
-                            <Chrome className="w-5 h-5 text-slate-900" />
+                            <Chrome className="w-5 h-5 text-slate-900 dark:text-white" />
                             Continuar con Google
                         </button>
                         <div className="relative my-6">
                             <div className="absolute inset-0 flex items-center">
-                                <span className="w-full border-t border-slate-200"></span>
+                                <span className="w-full border-t border-slate-200 dark:border-slate-700"></span>
                             </div>
                             <div className="relative flex justify-center text-xs uppercase">
-                                <span className="bg-white px-2 text-slate-400">
+                                <span className="bg-white dark:bg-slate-800 px-2 text-slate-400">
                                     O usa tu correo
                                 </span>
                             </div>
@@ -176,7 +194,7 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-xs font-bold text-slate-600 uppercase mb-1 ml-1">
+                        <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1 ml-1">
                             Email
                         </label>
                         <div className="relative">
@@ -184,7 +202,7 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
                             <input
                                 type="email"
                                 required
-                                className="w-full pl-10 p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none transition-all"
+                                className="w-full pl-10 p-3 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none transition-all bg-white dark:bg-slate-900 dark:text-white"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="hola@freelancer.com"
@@ -195,7 +213,7 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
                     {viewState !== 'forgot' && (
                         <div>
                             <div className="flex justify-between items-center mb-1">
-                                <label className="block text-xs font-bold text-slate-600 uppercase ml-1">
+                                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase ml-1">
                                     Contraseña
                                 </label>
                                 {viewState === 'login' && (
@@ -205,7 +223,7 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
                                             setViewState('forgot')
                                             setError('')
                                         }}
-                                        className="text-xs text-brand-600 hover:underline"
+                                        className="text-xs text-brand-600 dark:text-brand-400 hover:underline"
                                     >
                                         ¿Olvidaste la contraseña?
                                     </button>
@@ -216,7 +234,7 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
                                 <input
                                     type="password"
                                     required
-                                    className="w-full pl-10 p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none transition-all"
+                                    className="w-full pl-10 p-3 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none transition-all bg-white dark:bg-slate-900 dark:text-white"
                                     value={password}
                                     onChange={(e) =>
                                         setPassword(e.target.value)
@@ -231,7 +249,7 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl transition-all disabled:opacity-70 flex items-center justify-center gap-2 shadow-lg shadow-brand-200"
+                        className="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl transition-all disabled:opacity-70 flex items-center justify-center gap-2 shadow-lg shadow-brand-200 dark:shadow-none"
                     >
                         {loading ? (
                             <Loader2 className="animate-spin w-5 h-5" />
@@ -250,7 +268,7 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
                     </button>
                 </form>
 
-                <div className="mt-8 pt-6 border-t border-slate-100 text-center space-y-2">
+                <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-700 text-center space-y-2">
                     {viewState === 'forgot' ? (
                         <button
                             onClick={() => {
@@ -258,7 +276,7 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
                                 setError('')
                                 setSuccessMsg('')
                             }}
-                            className="text-slate-500 hover:text-brand-600 font-medium text-sm"
+                            className="text-slate-500 hover:text-brand-600 dark:hover:text-brand-400 font-medium text-sm"
                         >
                             Volver a Iniciar Sesión
                         </button>
@@ -270,7 +288,7 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
                                 )
                                 setError('')
                             }}
-                            className="text-slate-500 hover:text-brand-600 font-medium text-sm transition-colors"
+                            className="text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 font-medium text-sm transition-colors"
                         >
                             {viewState === 'login'
                                 ? '¿Nuevo por aquí? Crea una cuenta gratis'

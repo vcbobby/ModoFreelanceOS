@@ -11,6 +11,9 @@ export enum AppView {
     OPTIMIZER = 'optimizer',
     ANALYZER = 'analyzer',
     FINANCES = 'finances',
+    BACKGROUND_REMOVER = 'BACKGROUND_REMOVER',
+    PORTFOLIO = 'PORTFOLIO',
+    BRIEFING = 'BRIEFING',
 }
 
 export interface Proposal {
@@ -30,10 +33,10 @@ export interface HistoryItem {
     id: string
     createdAt: string // Fecha ISO
     clientName: string
-    platform: string
-    type: string // Formal, Corto, etc.
+    platform?: string
+    type?: string // Formal, Corto, etc.
     content: string
-    category?: 'proposal' | 'logo' | 'invoice' // Para saber qué tarjeta mostrar
+    category?: 'proposal' | 'logo' | 'invoice' | 'tool' // Para saber qué tarjeta mostrar
     imageUrl?: string
 
     // Datos específicos para facturas (los guardaremos en el mismo objeto para simplificar)

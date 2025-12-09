@@ -1,141 +1,503 @@
-import React, { useState } from 'react';
-import { ArrowRight, ArrowLeft, Check, FileText, Send, Image as ImageIcon, DollarSign } from 'lucide-react';
-import { Button, Card } from '../components/ui';
+import React, { useState } from 'react'
+import {
+    ArrowRight,
+    ArrowLeft,
+    Check,
+    FileText,
+    Briefcase,
+    User,
+    AlignLeft,
+    Download,
+} from 'lucide-react'
+import { Button, Card, ConfirmationModal } from '../components/ui'
+// @ts-ignore
+import html2pdf from 'html2pdf.js'
 
 interface BriefingToolProps {
-  onUsage: () => void;
+    onUsage: (cost: number) => Promise<boolean>
+    userId?: string
 }
 
-export const BriefingTool: React.FC<BriefingToolProps> = ({ onUsage }) => {
-  const [step, setStep] = useState(0);
-  const [isFinished, setIsFinished] = useState(false);
+export const BriefingTool: React.FC<BriefingToolProps> = ({
+    onUsage,
+    userId,
+}) => {
+    const [step, setStep] = useState(0)
+    const [loading, setLoading] = useState(false)
+    const [isFinished, setIsFinished] = useState(false)
 
-  // Mock Steps simulating what the freelancer sends to the client
-  const steps = [
-    {
-      title: "Bienvenida",
-      description: "Hola! Antes de empezar, necesito entender exactamente qué buscas para no hacerte perder tiempo.",
-      type: "intro"
-    },
-    {
-      title: "Estilo Visual",
-      description: "¿Qué vibra buscas para tu proyecto?",
-      type: "choice",
-      options: ["Minimalista & Limpio", "Colorido & Juguetón", "Corporativo & Serio", "Lujoso & Elegante"]
-    },
-    {
-      title: "Recursos Existentes",
-      description: "¿Ya tienes logotipo o guía de marca?",
-      type: "choice",
-      options: ["Sí, tengo todo listo", "Tengo logo pero no manual", "No tengo nada aún"]
-    },
-    {
-      title: "Presupuesto Real",
-      description: "Esto ayuda a definir el alcance realista del proyecto.",
-      type: "budget",
-      options: ["<$500", "$500 - $1,000", "$1,000 - $3,000", "$3,000+"]
+    const [modal, setModal] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        isDanger: false,
+        action: () => {},
+        singleButton: false,
+    })
+
+    const showModal = (
+        title: string,
+        message: string,
+        isDanger = false,
+        singleButton = true,
+        action = () => {}
+    ) => {
+        setModal({
+            isOpen: true,
+            title,
+            message,
+            isDanger,
+            singleButton,
+            action,
+        })
     }
-  ];
 
-  const handleNext = () => {
-    if (step < steps.length - 1) {
-      setStep(step + 1);
-    } else {
-      setIsFinished(true);
-      onUsage(); // Trigger gate check
+    const [formData, setFormData] = useState({
+        clientName: '',
+        projectType: 'Diseño Gráfico',
+        budget: '',
+        deadline: '',
+        goals: '',
+        audience: '',
+        style: '',
+    })
+
+    const BACKEND_URL = 'http://localhost:8000'
+
+    const updateForm = (field: string, value: string) => {
+        setFormData((prev) => ({ ...prev, [field]: value }))
     }
-  };
 
-  const handleBack = () => {
-    if (step > 0) setStep(step - 1);
-  };
+    const handleDownloadPDF = () => {
+        const element = document.getElementById('brief-document')
+        const opt = {
+            margin: 0, // Márgenes controlados por el CSS del div
+            filename: `brief-${formData.clientName
+                .replace(/\s+/g, '-')
+                .toLowerCase()}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: {
+                scale: 2,
+                useCORS: true,
+                scrollY: 0,
+                windowWidth: 1200, // <--- ESTO SOLUCIONA EL CORTE
+            },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        }
+        html2pdf().set(opt).from(element).save()
+    }
 
-  if (isFinished) {
+    const handleProcess = async () => {
+        if (!userId) return
+        const canProceed = await onUsage(2)
+        if (!canProceed) return
+
+        setLoading(true)
+        try {
+            const fullDetails = `
+                Objetivo: ${formData.goals}. 
+                Audiencia: ${formData.audience}. 
+                Estilo: ${formData.style}. 
+                Presupuesto: ${formData.budget}. 
+                Fecha límite: ${formData.deadline}.
+            `
+
+            const data = new FormData()
+            data.append('userId', userId)
+            data.append('clientName', formData.clientName)
+            data.append('projectType', formData.projectType)
+            data.append('details', fullDetails)
+
+            const response = await fetch(
+                `${BACKEND_URL}/api/generate-checklist`,
+                {
+                    method: 'POST',
+                    body: data,
+                }
+            )
+
+            if (!response.ok) {
+                const err = await response.json()
+                throw new Error(err.detail || 'Error en el servidor')
+            }
+
+            setIsFinished(true)
+        } catch (error: any) {
+            console.error(error)
+            showModal(
+                'Error de Generación',
+                `No se pudo crear el checklist. Detalle: ${error.message}`,
+                true,
+                true
+            )
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const nextStep = () => setStep((s) => s + 1)
+    const prevStep = () => setStep((s) => s - 1)
+
+    if (isFinished) {
+        return (
+            <div className="max-w-5xl mx-auto pt-8 pb-20">
+                <div className="text-center mb-8">
+                    <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                        <Check className="w-8 h-8 text-green-600 dark:text-green-400" />
+                    </div>
+                    <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+                        ¡Proyecto Iniciado!
+                    </h2>
+                    <p className="text-slate-600 dark:text-slate-300">
+                        Nota creada. Aquí tienes la vista previa del documento.
+                    </p>
+                </div>
+
+                <div className="flex justify-center gap-4 mb-8">
+                    <Button
+                        onClick={handleDownloadPDF}
+                        className="shadow-lg shadow-brand-200 dark:shadow-none"
+                    >
+                        <Download className="w-4 h-4 mr-2" /> Descargar PDF
+                        Oficial
+                    </Button>
+                    <Button
+                        variant="outline"
+                        onClick={() => window.location.reload()}
+                    >
+                        Crear Nuevo
+                    </Button>
+                </div>
+
+                {/* CONTENEDOR CON SCROLL PARA QUE NO ROMPA EL LAYOUT MÓVIL */}
+                <div className="flex justify-center bg-slate-200 dark:bg-slate-800 p-4 md:p-8 rounded-xl overflow-x-auto border border-slate-300 dark:border-slate-700">
+                    {/* HOJA A4 EXACTA (210mm ancho) */}
+                    <div
+                        id="brief-document"
+                        className="bg-white text-slate-900 w-[210mm] min-h-[297mm] p-[20mm] shadow-2xl shrink-0"
+                        style={{ fontFamily: 'Inter, sans-serif' }}
+                    >
+                        {/* Header Documento */}
+                        <div className="border-b-2 border-slate-900 pb-6 mb-8 flex justify-between items-start">
+                            <div>
+                                <h1 className="text-4xl font-extrabold uppercase tracking-tight mb-2">
+                                    Briefing
+                                </h1>
+                                <p className="text-sm text-slate-500 font-medium">
+                                    Documento de Requerimientos
+                                </p>
+                            </div>
+                            <div className="text-right">
+                                <p className="font-bold text-lg">
+                                    {formData.clientName}
+                                </p>
+                                <p className="text-sm text-slate-500">
+                                    {new Date().toLocaleDateString()}
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Cuerpo Documento */}
+                        <div className="space-y-10">
+                            <section>
+                                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 border-b border-slate-100 pb-1">
+                                    Detalles Generales
+                                </h3>
+                                <div className="grid grid-cols-2 gap-y-6 gap-x-8">
+                                    <div>
+                                        <span className="block text-xs font-bold text-slate-500 mb-1">
+                                            Tipo de Proyecto
+                                        </span>
+                                        <p className="text-base font-medium">
+                                            {formData.projectType}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <span className="block text-xs font-bold text-slate-500 mb-1">
+                                            Fecha Límite
+                                        </span>
+                                        <p className="text-base font-medium">
+                                            {formData.deadline || 'A definir'}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <span className="block text-xs font-bold text-slate-500 mb-1">
+                                            Presupuesto Estimado
+                                        </span>
+                                        <p className="text-base font-medium">
+                                            {formData.budget || 'A definir'}
+                                        </p>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section>
+                                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 border-b border-slate-100 pb-1">
+                                    Objetivos & Alcance
+                                </h3>
+                                <div className="bg-slate-50 p-6 rounded-lg border border-slate-100">
+                                    <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                                        {formData.goals ||
+                                            'Sin objetivos definidos.'}
+                                    </p>
+                                </div>
+                            </section>
+
+                            <section className="grid grid-cols-2 gap-8">
+                                <div>
+                                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 border-b border-slate-100 pb-1">
+                                        Público Objetivo
+                                    </h3>
+                                    <p className="text-sm leading-relaxed">
+                                        {formData.audience ||
+                                            'No especificado.'}
+                                    </p>
+                                </div>
+                                <div>
+                                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 border-b border-slate-100 pb-1">
+                                        Estilo Visual
+                                    </h3>
+                                    <p className="text-sm leading-relaxed">
+                                        {formData.style || 'No especificado.'}
+                                    </p>
+                                </div>
+                            </section>
+                        </div>
+
+                        {/* Footer Documento */}
+                        <div className="mt-24 pt-8 border-t border-slate-200 flex justify-between items-center text-xs text-slate-400">
+                            <p>Generado con ModoFreelanceOS</p>
+                            <p>Página 1 de 1</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    // --- WIZARD ---
     return (
-      <div className="max-w-2xl mx-auto text-center pt-12">
-        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <Check className="w-10 h-10 text-green-600" />
-        </div>
-        <h2 className="text-3xl font-bold text-slate-900 mb-4">¡Brief Generado!</h2>
-        <p className="text-slate-600 text-lg mb-8">
-          En la versión completa, esto genera un PDF limpio con los requisitos del cliente y te lo envía por email.
-          Esto evita el "Yo no pedí eso" a mitad del proyecto.
-        </p>
-        <Card className="p-6 bg-slate-50 text-left mb-8 border-dashed border-2 border-slate-300">
-          <h3 className="font-bold text-slate-800 mb-2">Resumen del Cliente:</h3>
-          <ul className="space-y-2 text-slate-600 text-sm">
-            <li>• Estilo: Minimalista & Limpio</li>
-            <li>• Recursos: No tengo nada aún</li>
-            <li>• Presupuesto: $1,000 - $3,000</li>
-          </ul>
-        </Card>
-        <Button onClick={() => { setIsFinished(false); setStep(0); }}>Crear otro Brief</Button>
-      </div>
-    );
-  }
+        <div className="max-w-3xl mx-auto">
+            <ConfirmationModal
+                isOpen={modal.isOpen}
+                onClose={() => setModal({ ...modal, isOpen: false })}
+                onConfirm={() => {
+                    modal.action()
+                    setModal({ ...modal, isOpen: false })
+                }}
+                title={modal.title}
+                message={modal.message}
+                isDanger={modal.isDanger}
+                confirmText="Entendido"
+                cancelText={modal.singleButton ? '' : 'Cancelar'}
+            />
 
-  const currentStep = steps[step];
-
-  return (
-    <div className="max-w-3xl mx-auto">
-      <div className="mb-8 text-center">
-        <h2 className="text-2xl font-bold text-slate-900">Briefing Wizard</h2>
-        <p className="text-slate-500">
-          Así es como tu cliente verá el formulario. Profesional y guiado.
-        </p>
-      </div>
-
-      <div className="w-full bg-slate-200 h-2 rounded-full mb-8">
-        <div 
-          className="bg-brand-600 h-2 rounded-full transition-all duration-300" 
-          style={{ width: `${((step + 1) / steps.length) * 100}%` }}
-        />
-      </div>
-
-      <Card className="p-8 md:p-12 min-h-[400px] flex flex-col justify-between shadow-lg relative overflow-hidden">
-        {/* Decorative background element */}
-        <div className="absolute top-0 right-0 w-32 h-32 bg-brand-50 rounded-bl-full -z-0" />
-
-        <div className="relative z-10">
-          <span className="text-xs font-bold tracking-wider text-brand-600 uppercase mb-2 block">
-            Paso {step + 1} de {steps.length}
-          </span>
-          <h3 className="text-3xl font-bold text-slate-900 mb-4">{currentStep.title}</h3>
-          <p className="text-lg text-slate-600 mb-8">{currentStep.description}</p>
-
-          {currentStep.type === 'choice' || currentStep.type === 'budget' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {currentStep.options?.map((opt, i) => (
-                <button 
-                  key={i}
-                  onClick={handleNext}
-                  className="p-4 rounded-xl border-2 border-slate-100 hover:border-brand-500 hover:bg-brand-50 text-left transition-all group"
-                >
-                  <span className="font-medium text-slate-700 group-hover:text-brand-700">{opt}</span>
-                </button>
-              ))}
+            <div className="mb-8 text-center">
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+                    Briefing Inteligente
+                </h2>
+                <p className="text-slate-500 dark:text-slate-400">
+                    Define el proyecto y deja que la IA organice tu trabajo.
+                </p>
             </div>
-          ) : (
-            <div className="flex items-center justify-center h-32 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200 text-slate-400">
-              (Vista previa de contenido introductorio)
-            </div>
-          )}
-        </div>
 
-        <div className="flex justify-between items-center mt-8 pt-6 border-t border-slate-100 relative z-10">
-          <Button variant="ghost" onClick={handleBack} disabled={step === 0}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Atrás
-          </Button>
-          
-          {currentStep.type === 'intro' && (
-            <Button onClick={handleNext}>
-              Comenzar
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          )}
+            <div className="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full mb-8">
+                <div
+                    className="bg-brand-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${((step + 1) / 4) * 100}%` }}
+                />
+            </div>
+
+            <Card className="p-8 shadow-lg min-h-[400px] flex flex-col relative dark:bg-slate-800 dark:border-slate-700">
+                {/* PASO 1 */}
+                {step === 0 && (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                        <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                            <User className="w-5 h-5 text-brand-500" /> Datos
+                            del Cliente
+                        </h3>
+                        <div>
+                            <label className="text-sm font-bold text-slate-600 dark:text-slate-400">
+                                Nombre del Cliente / Empresa
+                            </label>
+                            <input
+                                className="w-full p-3 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white rounded-lg mt-1 outline-none focus:ring-2 focus:ring-brand-500"
+                                value={formData.clientName}
+                                onChange={(e) =>
+                                    updateForm('clientName', e.target.value)
+                                }
+                                placeholder="Ej: Pizza Planet"
+                                autoFocus
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-bold text-slate-600 dark:text-slate-400">
+                                Tipo de Proyecto
+                            </label>
+                            <select
+                                className="w-full p-3 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white rounded-lg mt-1 outline-none"
+                                value={formData.projectType}
+                                onChange={(e) =>
+                                    updateForm('projectType', e.target.value)
+                                }
+                            >
+                                <option>Diseño Gráfico (Logo/Branding)</option>
+                                <option>Desarrollo Web</option>
+                                <option>Marketing / Redes Sociales</option>
+                                <option>Redacción / Traducción</option>
+                                <option>Edición de Video</option>
+                                <option>Otro</option>
+                            </select>
+                        </div>
+                    </div>
+                )}
+
+                {/* PASO 2 */}
+                {step === 1 && (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                        <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                            <Briefcase className="w-5 h-5 text-brand-500" />{' '}
+                            Alcance y Presupuesto
+                        </h3>
+                        <div>
+                            <label className="text-sm font-bold text-slate-600 dark:text-slate-400">
+                                Presupuesto Estimado
+                            </label>
+                            <input
+                                className="w-full p-3 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white rounded-lg mt-1 outline-none"
+                                value={formData.budget}
+                                onChange={(e) =>
+                                    updateForm('budget', e.target.value)
+                                }
+                                placeholder="Ej: $500 - $1000 USD"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-bold text-slate-600 dark:text-slate-400">
+                                Fecha de Entrega (Deadline)
+                            </label>
+                            <input
+                                type="date"
+                                className="w-full p-3 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white rounded-lg mt-1 outline-none"
+                                value={formData.deadline}
+                                onChange={(e) =>
+                                    updateForm('deadline', e.target.value)
+                                }
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {/* PASO 3 */}
+                {step === 2 && (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                        <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                            <AlignLeft className="w-5 h-5 text-brand-500" />{' '}
+                            Detalles Creativos
+                        </h3>
+                        <div>
+                            <label className="text-sm font-bold text-slate-600 dark:text-slate-400">
+                                ¿Cuál es el objetivo principal?
+                            </label>
+                            <textarea
+                                className="w-full p-3 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white rounded-lg mt-1 h-20 resize-none outline-none"
+                                value={formData.goals}
+                                onChange={(e) =>
+                                    updateForm('goals', e.target.value)
+                                }
+                                placeholder="Ej: Aumentar ventas, renovar imagen..."
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-bold text-slate-600 dark:text-slate-400">
+                                ¿A quién va dirigido? (Audiencia)
+                            </label>
+                            <input
+                                className="w-full p-3 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white rounded-lg mt-1 outline-none"
+                                value={formData.audience}
+                                onChange={(e) =>
+                                    updateForm('audience', e.target.value)
+                                }
+                                placeholder="Ej: Jóvenes de 18-25 años..."
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-bold text-slate-600 dark:text-slate-400">
+                                Estilo Visual / Tono
+                            </label>
+                            <input
+                                className="w-full p-3 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white rounded-lg mt-1 outline-none"
+                                value={formData.style}
+                                onChange={(e) =>
+                                    updateForm('style', e.target.value)
+                                }
+                                placeholder="Ej: Minimalista, Corporativo, Divertido..."
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {/* PASO 4 */}
+                {step === 3 && (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300 text-center">
+                        <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-4">
+                            ¿Todo listo?
+                        </h3>
+                        <p className="text-slate-600 dark:text-slate-300 mb-8">
+                            Al confirmar, generaremos el PDF del brief y la IA
+                            creará automáticamente las tareas en tu tablero.
+                        </p>
+                        <div className="bg-brand-50 dark:bg-brand-900/20 p-4 rounded-xl text-left border border-brand-100 dark:border-brand-800">
+                            <p className="font-bold text-brand-900 dark:text-brand-100 text-sm mb-2">
+                                Resumen:
+                            </p>
+                            <ul className="text-sm text-brand-800 dark:text-brand-200 list-disc list-inside space-y-1">
+                                <li>
+                                    <strong>Cliente:</strong>{' '}
+                                    {formData.clientName}
+                                </li>
+                                <li>
+                                    <strong>Proyecto:</strong>{' '}
+                                    {formData.projectType}
+                                </li>
+                                <li>
+                                    <strong>Objetivo:</strong> {formData.goals}
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                )}
+
+                {/* NAVEGACIÓN */}
+                <div className="mt-auto pt-8 flex justify-between border-t border-slate-100 dark:border-slate-700">
+                    <Button
+                        variant="ghost"
+                        onClick={prevStep}
+                        disabled={step === 0 || loading}
+                    >
+                        <ArrowLeft className="w-4 h-4 mr-2" /> Atrás
+                    </Button>
+
+                    {step < 3 ? (
+                        <Button
+                            onClick={nextStep}
+                            disabled={!formData.clientName}
+                        >
+                            Siguiente <ArrowRight className="w-4 h-4 ml-2" />
+                        </Button>
+                    ) : (
+                        <Button
+                            onClick={handleProcess}
+                            isLoading={loading}
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                        >
+                            {loading
+                                ? 'Generando Checklist...'
+                                : 'Finalizar y Crear Tareas'}
+                        </Button>
+                    )}
+                </div>
+            </Card>
         </div>
-      </Card>
-    </div>
-  );
-};
+    )
+}

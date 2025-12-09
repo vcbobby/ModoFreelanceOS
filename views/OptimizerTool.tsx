@@ -30,7 +30,6 @@ export const OptimizerTool: React.FC<OptimizerToolProps> = ({
         if (!originalFile) return
         const canProceed = await onUsage(3)
         if (!canProceed) return
-
         setIsCompressing(true)
         try {
             const options = {
@@ -51,10 +50,6 @@ export const OptimizerTool: React.FC<OptimizerToolProps> = ({
     const handleDownloadAndSave = async () => {
         if (!compressedFile || !originalFile) return
         setIsSaving(true)
-
-        // DEBUG: Verificar si llega el usuario
-        console.log('Intentando guardar historial. Usuario ID:', userId)
-
         if (userId) {
             const savedSize = (
                 (originalFile.size - compressedFile.size) /
@@ -65,12 +60,11 @@ export const OptimizerTool: React.FC<OptimizerToolProps> = ({
                     originalFile.size) *
                     100
             )
-
             try {
                 await addDoc(collection(db, 'users', userId, 'history'), {
                     createdAt: new Date().toISOString(),
                     category: 'proposal',
-                    clientName: originalFile.name, // Nombre del archivo como "Cliente"
+                    clientName: originalFile.name,
                     platform: 'Image Optimizer',
                     type: 'Optimización',
                     content: `**Reporte de Ahorro:**\n- Peso Original: ${formatSize(
@@ -79,23 +73,16 @@ export const OptimizerTool: React.FC<OptimizerToolProps> = ({
                         compressedFile.size
                     )}\n- **Espacio Ahorrado: ${savedSize} KB (${percent}%)**`,
                 })
-                console.log('Guardado en historial con éxito')
             } catch (e) {
                 console.error('Error guardando historial:', e)
-                alert('Error guardando en historial (revisa la consola)')
             }
-        } else {
-            console.warn('No se guardó en historial porque no hay userId')
         }
-
-        // Descargar
         const link = document.createElement('a')
         link.href = URL.createObjectURL(compressedFile)
         link.download = `optimized-${originalFile.name}`
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
-
         setIsSaving(false)
     }
 
@@ -104,20 +91,20 @@ export const OptimizerTool: React.FC<OptimizerToolProps> = ({
     return (
         <div className="max-w-3xl mx-auto">
             <div className="mb-8 text-center">
-                <h2 className="text-2xl font-bold text-slate-900 flex items-center justify-center gap-2">
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center justify-center gap-2">
                     <Zap className="w-6 h-6 text-brand-600" /> Optimizador de
                     Imágenes
                 </h2>
-                <p className="text-slate-600">
+                <p className="text-slate-600 dark:text-slate-400">
                     Reduce el peso de tus imágenes.{' '}
-                    <span className="bg-brand-100 text-brand-800 text-xs font-bold px-2 py-0.5 rounded">
+                    <span className="bg-brand-100 dark:bg-brand-900/30 text-brand-800 dark:text-brand-300 text-xs font-bold px-2 py-0.5 rounded">
                         Costo: 3 Créditos
                     </span>
                 </p>
             </div>
 
             <Card className="p-8 shadow-md">
-                <div className="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer relative">
+                <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-8 text-center bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer relative">
                     <input
                         type="file"
                         accept="image/*"
@@ -125,8 +112,8 @@ export const OptimizerTool: React.FC<OptimizerToolProps> = ({
                         className="absolute inset-0 opacity-0 cursor-pointer"
                     />
                     <div className="flex flex-col items-center">
-                        <Upload className="w-10 h-10 text-slate-400 mb-2" />
-                        <p className="font-bold text-slate-700">
+                        <Upload className="w-10 h-10 text-slate-400 mx-auto mb-2" />
+                        <p className="font-bold text-slate-700 dark:text-slate-300">
                             {originalFile
                                 ? originalFile.name
                                 : 'Arrastra o selecciona una imagen'}
@@ -154,25 +141,25 @@ export const OptimizerTool: React.FC<OptimizerToolProps> = ({
                 )}
 
                 {compressedFile && originalFile && (
-                    <div className="mt-8 bg-green-50 border border-green-200 rounded-xl p-6">
+                    <div className="mt-8 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-6">
                         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                             <div className="text-center md:text-left">
-                                <p className="text-xs text-slate-500 uppercase font-bold">
+                                <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold">
                                     Antes
                                 </p>
-                                <p className="font-bold text-slate-700">
+                                <p className="font-bold text-slate-700 dark:text-slate-300">
                                     {formatSize(originalFile.size)}
                                 </p>
                             </div>
                             <ArrowRight className="text-green-500 w-6 h-6" />
                             <div className="text-center md:text-right">
-                                <p className="text-xs text-green-600 uppercase font-bold">
+                                <p className="text-xs text-green-600 dark:text-green-400 uppercase font-bold">
                                     Ahora
                                 </p>
-                                <p className="font-bold text-green-700">
+                                <p className="font-bold text-green-700 dark:text-green-300">
                                     {formatSize(compressedFile.size)}
                                 </p>
-                                <span className="text-xs bg-green-200 text-green-800 px-2 py-0.5 rounded-full font-bold">
+                                <span className="text-xs bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200 px-2 py-0.5 rounded-full font-bold">
                                     -
                                     {Math.round(
                                         ((originalFile.size -

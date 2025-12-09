@@ -1,13 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import {
-    Download,
-    Plus,
-    Trash2,
-    FileText,
-    Upload,
-    Smartphone,
-    BadgeInfo,
-} from 'lucide-react'
+import { Download, Plus, Trash2, FileText, Upload } from 'lucide-react'
 import { Button, Card } from '../components/ui'
 // @ts-ignore
 import html2pdf from 'html2pdf.js'
@@ -151,8 +143,6 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({
                 scale: 2,
                 useCORS: true,
                 scrollY: 0,
-                // TRUCO: Le decimos que simule una ventana de 1200px aunque estemos en móvil
-                // Esto hace que el PDF salga perfecto (A4) aunque en la pantalla se vea pequeño.
                 windowWidth: 1200,
             },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
@@ -169,26 +159,24 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({
 
     return (
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-start pb-20">
-            {/* --- COLUMNA IZQUIERDA: EDITOR (FORMULARIO) --- */}
             <div className="space-y-6">
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                         <FileText className="w-6 h-6 text-brand-600" />{' '}
                         Generador de Facturas
                     </h2>
-                    <p className="text-slate-600 mt-1">
+                    <p className="text-slate-600 dark:text-slate-400 mt-1">
                         Crea facturas profesionales.
-                        <span className="bg-brand-100 text-brand-800 text-xs font-bold px-2 py-0.5 rounded ml-2">
+                        <span className="bg-brand-100 dark:bg-brand-900/30 text-brand-800 dark:text-brand-300 text-xs font-bold px-2 py-0.5 rounded ml-2">
                             Costo: 3 Créditos
                         </span>
                     </p>
                 </div>
 
                 <Card className="p-6 shadow-md space-y-6">
-                    {/* Configuración Básica */}
                     <div className="grid grid-cols-3 gap-4">
                         <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase">
+                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
                                 Número #
                             </label>
                             <input
@@ -199,28 +187,28 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({
                                     const num = parseInt(e.target.value)
                                     if (!isNaN(num)) setInvoiceSequence(num)
                                 }}
-                                className="w-full p-2 border rounded"
+                                className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 dark:text-white"
                             />
                         </div>
                         <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase">
+                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
                                 Fecha
                             </label>
                             <input
                                 type="date"
                                 value={date}
                                 onChange={(e) => setDate(e.target.value)}
-                                className="w-full p-2 border rounded"
+                                className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 dark:text-white"
                             />
                         </div>
                         <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase">
+                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
                                 Moneda
                             </label>
                             <select
                                 value={currency}
                                 onChange={(e) => setCurrency(e.target.value)}
-                                className="w-full p-2 border rounded"
+                                className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 dark:text-white"
                             >
                                 <option value="$">USD ($)</option>
                                 <option value="€">EUR (€)</option>
@@ -230,9 +218,8 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({
                         </div>
                     </div>
 
-                    {/* Logo */}
                     <div>
-                        <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">
+                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2 block">
                             Tu Logo
                         </label>
                         <div className="flex items-center gap-4">
@@ -243,7 +230,7 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({
                                     className="h-12 object-contain"
                                 />
                             )}
-                            <label className="cursor-pointer bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded text-sm text-slate-700 flex items-center gap-2">
+                            <label className="cursor-pointer bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 px-4 py-2 rounded text-sm text-slate-700 dark:text-slate-300 flex items-center gap-2">
                                 <Upload className="w-4 h-4" /> Subir Imagen
                                 <input
                                     type="file"
@@ -263,10 +250,9 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({
                         </div>
                     </div>
 
-                    {/* Emisor y Receptor */}
                     <div className="grid grid-cols-1 gap-6">
-                        <div className="space-y-2 border-b border-slate-100 pb-4">
-                            <h3 className="font-bold text-slate-800">
+                        <div className="space-y-2 border-b border-slate-100 dark:border-slate-700 pb-4">
+                            <h3 className="font-bold text-slate-800 dark:text-white">
                                 Tus Datos (Emisor)
                             </h3>
                             <input
@@ -278,7 +264,7 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({
                                         name: e.target.value,
                                     })
                                 }
-                                className="w-full p-2 border rounded text-sm"
+                                className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded text-sm bg-white dark:bg-slate-900 dark:text-white"
                             />
                             <div className="grid grid-cols-2 gap-2">
                                 <input
@@ -290,7 +276,7 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({
                                             idDoc: e.target.value,
                                         })
                                     }
-                                    className="w-full p-2 border rounded text-sm"
+                                    className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded text-sm bg-white dark:bg-slate-900 dark:text-white"
                                 />
                                 <input
                                     placeholder="Teléfono (Opcional)"
@@ -301,7 +287,7 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({
                                             phone: e.target.value,
                                         })
                                     }
-                                    className="w-full p-2 border rounded text-sm"
+                                    className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded text-sm bg-white dark:bg-slate-900 dark:text-white"
                                 />
                             </div>
                             <input
@@ -313,7 +299,7 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({
                                         email: e.target.value,
                                     })
                                 }
-                                className="w-full p-2 border rounded text-sm"
+                                className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded text-sm bg-white dark:bg-slate-900 dark:text-white"
                             />
                             <textarea
                                 placeholder="Dirección Física"
@@ -324,12 +310,12 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({
                                         address: e.target.value,
                                     })
                                 }
-                                className="w-full p-2 border rounded text-sm h-12 resize-none"
+                                className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded text-sm h-12 resize-none bg-white dark:bg-slate-900 dark:text-white"
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <h3 className="font-bold text-slate-800">
+                            <h3 className="font-bold text-slate-800 dark:text-white">
                                 Cliente (Receptor)
                             </h3>
                             <input
@@ -341,7 +327,7 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({
                                         name: e.target.value,
                                     })
                                 }
-                                className="w-full p-2 border rounded text-sm"
+                                className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded text-sm bg-white dark:bg-slate-900 dark:text-white"
                             />
                             <div className="grid grid-cols-2 gap-2">
                                 <input
@@ -353,7 +339,7 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({
                                             idDoc: e.target.value,
                                         })
                                     }
-                                    className="w-full p-2 border rounded text-sm"
+                                    className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded text-sm bg-white dark:bg-slate-900 dark:text-white"
                                 />
                                 <input
                                     placeholder="Teléfono (Opcional)"
@@ -364,7 +350,7 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({
                                             phone: e.target.value,
                                         })
                                     }
-                                    className="w-full p-2 border rounded text-sm"
+                                    className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded text-sm bg-white dark:bg-slate-900 dark:text-white"
                                 />
                             </div>
                             <input
@@ -376,7 +362,7 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({
                                         email: e.target.value,
                                     })
                                 }
-                                className="w-full p-2 border rounded text-sm"
+                                className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded text-sm bg-white dark:bg-slate-900 dark:text-white"
                             />
                             <textarea
                                 placeholder="Dirección Cliente"
@@ -387,21 +373,20 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({
                                         address: e.target.value,
                                     })
                                 }
-                                className="w-full p-2 border rounded text-sm h-12 resize-none"
+                                className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded text-sm h-12 resize-none bg-white dark:bg-slate-900 dark:text-white"
                             />
                         </div>
                     </div>
 
-                    {/* Items */}
                     <div>
-                        <h3 className="font-bold text-slate-800 mb-2">
+                        <h3 className="font-bold text-slate-800 dark:text-white mb-2">
                             Conceptos
                         </h3>
                         <div className="space-y-2">
                             {items.map((item) => (
                                 <div
                                     key={item.id}
-                                    className="flex flex-col sm:flex-row gap-2 items-start sm:items-center border-b border-slate-100 pb-4 sm:border-0 sm:pb-0 mb-2 sm:mb-0"
+                                    className="flex flex-col sm:flex-row gap-2 items-start sm:items-center border-b border-slate-100 dark:border-slate-700 pb-4 sm:border-0 sm:pb-0 mb-2 sm:mb-0"
                                 >
                                     <input
                                         placeholder="Descripción"
@@ -413,7 +398,7 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({
                                                 e.target.value
                                             )
                                         }
-                                        className="w-full sm:flex-1 p-2 border rounded text-sm"
+                                        className="w-full sm:flex-1 p-2 border border-slate-300 dark:border-slate-600 rounded text-sm bg-white dark:bg-slate-900 dark:text-white"
                                     />
                                     <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                                         <input
@@ -427,7 +412,7 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({
                                                     Number(e.target.value)
                                                 )
                                             }
-                                            className="w-20 p-2 border rounded text-sm"
+                                            className="w-20 p-2 border border-slate-300 dark:border-slate-600 rounded text-sm bg-white dark:bg-slate-900 dark:text-white"
                                         />
                                         <input
                                             type="number"
@@ -440,7 +425,7 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({
                                                     Number(e.target.value)
                                                 )
                                             }
-                                            className="flex-1 sm:w-24 p-2 border rounded text-sm"
+                                            className="flex-1 sm:w-24 p-2 border border-slate-300 dark:border-slate-600 rounded text-sm bg-white dark:bg-slate-900 dark:text-white"
                                         />
                                         <button
                                             onClick={() => removeItem(item.id)}
@@ -453,27 +438,26 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({
                             ))}
                             <button
                                 onClick={addItem}
-                                className="text-sm text-brand-600 font-bold flex items-center gap-1 hover:underline mt-2"
+                                className="text-sm text-brand-600 dark:text-brand-400 font-bold flex items-center gap-1 hover:underline mt-2"
                             >
                                 <Plus className="w-4 h-4" /> Agregar Item
                             </button>
                         </div>
                     </div>
 
-                    {/* Totales */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase">
+                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
                                 Notas
                             </label>
                             <textarea
                                 value={notes}
                                 onChange={(e) => setNotes(e.target.value)}
-                                className="w-full p-2 border rounded text-sm h-20"
+                                className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded text-sm h-20 bg-white dark:bg-slate-900 dark:text-white"
                             />
                         </div>
                         <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase">
+                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
                                 Impuestos (%)
                             </label>
                             <input
@@ -482,7 +466,7 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({
                                 onChange={(e) =>
                                     setTaxRate(Number(e.target.value))
                                 }
-                                className="w-full p-2 border rounded"
+                                className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 dark:text-white"
                             />
                         </div>
                     </div>
@@ -499,22 +483,18 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({
                 </Card>
             </div>
 
-            {/* --- COLUMNA DERECHA: VISTA PREVIA --- */}
-            {/* ARREGLO: Quitamos anchos fijos. Usamos w-full y sticky solo en desktop (lg) */}
             <div className="lg:sticky lg:top-6">
-                <h3 className="text-sm font-bold text-slate-500 uppercase mb-2">
+                <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">
                     Vista Previa
                 </h3>
 
-                <div className="bg-slate-200 p-4 rounded-xl border border-slate-300 shadow-inner flex justify-center">
-                    {/* HOJA A4 FLUIDA: w-full pero max-w de A4 */}
+                <div className="bg-slate-200 dark:bg-slate-700 p-4 rounded-xl border border-slate-300 dark:border-slate-600 shadow-inner flex justify-center">
                     <div
                         id="invoice-preview"
                         ref={invoiceRef}
                         className="bg-white shadow-xl w-full max-w-[210mm] min-h-[197mm] overflow-x-auto p-8 md:p-12 text-slate-800 flex flex-col justify-between"
                         style={{ fontSize: '14px' }}
                     >
-                        {/* ... CONTENIDO DE LA FACTURA (Igual que antes) ... */}
                         <div>
                             <div className="flex justify-between items-start mb-8">
                                 <div>
@@ -535,13 +515,11 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({
                                         </p>
                                         {sender.idDoc && (
                                             <p className="flex items-center gap-1">
-                                                {/* <BadgeInfo className="w-3 h-3" />{' '} */}
                                                 {sender.idDoc}
                                             </p>
                                         )}
                                         {sender.phone && (
                                             <p className="flex items-center gap-1">
-                                                {/* <Smartphone className="w-3 h-3" />{' '} */}
                                                 {sender.phone}
                                             </p>
                                         )}
