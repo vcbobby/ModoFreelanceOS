@@ -50,7 +50,7 @@ import { BriefingTool } from './views/BriefingTool'
 import { auth, db } from './firebase'
 import { onAuthStateChanged, signOut, User } from 'firebase/auth'
 import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore'
-const GUMROAD_LINK = 'https://modofreelanceos.gumroad.com/l/pro-plan'
+const GUMROAD_LINK = 'https://modofreelanceos.gumroad.com/l/pro-subs'
 const WORDPRESS_URL = 'http://modofreelanceos.com/'
 const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000' // <-- Asegúrate de que esto esté definido
 
@@ -796,6 +796,7 @@ const App = () => {
                 isOpen={isPricingOpen}
                 onClose={() => setIsPricingOpen(false)}
                 onSubscribe={handleSubscribe}
+                isPro={userState.isSubscribed} //
             />
             <ConfirmationModal
                 isOpen={alertModal.isOpen}

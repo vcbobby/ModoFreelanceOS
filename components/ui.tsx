@@ -148,21 +148,23 @@ interface PricingModalProps {
     isOpen: boolean
     onClose: () => void
     onSubscribe: () => void
+    isPro?: boolean
 }
 
 export const PricingModal: React.FC<PricingModalProps> = ({
     isOpen,
     onClose,
     onSubscribe,
+    isPro = false,
 }) => {
     if (!isOpen) return null
+    const GUMROAD_MANAGE_URL = 'https://app.gumroad.com/library'
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-300">
             <div
                 className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg relative animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto custom-scrollbar flex flex-col dark:border dark:border-slate-700"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* Botón cerrar */}
                 <button
                     onClick={onClose}
                     className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors z-20 bg-black/20 p-1 rounded-full backdrop-blur-md"
@@ -171,71 +173,117 @@ export const PricingModal: React.FC<PricingModalProps> = ({
                 </button>
 
                 {/* Header Premium */}
-                <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-brand-900 p-8 text-center text-white relative overflow-hidden shrink-0">
-                    <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+                <div
+                    className={`p-8 text-center text-white relative overflow-hidden shrink-0 ${
+                        isPro
+                            ? 'bg-gradient-to-br from-green-600 to-emerald-800'
+                            : 'bg-gradient-to-br from-slate-900 via-slate-800 to-brand-900'
+                    }`}
+                >
                     <div className="relative z-10">
-                        <div className="w-16 h-16 bg-gradient-to-br from-brand-400 to-brand-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-brand-500/30 transform rotate-3">
+                        <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg backdrop-blur-sm transform rotate-3">
                             <Crown className="w-8 h-8 text-white" />
                         </div>
                         <h2 className="text-3xl font-extrabold tracking-tight mb-2">
-                            ModoFreelance
-                            <span className="text-brand-400">PRO</span>
+                            {isPro ? '¡Eres PRO!' : 'ModoFreelance PRO'}
                         </h2>
-                        <p className="text-slate-300 text-sm font-medium">
-                            Desbloquea el potencial total de tu negocio.
+                        <p className="text-white/80 text-sm font-medium">
+                            {isPro
+                                ? 'Gracias por apoyar el proyecto.'
+                                : 'Desbloquea el potencial total de tu negocio.'}
                         </p>
                     </div>
                 </div>
 
-                {/* Contenido */}
                 <div className="p-6 md:p-8">
-                    <div className="text-center mb-8">
-                        <div className="flex items-center justify-center gap-2">
-                            <span className="text-lg text-slate-400 dark:text-slate-500 line-through font-medium">
-                                $19.99
-                            </span>
-                            <span className="text-5xl font-extrabold text-slate-900 dark:text-white">
-                                $10
-                            </span>
-                            <span className="text-md text-slate-400 dark:text-slate-300 font-medium">
-                                USD
-                            </span>
-                        </div>
-                        <div className="inline-flex items-center gap-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide mt-2">
-                            <Infinity className="w-3 h-3" /> Pago Mensual
-                        </div>
-                    </div>
+                    {/* CONTENIDO DINÁMICO: SI ES PRO vs SI NO LO ES */}
 
-                    <ul className="space-y-4 mb-8">
-                        <BenefitItem
-                            text="Créditos ILIMITADOS en todas las herramientas."
-                            highlighted
-                        />
-                        <BenefitItem
-                            text="Asistente Personal IA 24/7 (Chatbot Conectado)."
-                            highlighted
-                        />
-                        <Button
-                            variant="primary"
-                            className="w-full text-lg py-4 shadow-xl shadow-brand-200 dark:shadow-none mb-4"
-                            onClick={onSubscribe}
-                        >
-                            <Zap className="w-5 h-5 mr-2 fill-current" /> Pago
-                            automático con tarjeta
-                        </Button>
-                        <BenefitItem text="Módulo de Finanzas & Auditoría IA." />
-                        <BenefitItem text="Generador de Logos HD (Modelo Flux)." />
-                        <BenefitItem text="Analizador de Contratos con IA." />
-                        <BenefitItem text="Descargas ilimitadas (Facturas, QR, Imágenes)." />
-                        <BenefitItem text="Soporte prioritario y actualizaciones." />
-                    </ul>
+                    {isPro ? (
+                        // VISTA PARA USUARIOS PRO (GESTIÓN)
+                        <div className="text-center space-y-6">
+                            <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-xl border border-green-200 dark:border-green-800">
+                                <p className="text-green-800 dark:text-green-300 font-bold mb-1">
+                                    Tu suscripción está activa ✅
+                                </p>
+                                <p className="text-sm text-green-700 dark:text-green-400">
+                                    Tienes acceso ilimitado a todas las
+                                    herramientas de IA.
+                                </p>
+                            </div>
 
-                    <div className="text-center">
-                        <p className="text-xs text-slate-400 flex items-center justify-center gap-1">
-                            <ShieldCheck className="w-3 h-3" /> Pago seguro vía
-                            Gumroad.
-                        </p>
-                    </div>
+                            <div className="space-y-3">
+                                <p className="text-sm text-slate-500 dark:text-slate-400">
+                                    ¿Necesitas actualizar tu tarjeta o cancelar?
+                                </p>
+                                <Button
+                                    onClick={() =>
+                                        window.open(
+                                            GUMROAD_MANAGE_URL,
+                                            '_blank'
+                                        )
+                                    }
+                                    className="w-full bg-slate-900 dark:bg-slate-700 hover:bg-slate-800"
+                                >
+                                    Gestionar Suscripción en Gumroad
+                                </Button>
+                                <p className="text-xs text-slate-400 mt-2">
+                                    Serás redirigido a tu biblioteca de Gumroad.
+                                </p>
+                            </div>
+                        </div>
+                    ) : (
+                        // VISTA DE VENTA (LA ORIGINAL)
+                        <>
+                            <div className="text-center mb-8">
+                                <div className="flex items-center justify-center gap-2">
+                                    <span className="text-lg text-slate-400 dark:text-slate-500 line-through font-medium">
+                                        $19.99
+                                    </span>
+                                    <span className="text-5xl font-extrabold text-slate-900 dark:text-white">
+                                        $10
+                                    </span>
+                                    <span className="text-md text-slate-400 dark:text-slate-300 font-medium">
+                                        USD / mes
+                                    </span>
+                                </div>
+                                <div className="inline-flex items-center gap-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide mt-2">
+                                    <Infinity className="w-3 h-3" /> Acceso
+                                    Total
+                                </div>
+                            </div>
+
+                            <ul className="space-y-4 mb-8">
+                                <BenefitItem
+                                    text="Créditos ILIMITADOS en todas las herramientas."
+                                    highlighted
+                                />
+                                <BenefitItem
+                                    text="Generador de Videos Cortos (Shorts) con IA."
+                                    highlighted
+                                />
+                                <BenefitItem text="Asistente Personal IA 24/7 con memoria." />
+                                <BenefitItem text="Generador de Portafolios & Casos de Estudio." />
+                                <BenefitItem text="Checklists Automáticos desde Briefs." />
+                                <BenefitItem text="Finanzas Avanzadas & Auditoría." />
+                            </ul>
+
+                            <Button
+                                variant="primary"
+                                className="w-full text-lg py-4 shadow-xl shadow-brand-200 dark:shadow-none mb-4"
+                                onClick={onSubscribe}
+                            >
+                                <Zap className="w-5 h-5 mr-2 fill-current" />{' '}
+                                Pagar seguro con Gumroad
+                            </Button>
+
+                            <div className="text-center">
+                                <p className="text-xs text-slate-400 flex items-center justify-center gap-1">
+                                    <ShieldCheck className="w-3 h-3" />{' '}
+                                    Procesado por Gumroad.
+                                </p>
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
         </div>
