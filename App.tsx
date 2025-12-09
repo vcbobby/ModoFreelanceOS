@@ -45,7 +45,7 @@ import { AIAssistant } from './components/AIAssistant'
 import { DashboardUpcomingEvents } from './components/DashboardUpcomingEvents'
 import { PortfolioTool } from './views/PortfolioTool'
 import { BriefingTool } from './views/BriefingTool'
-import { Analytics } from '@vercel/analytics/next'
+import { Analytics } from '@vercel/analytics/react'
 // Firebase
 import { auth, db } from './firebase'
 import { onAuthStateChanged, signOut, User } from 'firebase/auth'
