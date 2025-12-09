@@ -13,7 +13,7 @@ import {
 import { Button, Card } from '../components/ui'
 import ReactMarkdown from 'react-markdown'
 // Importar FFmpeg
-import { FFmpeg } from '@ffmpeg/ffmpeg'
+// import { FFmpeg } from '@ffmpeg/ffmpeg'
 import { toBlobURL } from '@ffmpeg/util'
 
 interface VideoCompressorViewProps {
@@ -36,14 +36,20 @@ export const VideoCompressorView: React.FC<VideoCompressorViewProps> = ({
     const [statusMessage, setStatusMessage] = useState<string | null>(null)
 
     // FFmpeg Instance
-    const ffmpegRef = useRef(new FFmpeg())
+    const ffmpegRef = useRef<FFmpeg | null>(null) // Usamos null al inicio
     const messageRef = useRef<HTMLDivElement>(null)
 
     // --- 1. Inicializar FFmpeg ---
     useEffect(() => {
         const loadFFmpeg = async () => {
+            // Importación dinámica SÍ funciona con Vercel/Vite
+            const { FFmpeg } = await import('@ffmpeg/ffmpeg')
+
+            // Creamos la instancia
+            const ffmpeg = new FFmpeg()
+            ffmpegRef.current = ffmpeg
+
             const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm'
-            const ffmpeg = ffmpegRef.current
 
             try {
                 // Monta los core files
