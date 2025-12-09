@@ -33,10 +33,30 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
     const [successMsg, setSuccessMsg] = useState('')
     const [loading, setLoading] = useState(false)
 
+    // URL DE TU BACKEND (Cámbialo al subir a producción)
+    const BACKEND_URL = 'http://localhost:8000'
+
+    // Función para avisar al backend (Fire and Forget)
+    const notifyBackendSignup = async (userEmail: string) => {
+        try {
+            const formData = new FormData()
+            formData.append('email', userEmail)
+            // No usamos await aquí para no bloquear la UI si el backend falla
+            fetch(`${BACKEND_URL}/api/notify-signup`, {
+                method: 'POST',
+                body: formData,
+            })
+        } catch (e) {
+            console.error('No se pudo notificar al backend', e)
+        }
+    }
+
     const handleUserInDb = async (user: any) => {
         const docRef = doc(db, 'users', user.uid)
         const docSnap = await getDoc(docRef)
+
         if (!docSnap.exists()) {
+            // Usuario Nuevo
             await setDoc(docRef, {
                 email: user.email,
                 credits: 3,
@@ -44,6 +64,8 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
                 createdAt: new Date().toISOString(),
                 lastReset: Date.now(),
             })
+            // Notificamos al backend que hay un nuevo usuario
+            notifyBackendSignup(user.email)
         }
     }
 
@@ -52,6 +74,7 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
         setError('')
         setSuccessMsg('')
         setLoading(true)
+
         try {
             if (viewState === 'register') {
                 const userCredential = await createUserWithEmailAndPassword(

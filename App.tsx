@@ -20,6 +20,9 @@ import {
     DollarSign,
     Moon,
     Sun,
+    Eraser,
+    Briefcase,
+    ClipboardList,
 } from 'lucide-react'
 import { useTheme } from './context/ThemeContext'
 import { DashboardTips } from './components/DashboardTips'
@@ -41,12 +44,13 @@ import { AnalyzerTool } from './views/AnalyzerTool'
 import { NotificationModal } from './components/ui/NotificationModal'
 import { AIAssistant } from './components/AIAssistant'
 import { DashboardUpcomingEvents } from './components/DashboardUpcomingEvents'
-
+import { PortfolioTool } from './views/PortfolioTool'
+import { BriefingTool } from './views/BriefingTool'
 // Firebase
 import { auth, db } from './firebase'
 import { onAuthStateChanged, signOut, User } from 'firebase/auth'
 import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore'
-
+import { BackgroundRemoverView } from './views/BackgroundRemoverView'
 const GUMROAD_LINK = 'https://modofreelanceos.gumroad.com/l/pro-plan'
 const WORDPRESS_URL = 'http://modofreelanceos.com/'
 
@@ -365,6 +369,27 @@ const App = () => {
                 )
             case AppView.FINANCES:
                 return <FinanceView userId={firebaseUser?.uid} />
+            case AppView.BACKGROUND_REMOVER:
+                return (
+                    <BackgroundRemoverView
+                        onUsage={handleFeatureUsage}
+                        userId={firebaseUser?.uid}
+                    />
+                )
+            case AppView.PORTFOLIO:
+                return (
+                    <PortfolioTool
+                        onUsage={handleFeatureUsage}
+                        userId={firebaseUser?.uid}
+                    />
+                )
+            case AppView.BRIEFING:
+                return (
+                    <BriefingTool
+                        onUsage={handleFeatureUsage}
+                        userId={firebaseUser?.uid}
+                    />
+                )
             default:
                 return (
                     <div className="max-w-4xl mx-auto py-8">
@@ -616,6 +641,24 @@ const App = () => {
                         }}
                     />
                     <NavItem
+                        icon={<Briefcase />}
+                        label="Creador Portafolio"
+                        active={currentView === AppView.PORTFOLIO}
+                        onClick={() => {
+                            setCurrentView(AppView.PORTFOLIO)
+                            setIsMobileMenuOpen(false)
+                        }}
+                    />
+                    <NavItem
+                        icon={<ClipboardList />}
+                        label="Briefing & Tareas"
+                        active={currentView === AppView.BRIEFING}
+                        onClick={() => {
+                            setCurrentView(AppView.BRIEFING)
+                            setIsMobileMenuOpen(false)
+                        }}
+                    />
+                    <NavItem
                         icon={<Palette />}
                         label="Generador Logos"
                         active={currentView === AppView.LOGOS}
@@ -648,6 +691,15 @@ const App = () => {
                         active={currentView === AppView.OPTIMIZER}
                         onClick={() => {
                             setCurrentView(AppView.OPTIMIZER)
+                            setIsMobileMenuOpen(false)
+                        }}
+                    />
+                    <NavItem
+                        icon={<Eraser />} // Usa el icono importado
+                        label="Quitar Fondo"
+                        active={currentView === AppView.BACKGROUND_REMOVER}
+                        onClick={() => {
+                            setCurrentView(AppView.BACKGROUND_REMOVER)
                             setIsMobileMenuOpen(false)
                         }}
                     />

@@ -31,6 +31,8 @@ import {
     AlignLeft,
     GripVertical,
     AlertCircle,
+    Edit3,
+    ListChecks,
 } from 'lucide-react'
 
 interface NotesViewProps {
@@ -54,34 +56,34 @@ const COLOR_MAP: Record<
     { bg: string; border: string; gradient: string }
 > = {
     'bg-yellow-100': {
-        bg: 'bg-yellow-100',
-        border: 'border-yellow-200',
-        gradient: 'from-yellow-100',
+        bg: 'bg-yellow-100 dark:bg-yellow-900/40',
+        border: 'border-yellow-200 dark:border-yellow-700',
+        gradient: 'from-yellow-100 dark:from-yellow-900',
     },
     'bg-green-100': {
-        bg: 'bg-green-100',
-        border: 'border-green-200',
-        gradient: 'from-green-100',
+        bg: 'bg-green-100 dark:bg-green-900/40',
+        border: 'border-green-200 dark:border-green-700',
+        gradient: 'from-green-100 dark:from-green-900',
     },
     'bg-blue-100': {
-        bg: 'bg-blue-100',
-        border: 'border-blue-200',
-        gradient: 'from-blue-100',
+        bg: 'bg-blue-100 dark:bg-blue-900/40',
+        border: 'border-blue-200 dark:border-blue-700',
+        gradient: 'from-blue-100 dark:from-blue-900',
     },
     'bg-red-100': {
-        bg: 'bg-red-100',
-        border: 'border-red-200',
-        gradient: 'from-red-100',
+        bg: 'bg-red-100 dark:bg-red-900/40',
+        border: 'border-red-200 dark:border-red-700',
+        gradient: 'from-red-100 dark:from-red-900',
     },
     'bg-purple-100': {
-        bg: 'bg-purple-100',
-        border: 'border-purple-200',
-        gradient: 'from-purple-100',
+        bg: 'bg-purple-100 dark:bg-purple-900/40',
+        border: 'border-purple-200 dark:border-purple-700',
+        gradient: 'from-purple-100 dark:from-purple-900',
     },
     'bg-slate-100': {
-        bg: 'bg-slate-100',
-        border: 'border-slate-200',
-        gradient: 'from-slate-100',
+        bg: 'bg-slate-100 dark:bg-slate-800',
+        border: 'border-slate-200 dark:border-slate-600',
+        gradient: 'from-slate-100 dark:from-slate-800',
     },
 }
 
@@ -93,7 +95,11 @@ export const NotesView: React.FC<NotesViewProps> = ({
     const [newNote, setNewNote] = useState({ title: '', content: '' })
     const [selectedColor, setSelectedColor] = useState('bg-yellow-100')
     const [isInputExpanded, setIsInputExpanded] = useState(false)
+
+    // Estado para el modal de edición
     const [editingNote, setEditingNote] = useState<Note | null>(null)
+    const [editMode, setEditMode] = useState<'view' | 'edit'>('view') // Nuevo estado para alternar vista
+
     const [showAgenda, setShowAgenda] = useState(false)
     const dragItem = useRef<number | null>(null)
     const dragOverItem = useRef<number | null>(null)
@@ -188,6 +194,37 @@ export const NotesView: React.FC<NotesViewProps> = ({
         dragOverItem.current = null
     }
 
+    // --- FUNCIÓN UNIFICADA PARA TACHAR TAREAS ---
+    const handleToggleCheck = async (
+        note: Note,
+        lineIndex: number,
+        isEditingModal = false
+    ) => {
+        if (!userId) return
+        const lines = note.content.split('\n')
+        const line = lines[lineIndex]
+
+        if (line.includes('☐')) {
+            lines[lineIndex] = line.replace('☐', '☑')
+        } else if (line.includes('☑')) {
+            lines[lineIndex] = line.replace('☑', '☐')
+        } else {
+            return
+        }
+
+        const newContent = lines.join('\n')
+
+        // Si estamos en el modal, actualizamos su estado local también
+        if (isEditingModal && editingNote) {
+            setEditingNote({ ...editingNote, content: newContent })
+        }
+
+        // Actualizar en Firebase (esto disparará el onSnapshot y actualizará la lista principal)
+        await updateDoc(doc(db, 'users', userId, 'notes', note.id), {
+            content: newContent,
+        })
+    }
+
     const handleUpdateNote = async () => {
         if (editingNote && userId) {
             await updateDoc(doc(db, 'users', userId, 'notes', editingNote.id), {
@@ -214,6 +251,18 @@ export const NotesView: React.FC<NotesViewProps> = ({
             await updateDoc(doc(db, 'users', userId, 'notes', note.id), {
                 isPrivate: !note.isPrivate,
             })
+    }
+
+    // Al abrir una nota, decidimos si mostrar vista o edición
+    const openNoteModal = (note: Note) => {
+        setEditingNote(note)
+        // Si tiene checkboxes, abrimos en modo "vista" para que sea interactivo.
+        // Si es texto plano, abrimos en modo "edit" directamente.
+        if (note.content.includes('☐') || note.content.includes('☑')) {
+            setEditMode('view')
+        } else {
+            setEditMode('edit')
+        }
     }
 
     return (
@@ -359,7 +408,10 @@ export const NotesView: React.FC<NotesViewProps> = ({
                                     onDelete={() => handleDelete(note.id)}
                                     onPin={(e) => togglePin(e, note)}
                                     onPrivacy={(e) => togglePrivacy(e, note)}
-                                    onClick={() => setEditingNote(note)}
+                                    onClick={() => openNoteModal(note)}
+                                    onCheck={(lineIdx) =>
+                                        handleToggleCheck(note, lineIdx)
+                                    }
                                 />
                             </div>
                         ))}
@@ -374,6 +426,7 @@ export const NotesView: React.FC<NotesViewProps> = ({
                 </div>
             </div>
 
+            {/* MODAL DE EDICIÓN MEJORADO */}
             {editingNote && (
                 <div
                     className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
@@ -382,12 +435,13 @@ export const NotesView: React.FC<NotesViewProps> = ({
                     <div
                         className={`w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden ${
                             COLOR_MAP[editingNote.color]?.bg || 'bg-white'
-                        }`}
+                        } flex flex-col max-h-[80vh]`}
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div className="p-4 max-h-[80vh] overflow-y-auto custom-scrollbar">
+                        {/* Header con Título y Switch de Modo */}
+                        <div className="p-4 flex justify-between items-start border-b border-black/5 dark:border-white/10 shrink-0">
                             <input
-                                className={`w-full text-xl font-bold bg-transparent outline-none text-slate-900 mb-2`}
+                                className={`flex-1 text-xl font-bold bg-transparent outline-none text-slate-900 dark:text-white mr-4`}
                                 value={editingNote.title}
                                 onChange={(e) =>
                                     setEditingNote({
@@ -397,18 +451,127 @@ export const NotesView: React.FC<NotesViewProps> = ({
                                 }
                                 placeholder="Título"
                             />
-                            <textarea
-                                className={`w-full h-64 bg-transparent outline-none resize-none text-slate-800 leading-relaxed`}
-                                value={editingNote.content}
-                                onChange={(e) =>
-                                    setEditingNote({
-                                        ...editingNote,
-                                        content: e.target.value,
-                                    })
-                                }
-                            />
+
+                            <div className="flex bg-black/5 dark:bg-white/10 rounded-lg p-1">
+                                <button
+                                    onClick={() => setEditMode('view')}
+                                    className={`p-1.5 rounded-md transition-colors ${
+                                        editMode === 'view'
+                                            ? 'bg-white dark:bg-slate-700 shadow-sm'
+                                            : 'text-slate-500'
+                                    }`}
+                                    title="Modo Interactivo (Checklist)"
+                                >
+                                    <ListChecks className="w-4 h-4" />
+                                </button>
+                                <button
+                                    onClick={() => setEditMode('edit')}
+                                    className={`p-1.5 rounded-md transition-colors ${
+                                        editMode === 'edit'
+                                            ? 'bg-white dark:bg-slate-700 shadow-sm'
+                                            : 'text-slate-500'
+                                    }`}
+                                    title="Modo Edición de Texto"
+                                >
+                                    <Edit3 className="w-4 h-4" />
+                                </button>
+                            </div>
                         </div>
-                        <div className="flex items-center justify-between px-4 py-3 bg-white/50 border-t border-black/5">
+
+                        {/* Cuerpo (Scrollable) */}
+                        <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
+                            {editMode === 'edit' ? (
+                                <textarea
+                                    className={`w-full h-full min-h-[300px] bg-transparent outline-none resize-none text-slate-800 dark:text-slate-200 leading-relaxed font-mono text-sm`}
+                                    value={editingNote.content}
+                                    onChange={(e) =>
+                                        setEditingNote({
+                                            ...editingNote,
+                                            content: e.target.value,
+                                        })
+                                    }
+                                />
+                            ) : (
+                                // MODO VISTA INTERACTIVA (Checkboxes funcionan aquí)
+                                <div className="text-slate-800 dark:text-slate-200 text-base leading-relaxed">
+                                    {editingNote.content
+                                        .split('\n')
+                                        .map((line: string, idx: number) => {
+                                            if (line.trim().startsWith('☐')) {
+                                                return (
+                                                    <div
+                                                        key={idx}
+                                                        className="flex items-start gap-3 py-1.5 px-2 -mx-2 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg cursor-pointer transition-colors"
+                                                        onClick={() =>
+                                                            handleToggleCheck(
+                                                                editingNote,
+                                                                idx,
+                                                                true
+                                                            )
+                                                        }
+                                                    >
+                                                        <span className="text-brand-600 font-bold scale-125 mt-0.5">
+                                                            ☐
+                                                        </span>
+                                                        <span>
+                                                            {line
+                                                                .replace(
+                                                                    '☐',
+                                                                    ''
+                                                                )
+                                                                .trim()}
+                                                        </span>
+                                                    </div>
+                                                )
+                                            }
+                                            if (line.trim().startsWith('☑')) {
+                                                return (
+                                                    <div
+                                                        key={idx}
+                                                        className="flex items-start gap-3 py-1.5 px-2 -mx-2 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg cursor-pointer transition-colors opacity-50"
+                                                        onClick={() =>
+                                                            handleToggleCheck(
+                                                                editingNote,
+                                                                idx,
+                                                                true
+                                                            )
+                                                        }
+                                                    >
+                                                        <span className="text-green-800 font-bold scale-125 mt-0.5">
+                                                            ☑
+                                                        </span>
+                                                        <span className="line-through decoration-slate-600">
+                                                            {line
+                                                                .replace(
+                                                                    '☑',
+                                                                    ''
+                                                                )
+                                                                .trim()}
+                                                        </span>
+                                                    </div>
+                                                )
+                                            }
+                                            return (
+                                                <div
+                                                    key={idx}
+                                                    className="min-h-[1.5em] mb-1 whitespace-pre-wrap"
+                                                >
+                                                    {line}
+                                                </div>
+                                            )
+                                        })}
+                                    {/* Mensaje si no hay contenido */}
+                                    {!editingNote.content && (
+                                        <p className="text-slate-400 italic">
+                                            Escribe algo...
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Footer (Colores y Guardar) */}
+                        <div className="flex items-center justify-between px-4 py-3 bg-white/50 dark:bg-slate-900/50 border-t border-black/5 dark:border-white/10 shrink-0">
                             <div className="flex gap-1">
                                 {Object.keys(COLOR_MAP).map((colorKey) => (
                                     <button
@@ -420,13 +583,21 @@ export const NotesView: React.FC<NotesViewProps> = ({
                                                 color: colorKey,
                                             })
                                         }
-                                        className={`w-6 h-6 rounded-full border ${COLOR_MAP[colorKey].border} ${COLOR_MAP[colorKey].bg} shadow-sm`}
+                                        className={`w-6 h-6 rounded-full border ${
+                                            COLOR_MAP[colorKey].border
+                                        } ${
+                                            COLOR_MAP[colorKey].bg
+                                        } shadow-sm transition-transform hover:scale-110 ${
+                                            editingNote.color === colorKey
+                                                ? 'ring-2 ring-slate-400'
+                                                : ''
+                                        }`}
                                     />
                                 ))}
                             </div>
                             <button
                                 onClick={handleUpdateNote}
-                                className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg font-bold hover:bg-black transition-colors"
+                                className="flex items-center gap-2 px-4 py-2 bg-slate-900 dark:bg-slate-700 text-white rounded-lg font-bold hover:bg-black dark:hover:bg-slate-600 transition-colors shadow-lg"
                             >
                                 <Save className="w-4 h-4" /> Guardar
                             </button>
@@ -438,12 +609,23 @@ export const NotesView: React.FC<NotesViewProps> = ({
     )
 }
 
-const NoteCard = ({ note, onDelete, onPin, onPrivacy, onClick }: any) => {
+// ... NoteCard y AgendaWidget (se mantienen igual que antes, asegúrate de copiarlos si no están) ...
+const NoteCard = ({
+    note,
+    onDelete,
+    onPin,
+    onPrivacy,
+    onClick,
+    onCheck,
+}: any) => {
+    // ... Copia el contenido de NoteCard del mensaje anterior ...
+    // (Por brevedad asumo que ya lo tienes, es el que tiene la lógica de renderizado de checkboxes)
     const [isHovered, setIsHovered] = useState(false)
     const [copied, setCopied] = useState(false)
     const styles = COLOR_MAP[note.color] || COLOR_MAP['bg-yellow-100']
-    const isLongContent =
-        note.content.length > 200 || note.content.split('\n').length > 6
+
+    const lines = note.content.split('\n')
+    const isLongContent = lines.length > 8 || note.content.length > 250
 
     const handleCopy = (e: React.MouseEvent) => {
         e.stopPropagation()
@@ -466,7 +648,7 @@ const NoteCard = ({ note, onDelete, onPin, onPrivacy, onClick }: any) => {
             onTouchStart={() => setIsHovered(true)}
         >
             {note.isPinned && (
-                <div className="absolute -top-2 -right-2 bg-white border border-slate-200 p-1.5 rounded-full shadow-sm text-brand-600 z-30">
+                <div className="absolute -top-2 -right-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-1.5 rounded-full shadow-sm text-brand-600 z-30">
                     <Pin className="w-4 h-4 fill-current" />
                 </div>
             )}
@@ -476,50 +658,90 @@ const NoteCard = ({ note, onDelete, onPin, onPrivacy, onClick }: any) => {
                 </div>
             )}
             {note.title && (
-                <h3 className="font-bold text-slate-800 mb-2 pr-6">
+                <h3 className="font-bold text-slate-800 dark:text-white mb-2 pr-6">
                     {note.title}
                 </h3>
             )}
             <div
-                className={`relative text-sm text-slate-700 whitespace-pre-wrap leading-relaxed transition-all duration-300 ${
+                className={`relative text-sm text-slate-700 dark:text-slate-200 whitespace-pre-wrap leading-relaxed transition-all duration-300 ${
                     note.isPrivate && !isHovered
                         ? 'blur-md opacity-50'
                         : 'blur-0 opacity-100'
                 } overflow-hidden`}
             >
-                <div className={isLongContent ? 'line-clamp-[6] max-h-40' : ''}>
-                    {note.content}
+                <div className={isLongContent ? 'line-clamp-[8] max-h-60' : ''}>
+                    {lines.map((line: string, idx: number) => {
+                        if (line.trim().startsWith('☐')) {
+                            return (
+                                <div
+                                    key={idx}
+                                    className="flex items-start gap-2 py-0.5 hover:bg-black/5 dark:hover:bg-white/10 rounded cursor-pointer transition-colors"
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        onCheck(idx)
+                                    }}
+                                >
+                                    <span className="text-brand-600 font-bold">
+                                        ☐
+                                    </span>
+                                    <span>{line.replace('☐', '').trim()}</span>
+                                </div>
+                            )
+                        }
+                        if (line.trim().startsWith('☑')) {
+                            return (
+                                <div
+                                    key={idx}
+                                    className="flex items-start gap-2 py-0.5 hover:bg-black/5 dark:hover:bg-white/10 rounded cursor-pointer transition-colors opacity-60"
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        onCheck(idx)
+                                    }}
+                                >
+                                    <span className="text-green-600 font-bold">
+                                        ☑
+                                    </span>
+                                    <span className="line-through decoration-slate-400">
+                                        {line.replace('☑', '').trim()}
+                                    </span>
+                                </div>
+                            )
+                        }
+                        return <div key={idx}>{line}</div>
+                    })}
                 </div>
                 {isLongContent && !note.isPrivate && (
                     <div
                         className={`absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t ${styles.gradient} to-transparent flex items-end justify-start pl-4 pb-1`}
                     >
-                        <span className="text-[10px] font-bold text-slate-500 bg-white/80 px-2 py-0.5 rounded-full backdrop-blur-sm shadow-sm border border-white/20">
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-white/80 dark:bg-slate-900/80 px-2 py-0.5 rounded-full backdrop-blur-sm shadow-sm border border-white/20">
                             Ver más...
                         </span>
                     </div>
                 )}
             </div>
             <div
-                className={`absolute bottom-2 right-2 flex gap-1 bg-white/90 backdrop-blur-sm p-1 rounded-lg border border-slate-200 transition-opacity opacity-100 md:opacity-0 md:group-hover:opacity-100 shadow-sm z-20`}
+                className={`absolute bottom-2 right-2 flex gap-1 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm p-1 rounded-lg border border-slate-200 dark:border-slate-700 transition-opacity opacity-100 md:opacity-0 md:group-hover:opacity-100 shadow-sm z-20`}
             >
                 <button
                     onClick={(e) => {
                         e.stopPropagation()
                         onPin(e)
                     }}
-                    className={`p-1.5 rounded hover:bg-white ${
-                        note.isPinned ? 'text-brand-600' : 'text-slate-500'
+                    className={`p-1.5 rounded hover:bg-white dark:hover:bg-slate-700 ${
+                        note.isPinned
+                            ? 'text-brand-600'
+                            : 'text-slate-500 dark:text-slate-400'
                     }`}
                 >
                     <Pin className="w-3.5 h-3.5" />
                 </button>
                 <button
                     onClick={handlePrivacyClick}
-                    className={`p-1.5 rounded hover:bg-white ${
+                    className={`p-1.5 rounded hover:bg-white dark:hover:bg-slate-700 ${
                         note.isPrivate
-                            ? 'text-slate-900 font-bold'
-                            : 'text-slate-500'
+                            ? 'text-slate-900 dark:text-white font-bold'
+                            : 'text-slate-500 dark:text-slate-400'
                     }`}
                 >
                     {note.isPrivate ? (
@@ -530,7 +752,7 @@ const NoteCard = ({ note, onDelete, onPin, onPrivacy, onClick }: any) => {
                 </button>
                 <button
                     onClick={handleCopy}
-                    className="p-1.5 rounded hover:bg-white text-slate-500 hover:text-blue-600"
+                    className="p-1.5 rounded hover:bg-white dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400"
                 >
                     {copied ? (
                         <Check className="w-3.5 h-3.5 text-green-600" />
@@ -543,7 +765,7 @@ const NoteCard = ({ note, onDelete, onPin, onPrivacy, onClick }: any) => {
                         e.stopPropagation()
                         onDelete(note.id)
                     }}
-                    className="p-1.5 rounded hover:bg-white text-slate-500 hover:text-red-600"
+                    className="p-1.5 rounded hover:bg-white dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400"
                 >
                     <Trash2 className="w-3.5 h-3.5" />
                 </button>
@@ -553,6 +775,10 @@ const NoteCard = ({ note, onDelete, onPin, onPrivacy, onClick }: any) => {
 }
 
 const AgendaWidget = ({ userId }: { userId?: string }) => {
+    // ... (Copia el AgendaWidget que ya tenías, funciona bien)
+    // Para ahorrar espacio, asumo que usas el mismo de la respuesta anterior
+    // Si necesitas que lo pegue de nuevo, avísame.
+    // ...
     const [events, setEvents] = useState<any[]>([])
     const [newEvent, setNewEvent] = useState({
         title: '',

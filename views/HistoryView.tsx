@@ -26,6 +26,7 @@ import {
     Download,
     FileText,
     QrCode,
+    Eraser, // <--- Nuevo icono importado
 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import html2pdf from 'html2pdf.js'
@@ -208,7 +209,12 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ userId }) => {
 
             <div className="space-y-4">
                 {currentItems.map((item) => {
-                    if (item.category === 'logo')
+                    // Si es cualquier tipo de imagen (Logo, QR, Fondo, Portafolio)
+                    if (
+                        item.category === 'logo' ||
+                        item.type === 'background-removal' ||
+                        item.type === 'portfolio-gen'
+                    )
                         return (
                             <LogoHistoryCard
                                 key={item.id}
@@ -216,6 +222,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ userId }) => {
                                 onDelete={() => handleDelete(item.id)}
                             />
                         )
+                    // Si es factura
                     if (item.category === 'invoice')
                         return (
                             <InvoiceHistoryCard
@@ -224,7 +231,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ userId }) => {
                                 onDelete={() => handleDelete(item.id)}
                             />
                         )
-
+                    // Si es texto (briefing checklist, propuestas, etc)
                     return (
                         <HistoryCard
                             key={item.id}
@@ -312,10 +319,14 @@ const HistoryCard = ({
                                 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
                                 : item.type === 'Corto'
                                 ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'
+                                : item.type === 'brief-checklist'
+                                ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
                                 : 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
                         }`}
                     >
-                        {item.type}
+                        {item.type === 'brief-checklist'
+                            ? 'BRIEF + TAREAS'
+                            : item.type}
                     </span>
                     <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
                         <Calendar className="w-3 h-3" /> {dateStr}
@@ -399,6 +410,7 @@ const HistoryCard = ({
     )
 }
 
+// --- TARJETA DE IMAGEN UNIFICADA (LOGO / QR / IMAGEN / PORTAFOLIO) ---
 const LogoHistoryCard = ({
     item,
     onDelete,
@@ -409,7 +421,37 @@ const LogoHistoryCard = ({
     const [showImage, setShowImage] = useState(false)
     const [copied, setCopied] = useState(false)
     const [isDownloading, setIsDownloading] = useState(false)
+
+    // DETECCIÓN DE TIPO
     const isQR = item.platform === 'QR Generator' || item.type === 'QR Code'
+    const isPortfolio = item.type === 'portfolio-gen'
+    const isBgRemoval = item.type === 'background-removal'
+
+    // Configuración dinámica
+    let badgeLabel = 'LOGO'
+    let BadgeIcon = ImageIcon
+    // Colores por defecto (Morado para Logo)
+    let badgeColor =
+        'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
+
+    if (isQR) {
+        badgeLabel = 'QR'
+        BadgeIcon = QrCode
+        badgeColor =
+            'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
+    } else if (isPortfolio) {
+        badgeLabel = 'PORTAFOLIO'
+        BadgeIcon = FileText
+        badgeColor =
+            'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+    } else if (isBgRemoval) {
+        // AQUI ESTÁ EL CAMBIO PARA IMAGEN SIN FONDO
+        badgeLabel = 'IMAGEN'
+        BadgeIcon = Eraser
+        badgeColor =
+            'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300'
+    }
+
     const dateStr =
         new Date(item.createdAt).toLocaleDateString() +
         ' ' +
@@ -419,16 +461,14 @@ const LogoHistoryCard = ({
         })
 
     const handleCopyDescription = () => {
-        const textToCopy = `Tipo: ${isQR ? 'QR' : 'Logo'}\nNombre: ${
-            item.clientName
-        }\nContenido: ${item.content}`
+        const textToCopy = `Tipo: ${badgeLabel}\nNombre: ${item.clientName}\nContenido: ${item.content}`
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(textToCopy).then(() => {
                 setCopied(true)
                 setTimeout(() => setCopied(false), 2000)
             })
         } else {
-            alert('Texto copiado: ' + textToCopy)
+            alert('Texto copiado.')
         }
     }
 
@@ -441,7 +481,14 @@ const LogoHistoryCard = ({
             const blobUrl = window.URL.createObjectURL(blob)
             const link = document.createElement('a')
             link.href = blobUrl
-            link.download = `${isQR ? 'qr' : 'logo'}-${item.clientName
+
+            // Prefijo dinámico para el archivo
+            let prefix = 'logo'
+            if (isQR) prefix = 'qr'
+            if (isPortfolio) prefix = 'caso-estudio'
+            if (isBgRemoval) prefix = 'sin-fondo'
+
+            link.download = `${prefix}-${item.clientName
                 .replace(/\s+/g, '-')
                 .toLowerCase()}-${Date.now()}.png`
             document.body.appendChild(link)
@@ -457,21 +504,15 @@ const LogoHistoryCard = ({
 
     return (
         <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+            {/* ENCABEZADO */}
             <div className="p-4 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
                 <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+                    {/* ETIQUETA DINÁMICA */}
                     <span
-                        className={`text-xs font-bold px-2 py-1 rounded-md uppercase flex items-center gap-1 w-fit ${
-                            isQR
-                                ? 'bg-slate-200 text-slate-700 dark:bg-slate-600 dark:text-slate-200'
-                                : 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
-                        }`}
+                        className={`text-xs font-bold px-2 py-1 rounded-md uppercase flex items-center gap-1 w-fit ${badgeColor}`}
                     >
-                        {isQR ? (
-                            <QrCode className="w-3 h-3" />
-                        ) : (
-                            <ImageIcon className="w-3 h-3" />
-                        )}
-                        {isQR ? 'QR' : 'LOGO'}
+                        <BadgeIcon className="w-3 h-3" />
+                        {badgeLabel}
                     </span>
 
                     <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
@@ -490,7 +531,9 @@ const LogoHistoryCard = ({
                 </button>
             </div>
 
+            {/* CUERPO */}
             <div className="p-5 flex flex-col sm:flex-row gap-6 items-start">
+                {/* IMAGEN */}
                 <div className="w-full sm:w-40 shrink-0">
                     <div
                         className="aspect-square bg-slate-100 dark:bg-slate-900 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 flex items-center justify-center relative group cursor-pointer"
@@ -501,7 +544,7 @@ const LogoHistoryCard = ({
                                 src={item.imageUrl}
                                 alt="Visualización"
                                 className={`w-full h-full object-contain ${
-                                    isQR ? 'p-2' : 'p-1'
+                                    isQR ? 'p-2' : 'p-0'
                                 }`}
                                 loading="lazy"
                             />
@@ -529,19 +572,20 @@ const LogoHistoryCard = ({
                     </button>
                 </div>
 
+                {/* DATOS */}
                 <div className="flex-1 w-full">
                     <div className="grid grid-cols-2 gap-4 mb-4">
                         <div>
                             <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                                Tipo
+                                {isPortfolio ? 'Plataforma' : 'Tipo'}
                             </span>
                             <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                                {item.type}
+                                {isPortfolio ? item.platform : item.type}
                             </p>
                         </div>
                         <div>
                             <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                                Nombre
+                                Nombre / Título
                             </span>
                             <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
                                 {item.clientName}
@@ -551,15 +595,21 @@ const LogoHistoryCard = ({
 
                     <div className="mb-4">
                         <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                            {isQR ? 'Contenido del QR' : 'Prompt / Detalles'}
+                            {isQR
+                                ? 'Contenido del QR'
+                                : isPortfolio
+                                ? 'Copy Generado'
+                                : 'Prompt / Detalles'}
                         </span>
                         <div
                             className={`text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border border-slate-100 dark:border-slate-700 italic ${
-                                !showImage ? 'line-clamp-2' : ''
-                            } break-all`}
+                                !showImage ? 'line-clamp-3' : ''
+                            } break-all whitespace-pre-wrap`}
                         >
                             {isQR
                                 ? item.content.replace('Enlace: ', '')
+                                : isPortfolio
+                                ? item.content
                                 : `"${item.content}"`}
                         </div>
                     </div>
@@ -590,7 +640,7 @@ const LogoHistoryCard = ({
                             ) : (
                                 <Copy className="w-4 h-4" />
                             )}
-                            {copied ? 'Copiado' : 'Copiar datos'}
+                            {copied ? 'Copiado' : 'Copiar texto'}
                         </button>
                     </div>
 
@@ -599,7 +649,7 @@ const LogoHistoryCard = ({
                             <img
                                 src={item.imageUrl}
                                 alt="Full Size"
-                                className="max-h-64 object-contain shadow-sm rounded-lg bg-white"
+                                className="max-h-96 object-contain shadow-sm rounded-lg bg-white"
                             />
                         </div>
                     )}
@@ -616,6 +666,9 @@ const InvoiceHistoryCard = ({
     item: HistoryItem
     onDelete: () => void
 }) => {
+    // ... Copia el InvoiceHistoryCard del mensaje anterior
+    // (Ya tenía Dark Mode, no necesita cambios, solo asegúrate de incluirlo al final del archivo)
+    // Para ahorrar espacio, es el mismo que te di antes.
     const [isDownloading, setIsDownloading] = useState(false)
     const dateStr = new Date(item.createdAt).toLocaleDateString()
 
@@ -623,6 +676,7 @@ const InvoiceHistoryCard = ({
         setIsDownloading(true)
         const data = item.invoiceData
         if (!data) return
+        // (Lógica de HTML2PDF para facturas igual que antes)
         const containerStyle =
             "padding: 40px; font-family: 'Helvetica', sans-serif; color: #333; max-width: 800px; margin: 0 auto;"
         const headerStyle =

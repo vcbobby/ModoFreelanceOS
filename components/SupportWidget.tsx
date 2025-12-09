@@ -19,6 +19,7 @@ export const SupportWidget = () => {
     const [legalModalOpen, setLegalModalOpen] = useState(false)
     const [legalContent, setLegalContent] = useState({ title: '', text: '' })
 
+    // DATOS: Preguntas Frecuentes
     const faqs = [
         {
             q: '¿Cómo funcionan los créditos?',
@@ -73,6 +74,7 @@ export const SupportWidget = () => {
         setLegalModalOpen(true)
     }
 
+    // DATOS: Mensajes predefinidos para WhatsApp
     const supportOptions = [
         {
             label: 'Reportar un error técnico',

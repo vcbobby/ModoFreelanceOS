@@ -7,9 +7,10 @@ import {
     Infinity,
     ShieldCheck,
     Check,
+    AlertTriangle,
 } from 'lucide-react'
 
-// --- Button ---
+// --- BUTTON ---
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger'
     isLoading?: boolean
@@ -49,7 +50,7 @@ export const Button: React.FC<ButtonProps> = ({
     )
 }
 
-// --- Card ---
+// --- CARD ---
 export const Card: React.FC<{
     children: React.ReactNode
     className?: string
@@ -61,7 +62,7 @@ export const Card: React.FC<{
     </div>
 )
 
-// --- Confirmation Modal ---
+// --- CONFIRMATION MODAL ---
 interface ConfirmationModalProps {
     isOpen: boolean
     onClose: () => void
@@ -88,35 +89,50 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     return (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
             <div
-                className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 dark:border-slate-700"
+                className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 dark:border-slate-700 scale-100"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="p-6">
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
-                        {title}
-                    </h3>
-                    <p className="text-slate-600 dark:text-slate-300 text-sm">
-                        {message}
-                    </p>
+                    <div className="flex items-start gap-4">
+                        <div
+                            className={`p-3 rounded-full shrink-0 ${
+                                isDanger
+                                    ? 'bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400'
+                                    : 'bg-brand-100 text-brand-600 dark:bg-brand-900/20 dark:text-brand-400'
+                            }`}
+                        >
+                            <AlertTriangle className="w-6 h-6" />
+                        </div>
+                        <div className="flex-1">
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
+                                {title}
+                            </h3>
+                            <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
+                                {message}
+                            </p>
+                        </div>
+                    </div>
                 </div>
-                <div className="bg-slate-50 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-700 p-4 flex justify-end gap-3">
+
+                <div className="bg-slate-50 dark:bg-slate-900 p-4 flex justify-end gap-3 border-t border-slate-100 dark:border-slate-700">
                     {cancelText && (
                         <button
                             onClick={onClose}
-                            className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg"
+                            className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors"
                         >
                             {cancelText}
                         </button>
                     )}
+
                     <button
                         onClick={() => {
                             onConfirm()
                             onClose()
                         }}
-                        className={`px-4 py-2 text-sm font-bold text-white rounded-lg ${
+                        className={`px-4 py-2 text-sm font-bold text-white rounded-lg shadow-sm transition-all ${
                             isDanger
-                                ? 'bg-red-600 hover:bg-red-700'
-                                : 'bg-brand-600 hover:bg-brand-700'
+                                ? 'bg-red-600 hover:bg-red-700 shadow-red-200 dark:shadow-none'
+                                : 'bg-brand-600 hover:bg-brand-700 shadow-brand-200 dark:shadow-none'
                         }`}
                     >
                         {confirmText}
@@ -127,7 +143,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     )
 }
 
-// --- Pricing Modal ---
+// --- PRICING MODAL ---
 interface PricingModalProps {
     isOpen: boolean
     onClose: () => void
@@ -146,6 +162,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({
                 className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg relative animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto custom-scrollbar flex flex-col dark:border dark:border-slate-700"
                 onClick={(e) => e.stopPropagation()}
             >
+                {/* Botón cerrar */}
                 <button
                     onClick={onClose}
                     className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors z-20 bg-black/20 p-1 rounded-full backdrop-blur-md"
@@ -153,7 +170,9 @@ export const PricingModal: React.FC<PricingModalProps> = ({
                     <X className="w-5 h-5" />
                 </button>
 
+                {/* Header Premium */}
                 <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-brand-900 p-8 text-center text-white relative overflow-hidden shrink-0">
+                    <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
                     <div className="relative z-10">
                         <div className="w-16 h-16 bg-gradient-to-br from-brand-400 to-brand-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-brand-500/30 transform rotate-3">
                             <Crown className="w-8 h-8 text-white" />
@@ -168,6 +187,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({
                     </div>
                 </div>
 
+                {/* Contenido */}
                 <div className="p-6 md:p-8">
                     <div className="text-center mb-8">
                         <div className="flex items-center justify-center gap-2">
@@ -222,6 +242,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({
     )
 }
 
+// Componente interno para lista de beneficios
 const BenefitItem = ({
     text,
     highlighted = false,
