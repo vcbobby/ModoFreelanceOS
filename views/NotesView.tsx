@@ -439,9 +439,9 @@ export const NotesView: React.FC<NotesViewProps> = ({
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header con Título y Switch de Modo */}
-                        <div className="p-4 flex justify-between items-start border-b border-black/5 dark:border-white/10 shrink-0">
+                        <div className="p-4 flex flex-wrap justify-between items-center border-b border-black/5 dark:border-white/10 shrink-0">
                             <input
-                                className={`flex-1 text-xl font-bold bg-transparent outline-none text-slate-900 dark:text-white mr-4`}
+                                className={`flex-1 min-w-[50%] text-xl font-bold bg-transparent outline-none text-slate-900 dark:text-white mr-4`}
                                 value={editingNote.title}
                                 onChange={(e) =>
                                     setEditingNote({
@@ -452,7 +452,8 @@ export const NotesView: React.FC<NotesViewProps> = ({
                                 placeholder="Título"
                             />
 
-                            <div className="flex bg-black/5 dark:bg-white/10 rounded-lg p-1">
+                            {/* FIX DE UI: Usamos flex-none para que el contenedor de botones no se encoja */}
+                            <div className="flex bg-black/5 dark:bg-white/10 rounded-lg p-1 flex-none mt-2 md:mt-0">
                                 <button
                                     onClick={() => setEditMode('view')}
                                     className={`p-1.5 rounded-md transition-colors ${
@@ -492,11 +493,11 @@ export const NotesView: React.FC<NotesViewProps> = ({
                                     }
                                 />
                             ) : (
-                                // MODO VISTA INTERACTIVA (Checkboxes funcionan aquí)
                                 <div className="text-slate-800 dark:text-slate-200 text-base leading-relaxed">
                                     {editingNote.content
                                         .split('\n')
                                         .map((line: string, idx: number) => {
+                                            // MODO INTERACTIVO DE CHECKBOXES
                                             if (line.trim().startsWith('☐')) {
                                                 return (
                                                     <div
@@ -510,7 +511,7 @@ export const NotesView: React.FC<NotesViewProps> = ({
                                                             )
                                                         }
                                                     >
-                                                        <span className="text-brand-600 font-bold scale-125 mt-0.5">
+                                                        <span className="text-slate-900 font-bold scale-125 mt-0.5">
                                                             ☐
                                                         </span>
                                                         <span>
@@ -560,7 +561,6 @@ export const NotesView: React.FC<NotesViewProps> = ({
                                                 </div>
                                             )
                                         })}
-                                    {/* Mensaje si no hay contenido */}
                                     {!editingNote.content && (
                                         <p className="text-slate-400 italic">
                                             Escribe algo...
