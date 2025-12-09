@@ -258,7 +258,7 @@ export const BriefingTool: React.FC<BriefingToolProps> = ({
                         variant="outline"
                         onClick={() => window.location.reload()}
                     >
-                        Crear Nuevo
+                        Salir
                     </Button>
                 </div>
 
