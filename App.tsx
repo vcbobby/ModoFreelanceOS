@@ -745,14 +745,19 @@ const App = () => {
                             )}
                         </div>
 
-                        {!userState.isSubscribed && (
-                            <button
-                                onClick={() => setIsPricingOpen(true)}
-                                className="w-full mt-2 py-1.5 bg-brand-600 hover:bg-brand-500 text-white text-[10px] font-bold rounded-lg transition-colors uppercase tracking-wide"
-                            >
-                                Ser PRO ($10)
-                            </button>
-                        )}
+                        {/* BOTÓN UNIFICADO: CAMBIA SEGÚN EL ESTADO */}
+                        <button
+                            onClick={() => setIsPricingOpen(true)}
+                            className={`w-full mt-2 py-1.5 text-[10px] font-bold rounded-lg transition-colors uppercase tracking-wide ${
+                                userState.isSubscribed
+                                    ? 'bg-slate-700 hover:bg-slate-600 text-slate-300 border border-slate-600' // Estilo para PRO (Discreto)
+                                    : 'bg-brand-600 hover:bg-brand-500 text-white shadow-lg shadow-brand-900/20' // Estilo para FREE (Llamativo)
+                            }`}
+                        >
+                            {userState.isSubscribed
+                                ? 'Gestionar Plan'
+                                : 'Ser PRO ($10)'}
+                        </button>
                     </div>
 
                     <div className="flex items-center gap-2 mt-2">
