@@ -20,10 +20,8 @@ import {
     DollarSign,
     Moon,
     Sun,
-    Eraser,
     Briefcase,
     ClipboardList,
-    Film,
 } from 'lucide-react'
 import { useTheme } from './context/ThemeContext'
 import { DashboardTips } from './components/DashboardTips'
@@ -47,13 +45,14 @@ import { AIAssistant } from './components/AIAssistant'
 import { DashboardUpcomingEvents } from './components/DashboardUpcomingEvents'
 import { PortfolioTool } from './views/PortfolioTool'
 import { BriefingTool } from './views/BriefingTool'
-import { VideoCompressorView } from './views/VideoCompressorView'
+
 // Firebase
 import { auth, db } from './firebase'
 import { onAuthStateChanged, signOut, User } from 'firebase/auth'
 import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore'
 const GUMROAD_LINK = 'https://modofreelanceos.gumroad.com/l/pro-plan'
 const WORDPRESS_URL = 'http://modofreelanceos.com/'
+const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000' // <-- Asegúrate de que esto esté definido
 
 const App = () => {
     const [currentView, setCurrentView] = useState<AppView>(AppView.DASHBOARD)
@@ -85,12 +84,28 @@ const App = () => {
         setAlertModal({ isOpen: true, title, message })
     }
     const { theme, toggleTheme } = useTheme()
-
+    const sendWakeUpPing = async () => {
+        try {
+            console.log('Sending Wake-Up Ping to backend...')
+            // Llamamos al endpoint más ligero (el /) sin esperar la respuesta
+            await fetch(BACKEND_URL, {
+                method: 'GET',
+                signal: AbortSignal.timeout(5000),
+            })
+            console.log('Ping sent (status: 200/timeout expected)')
+        } catch (error) {
+            // Esto es normal si el servidor está dormido (timeout) o si es localhost
+            console.log(
+                'Ping complete or timed out (Normal behavior for cold start)'
+            )
+        }
+    }
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             setFirebaseUser(currentUser)
             if (currentUser) {
                 await fetchUserData(currentUser.uid)
+                sendWakeUpPing()
                 const urlParams = new URLSearchParams(window.location.search)
                 if (urlParams.get('payment_success') === 'true') {
                     await activateProPlan(currentUser.uid)
@@ -370,13 +385,7 @@ const App = () => {
                 )
             case AppView.FINANCES:
                 return <FinanceView userId={firebaseUser?.uid} />
-            case AppView.VIDEO_COMPRESSOR:
-                return (
-                    <VideoCompressorView
-                        onUsage={handleFeatureUsage}
-                        userId={firebaseUser?.uid}
-                    />
-                )
+
             case AppView.PORTFOLIO:
                 return (
                     <PortfolioTool
@@ -695,15 +704,7 @@ const App = () => {
                             setIsMobileMenuOpen(false)
                         }}
                     />
-                    <NavItem
-                        icon={<Film />} // Usamos el icono Film
-                        label="Compresor Video"
-                        active={currentView === AppView.VIDEO_COMPRESSOR}
-                        onClick={() => {
-                            setCurrentView(AppView.VIDEO_COMPRESSOR)
-                            setIsMobileMenuOpen(false)
-                        }}
-                    />
+
                     <NavItem
                         icon={<FileSearch />}
                         label="Analizar Doc"

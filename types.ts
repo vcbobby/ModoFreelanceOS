@@ -13,7 +13,6 @@ export enum AppView {
     FINANCES = 'finances',
     PORTFOLIO = 'PORTFOLIO',
     BRIEFING = 'BRIEFING',
-    VIDEO_COMPRESSOR = 'VIDEO_COMPRESSOR',
 }
 
 export interface Proposal {
