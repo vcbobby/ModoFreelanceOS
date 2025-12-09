@@ -258,23 +258,22 @@ export const PricingModal: React.FC<PricingModalProps> = ({
                                     highlighted
                                 />
                                 <BenefitItem
-                                    text="Generador de Videos Cortos (Shorts) con IA."
+                                    text="Crea tus portafolios y gestiona tus proyectos."
                                     highlighted
                                 />
+                                <Button
+                                    variant="primary"
+                                    className="w-full text-lg py-4 shadow-xl shadow-brand-200 dark:shadow-none mb-4"
+                                    onClick={onSubscribe}
+                                >
+                                    <Zap className="w-5 h-5 mr-2 fill-current" />{' '}
+                                    Pago automatico con Gumroad
+                                </Button>
                                 <BenefitItem text="Asistente Personal IA 24/7 con memoria." />
                                 <BenefitItem text="Generador de Portafolios & Casos de Estudio." />
                                 <BenefitItem text="Checklists Automáticos desde Briefs." />
                                 <BenefitItem text="Finanzas Avanzadas & Auditoría." />
                             </ul>
-
-                            <Button
-                                variant="primary"
-                                className="w-full text-lg py-4 shadow-xl shadow-brand-200 dark:shadow-none mb-4"
-                                onClick={onSubscribe}
-                            >
-                                <Zap className="w-5 h-5 mr-2 fill-current" />{' '}
-                                Pagar seguro con Gumroad
-                            </Button>
 
                             <div className="text-center">
                                 <p className="text-xs text-slate-400 flex items-center justify-center gap-1">
