@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
     appName: 'ModoFreelanceOS',
     webDir: 'dist',
     server: {
-        url: 'https://freelanceos-app.vercel.app',
+        url: 'https://app.modofreelanceos.com',
         cleartext: true,
         androidScheme: 'https',
     },
