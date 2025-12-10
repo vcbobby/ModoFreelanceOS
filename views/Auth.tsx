@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { auth, db } from '../firebase'
 import {
     createUserWithEmailAndPassword,
@@ -6,7 +6,10 @@ import {
     signInWithPopup,
     GoogleAuthProvider,
     sendPasswordResetEmail,
+    signInWithCredential,
 } from 'firebase/auth'
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth' // <--- NUEVO IMPORT
+import { Capacitor } from '@capacitor/core' // <--- NUEVO IMPORT
 import { doc, setDoc, getDoc } from 'firebase/firestore'
 import {
     User,
@@ -34,7 +37,15 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
     const [loading, setLoading] = useState(false)
 
     // URL DE TU BACKEND (Cámbialo al subir a producción)
-    const BACKEND_URL = 'https://backend-freelanceos.onrender.com'
+    const BACKEND_URL = import.meta.env.PROD
+        ? 'https://backend-freelanceos.onrender.com'
+        : 'http://localhost:8000'
+
+    useEffect(() => {
+        if (Capacitor.isNativePlatform()) {
+            GoogleAuth.initialize()
+        }
+    }, [])
 
     // Función para avisar al backend (Fire and Forget)
     const notifyBackendSignup = async (userEmail: string) => {
@@ -115,9 +126,26 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
         setError('')
         setLoading(true)
         try {
-            const provider = new GoogleAuthProvider()
-            const result = await signInWithPopup(auth, provider)
-            await handleUserInDb(result.user)
+            let userResult
+
+            if (Capacitor.isNativePlatform()) {
+                // --- MODO NATIVO (ANDROID) ---
+                console.log('Usando Login Nativo Android')
+                const googleUser = await GoogleAuth.signIn()
+                // Crear credencial de Firebase con el token nativo
+                const credential = GoogleAuthProvider.credential(
+                    googleUser.authentication.idToken
+                )
+                // Iniciar sesión en Firebase
+                userResult = await signInWithCredential(auth, credential)
+            } else {
+                // --- MODO WEB (PC) ---
+                console.log('Usando Login Web Popup')
+                const provider = new GoogleAuthProvider()
+                userResult = await signInWithPopup(auth, provider)
+            }
+
+            await handleUserInDb(userResult.user)
             onLoginSuccess()
         } catch (err: any) {
             console.error(err)
@@ -145,7 +173,15 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
     return (
         <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 p-4 font-sans relative">
             <button
-                onClick={handleBack}
+                onClick={() => {
+                    // Si es Electron o App, intentamos abrir navegador externo o simplemente volver al login
+                    if (Capacitor.isNativePlatform()) {
+                        // En Android no hay "atrás" hacia la landing page externa facilmente,
+                        // mejor recargamos o no hacemos nada si ya estamos en Auth.
+                    } else {
+                        window.location.href = 'http://modofreelanceos.com/'
+                    }
+                }}
                 className="absolute top-6 left-6 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-2 text-sm font-medium transition-colors"
             >
                 ← Volver al inicio

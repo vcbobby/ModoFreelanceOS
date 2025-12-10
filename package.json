@@ -15,6 +15,10 @@
         "electron:build": "npm run build && electron-builder --win"
     },
     "dependencies": {
+        "@capacitor/android": "^8.0.0",
+        "@capacitor/assets": "^3.0.5",
+        "@capacitor/core": "^8.0.0",
+        "@codetrix-studio/capacitor-google-auth": "^3.4.0-rc.4",
         "@google/genai": "^1.30.0",
         "@google/generative-ai": "^0.24.1",
         "@vercel/analytics": "^1.6.1",
@@ -30,6 +34,7 @@
         "react-qr-code": "^2.0.18"
     },
     "devDependencies": {
+        "@capacitor/cli": "^8.0.0",
         "@types/node": "^22.14.0",
         "@vitejs/plugin-react": "^5.0.0",
         "concurrently": "^9.2.1",
