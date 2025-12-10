@@ -1,31 +1,61 @@
 {
-  "name": "modofreelanceos",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "@google/genai": "^1.30.0",
-    "@google/generative-ai": "^0.24.1",
-    "@vercel/analytics": "^1.6.1",
-    "browser-image-compression": "^2.0.2",
-    "firebase": "^12.6.0",
-    "html2pdf.js": "^0.12.1",
-    "lucide-react": "^0.555.0",
-    "pdfjs-dist": "^5.4.449",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "react-markdown": "^10.1.0",
-    "react-qr-code": "^2.0.18"
-  },
-  "devDependencies": {
-    "@types/node": "^22.14.0",
-    "@vitejs/plugin-react": "^5.0.0",
-    "typescript": "~5.8.2",
-    "vite": "^6.2.0"
-  }
+    "name": "modofreelanceos",
+    "main": "electron/main.cjs",
+    "homepage": "./",
+    "private": true,
+    "version": "1.0.0",
+    "description": "El Sistema Operativo para Freelancers",
+    "author": "ModoFreelance",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview",
+        "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && electron .\"",
+        "electron:build": "npm run build && electron-builder --win"
+    },
+    "dependencies": {
+        "@google/genai": "^1.30.0",
+        "@google/generative-ai": "^0.24.1",
+        "@vercel/analytics": "^1.6.1",
+        "browser-image-compression": "^2.0.2",
+        "electron-is-dev": "^3.0.1",
+        "firebase": "^12.6.0",
+        "html2pdf.js": "^0.12.1",
+        "lucide-react": "^0.555.0",
+        "pdfjs-dist": "^5.4.449",
+        "react": "^19.2.0",
+        "react-dom": "^19.2.0",
+        "react-markdown": "^10.1.0",
+        "react-qr-code": "^2.0.18"
+    },
+    "devDependencies": {
+        "@types/node": "^22.14.0",
+        "@vitejs/plugin-react": "^5.0.0",
+        "concurrently": "^9.2.1",
+        "electron": "^39.2.6",
+        "electron-builder": "^26.0.12",
+        "typescript": "~5.8.2",
+        "vite": "^6.2.0",
+        "wait-on": "^9.0.3"
+    },
+    "build": {
+        "appId": "com.modofreelanceos.app",
+        "productName": "ModoFreelanceOS",
+        "copyright": "Copyright © 2025",
+        "mac": {
+            "category": "public.app-category.productivity"
+        },
+        "win": {
+            "target": "nsis",
+            "icon": "build/favicon.ico"
+        },
+        "files": [
+            "dist/**/*",
+            "electron/**/*"
+        ],
+        "directories": {
+            "buildResources": "assets"
+        }
+    }
 }
