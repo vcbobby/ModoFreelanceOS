@@ -125,11 +125,27 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
             setLoading(false)
         }
     }
+    const handleBack = () => {
+        // Detectamos si estamos en Electron mirando el "User Agent"
+        const isElectron = navigator.userAgent
+            .toLowerCase()
+            .includes(' electron/')
+
+        if (isElectron) {
+            // Opción A: Si es la app de escritorio, quizás solo quieras ir al Login
+            // o abrir el navegador externo si es un link a tu web comercial.
+            // Aquí asumimos que quieres abrir tu web externa:
+            window.open('http://modofreelanceos.com/', '_blank')
+        } else {
+            // Comportamiento normal en web
+            onBack()
+        }
+    }
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 p-4 font-sans relative">
             <button
-                onClick={onBack}
+                onClick={handleBack}
                 className="absolute top-6 left-6 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-2 text-sm font-medium transition-colors"
             >
                 ← Volver al inicio

@@ -62,7 +62,9 @@ export const BriefingTool: React.FC<BriefingToolProps> = ({
         style: '',
     })
 
-    const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+    const BACKEND_URL = import.meta.env.PROD
+        ? 'https://backend-freelanceos.onrender.com' // Se usa en Vercel, Windows (.exe) y Android (.apk)
+        : 'http://localhost:8000' // Se usa solo en tu PC cuando haces "npm run dev"
 
     const updateForm = (field: string, value: string) => {
         setFormData((prev) => ({ ...prev, [field]: value }))

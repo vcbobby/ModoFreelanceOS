@@ -52,7 +52,9 @@ import { onAuthStateChanged, signOut, User } from 'firebase/auth'
 import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore'
 const GUMROAD_LINK = 'https://modofreelanceos.gumroad.com/l/pro-subs'
 const WORDPRESS_URL = 'http://modofreelanceos.com/'
-const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000' // <-- Asegúrate de que esto esté definido
+const BACKEND_URL = import.meta.env.PROD
+    ? 'https://backend-freelanceos.onrender.com' // Se usa en Vercel, Windows (.exe) y Android (.apk)
+    : 'http://localhost:8000' // Se usa solo en tu PC cuando haces "npm run dev"
 
 const App = () => {
     const [currentView, setCurrentView] = useState<AppView>(AppView.DASHBOARD)
