@@ -31,6 +31,7 @@ import {
 import ReactMarkdown from 'react-markdown'
 import html2pdf from 'html2pdf.js'
 import { ConfirmationModal } from '../components/ui/ConfirmationModal'
+import { downloadFile } from '../utils/downloadUtils'
 
 interface HistoryViewProps {
     userId?: string
@@ -487,7 +488,7 @@ const LogoHistoryCard = ({
             if (isQR) prefix = 'qr'
             if (isPortfolio) prefix = 'caso-estudio'
             if (isBgRemoval) prefix = 'sin-fondo'
-
+            const filename = `${prefix}-${Date.now()}.png`
             link.download = `${prefix}-${item.clientName
                 .replace(/\s+/g, '-')
                 .toLowerCase()}-${Date.now()}.png`
@@ -495,6 +496,7 @@ const LogoHistoryCard = ({
             link.click()
             document.body.removeChild(link)
             window.URL.revokeObjectURL(blobUrl)
+            await downloadFile(item.imageUrl, filename)
         } catch (error) {
             window.open(item.imageUrl, '_blank')
         } finally {

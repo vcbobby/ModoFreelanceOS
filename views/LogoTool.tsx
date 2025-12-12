@@ -12,6 +12,7 @@ import {
 import { Button, Card } from '../components/ui'
 import { collection, addDoc } from 'firebase/firestore'
 import { db } from '../firebase'
+import { downloadFile } from '../utils/downloadUtils' // <--- IMPORTANTE
 
 interface LogoToolProps {
     onUsage: (cost: number) => Promise<boolean>
@@ -82,6 +83,7 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
     }
 
     const downloadImage = async (url: string, index: number) => {
+        // 1. Guardar en Historial (Firebase)
         if (userId) {
             try {
                 await addDoc(collection(db, 'users', userId, 'history'), {
@@ -98,19 +100,11 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
             }
         }
 
-        try {
-            const response = await fetch(url)
-            const blob = await response.blob()
-            const blobUrl = window.URL.createObjectURL(blob)
-            const link = document.createElement('a')
-            link.href = blobUrl
-            link.download = `logo-modofreelance-${index}.jpg`
-            document.body.appendChild(link)
-            link.click()
-            document.body.removeChild(link)
-        } catch (error) {
-            window.open(url, '_blank')
-        }
+        // 2. Descargar usando la utilidad Universal (Android/PC)
+        const filename = `logo-${prompt
+            .replace(/\s+/g, '-')
+            .toLowerCase()}-${index}-${Date.now()}.jpg`
+        await downloadFile(url, filename)
     }
 
     return (

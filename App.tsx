@@ -45,6 +45,8 @@ import { AIAssistant } from './components/AIAssistant'
 import { DashboardUpcomingEvents } from './components/DashboardUpcomingEvents'
 import { PortfolioTool } from './views/PortfolioTool'
 import { BriefingTool } from './views/BriefingTool'
+import { UpdateChecker } from './components/UpdateChecker'
+
 // Firebase
 import { auth, db } from './firebase'
 import { onAuthStateChanged, signOut, User } from 'firebase/auth'
@@ -524,6 +526,7 @@ const App = () => {
 
     return (
         <div className="flex h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 transition-colors duration-300">
+            <UpdateChecker />
             {/* Mobile Header */}
             <div className="md:hidden fixed top-0 w-full bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-50 px-4 py-3 flex justify-between items-center gap-4 transition-colors">
                 <span

@@ -4,6 +4,7 @@ import { QrCode, Link } from 'lucide-react'
 import { Button, Card } from '../components/ui'
 import { addDoc, collection } from 'firebase/firestore'
 import { db } from '../firebase'
+import { downloadFile } from '../utils/downloadUtils'
 
 interface QRToolProps {
     onUsage: (cost: number) => Promise<boolean>
@@ -57,6 +58,7 @@ export const QRTool: React.FC<QRToolProps> = ({ onUsage, userId }) => {
                     downloadLink.href = pngUrl
                     downloadLink.download = `qr-${Date.now()}.png`
                     downloadLink.click()
+                    await downloadFile(pngUrl, `qr-${Date.now()}.png`)
                 }
             }
             img.src = 'data:image/svg+xml;base64,' + btoa(svgData)

@@ -4,6 +4,7 @@ import { Upload, Download, Zap, ArrowRight } from 'lucide-react'
 import { Button, Card } from '../components/ui'
 import { addDoc, collection } from 'firebase/firestore'
 import { db } from '../firebase'
+import { downloadFile } from '../utils/downloadUtils'
 
 interface OptimizerToolProps {
     onUsage: (cost: number) => Promise<boolean>
@@ -75,6 +76,14 @@ export const OptimizerTool: React.FC<OptimizerToolProps> = ({
                 })
             } catch (e) {
                 console.error('Error guardando historial:', e)
+            }
+            // Convertir el Blob comprimido a DataURL para pasarlo a la utilidad
+            const reader = new FileReader()
+            reader.readAsDataURL(compressedFile)
+            reader.onloadend = async () => {
+                const base64data = reader.result as string
+                await downloadFile(base64data, `optimized-${originalFile.name}`)
+                setIsSaving(false)
             }
         }
         const link = document.createElement('a')

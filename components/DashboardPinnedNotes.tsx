@@ -98,7 +98,11 @@ export const DashboardPinnedNotes: React.FC<DashboardPinnedNotesProps> = ({
                                     {note.title}
                                 </h4>
                             )}
-                            <div className="text-sm text-slate-700 overflow-hidden flex-1 opacity-80">
+                            <div
+                                className={`text-sm text-slate-700 overflow-hidden flex-1 opacity-80 ${
+                                    note.isPrivate ? 'blur-sm select-none' : ''
+                                }`}
+                            >
                                 {note.content
                                     .split('\n')
                                     .slice(0, 3)
@@ -139,7 +143,13 @@ export const DashboardPinnedNotes: React.FC<DashboardPinnedNotesProps> = ({
                                 </h3>
                             )}
 
-                            <div className="text-slate-800 text-base leading-relaxed">
+                            <div
+                                className={`text-slate-800 text-base leading-relaxed transition-all duration-300 ${
+                                    selectedNote.isPrivate
+                                        ? 'blur-md hover:blur-0 select-none'
+                                        : ''
+                                }`}
+                            >
                                 {selectedNote.content
                                     .split('\n')
                                     .map((line: string, idx: number) => {
@@ -202,6 +212,12 @@ export const DashboardPinnedNotes: React.FC<DashboardPinnedNotesProps> = ({
                                         )
                                     })}
                             </div>
+                            {/* Mensaje de ayuda si es privado */}
+                            {selectedNote.isPrivate && (
+                                <p className="text-xs text-center text-slate-500/50 mt-4 italic pointer-events-none">
+                                    (Contenido oculto. Pasa el cursor para ver)
+                                </p>
+                            )}
                         </div>
 
                         <div className="px-6 py-4 bg-white/40 border-t border-black/5 flex justify-between items-center text-xs text-slate-600">

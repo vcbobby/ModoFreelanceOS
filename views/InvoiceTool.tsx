@@ -5,6 +5,7 @@ import { Button, Card } from '../components/ui'
 import html2pdf from 'html2pdf.js'
 import { collection, addDoc, doc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '../firebase'
+import { downloadFile } from '../utils/downloadUtils'
 
 interface InvoiceToolProps {
     onUsage: (cost: number) => Promise<boolean>
@@ -155,6 +156,13 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({
             .then(() => {
                 setIsDownloading(false)
             })
+        const pdfDataUri = await html2pdf()
+            .set(opt)
+            .from(element)
+            .outputPdf('datauristring')
+        await downloadFile(pdfDataUri, `factura-${invoiceNumber}.pdf`)
+
+        setIsDownloading(false)
     }
 
     return (

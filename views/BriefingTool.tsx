@@ -12,6 +12,7 @@ import {
 import { Button, Card, ConfirmationModal } from '../components/ui'
 // @ts-ignore
 import html2pdf from 'html2pdf.js'
+import { downloadFile } from '../utils/downloadUtils'
 
 interface BriefingToolProps {
     onUsage: (cost: number) => Promise<boolean>
@@ -70,7 +71,7 @@ export const BriefingTool: React.FC<BriefingToolProps> = ({
         setFormData((prev) => ({ ...prev, [field]: value }))
     }
 
-    const handleDownloadPDF = () => {
+    const handleDownloadPDF = async () => {
         const element = document.getElementById('brief-document-full-size') // Usamos el ID del documento invisible
         const opt = {
             margin: 0,
@@ -87,6 +88,13 @@ export const BriefingTool: React.FC<BriefingToolProps> = ({
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         }
         html2pdf().set(opt).from(element).save()
+        const pdfDataUri = await html2pdf()
+            .set(opt)
+            .from(element)
+            .outputPdf('datauristring')
+
+        // USAR LA UTILIDAD UNIVERSAL
+        await downloadFile(pdfDataUri, opt.filename)
     }
 
     const handleProcess = async () => {
