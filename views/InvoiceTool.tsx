@@ -149,13 +149,6 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         }
 
-        html2pdf()
-            .set(opt)
-            .from(element)
-            .save()
-            .then(() => {
-                setIsDownloading(false)
-            })
         const pdfDataUri = await html2pdf()
             .set(opt)
             .from(element)
