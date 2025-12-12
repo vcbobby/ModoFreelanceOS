@@ -87,7 +87,7 @@ export const BriefingTool: React.FC<BriefingToolProps> = ({
             },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         }
-        html2pdf().set(opt).from(element).save()
+
         const pdfDataUri = await html2pdf()
             .set(opt)
             .from(element)

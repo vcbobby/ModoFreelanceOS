@@ -1,10 +1,10 @@
 import React, { useState, useRef } from 'react'
 import QRCode from 'react-qr-code'
 import { QrCode, Link } from 'lucide-react'
-import { Button, Card } from '../components/ui'
 import { addDoc, collection } from 'firebase/firestore'
 import { db } from '../firebase'
 import { downloadFile } from '../utils/downloadUtils'
+import { Button, Card, ConfirmationModal } from '../components/ui'
 
 interface QRToolProps {
     onUsage: (cost: number) => Promise<boolean>
@@ -15,58 +15,85 @@ export const QRTool: React.FC<QRToolProps> = ({ onUsage, userId }) => {
     const [text, setText] = useState('')
     const [fgColor, setFgColor] = useState('#000000')
     const qrRef = useRef<HTMLDivElement>(null)
-
+    const [modal, setModal] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+    })
     const handleDownload = async () => {
         if (!text) return
         const canProceed = await onUsage(1)
         if (!canProceed) return
+        try {
+            const svg = qrRef.current?.querySelector('svg')
+            if (svg) {
+                const svgData = new XMLSerializer().serializeToString(svg)
+                const canvas = document.createElement('canvas')
+                const ctx = canvas.getContext('2d')
+                const img = new Image()
 
-        const svg = qrRef.current?.querySelector('svg')
-        if (svg) {
-            const svgData = new XMLSerializer().serializeToString(svg)
-            const canvas = document.createElement('canvas')
-            const ctx = canvas.getContext('2d')
-            const img = new Image()
-
-            img.onload = async () => {
-                canvas.width = 512
-                canvas.height = 512
-                if (ctx) {
-                    ctx.fillStyle = '#ffffff'
-                    ctx.fillRect(0, 0, canvas.width, canvas.height)
-                    ctx.drawImage(img, 0, 0, 512, 512)
-                    const pngUrl = canvas.toDataURL('image/png')
-                    if (userId) {
-                        try {
-                            await addDoc(
-                                collection(db, 'users', userId, 'history'),
-                                {
-                                    createdAt: new Date().toISOString(),
-                                    category: 'logo',
-                                    clientName: 'Código QR',
-                                    platform: 'QR Generator',
-                                    type: 'QR Code',
-                                    content: `Enlace: ${text}`,
-                                    imageUrl: pngUrl,
-                                }
-                            )
-                        } catch (e) {
-                            console.error('Error guardando historial', e)
+                img.onload = async () => {
+                    canvas.width = 512
+                    canvas.height = 512
+                    if (ctx) {
+                        ctx.fillStyle = '#ffffff'
+                        ctx.fillRect(0, 0, canvas.width, canvas.height)
+                        ctx.drawImage(img, 0, 0, 512, 512)
+                        const pngUrl = canvas.toDataURL('image/png')
+                        if (userId) {
+                            try {
+                                await addDoc(
+                                    collection(db, 'users', userId, 'history'),
+                                    {
+                                        createdAt: new Date().toISOString(),
+                                        category: 'logo',
+                                        clientName: 'Código QR',
+                                        platform: 'QR Generator',
+                                        type: 'QR Code',
+                                        content: `Enlace: ${text}`,
+                                        imageUrl: pngUrl,
+                                    }
+                                )
+                            } catch (e) {
+                                console.error('Error guardando historial', e)
+                            }
                         }
+
+                        await downloadFile(pngUrl, `qr-${Date.now()}.png`)
                     }
-                    const downloadLink = document.createElement('a')
-                    downloadLink.href = pngUrl
-                    downloadLink.download = `qr-${Date.now()}.png`
-                    downloadLink.click()
-                    await downloadFile(pngUrl, `qr-${Date.now()}.png`)
                 }
+                img.onerror = () => {
+                    setModal({
+                        isOpen: true,
+                        title: 'Error',
+                        message: 'No se pudo procesar el código QR.',
+                    })
+                }
+                img.src = 'data:image/svg+xml;base64,' + btoa(svgData)
+            } else {
+                throw new Error('No se encontró el elemento QR.')
             }
-            img.src = 'data:image/svg+xml;base64,' + btoa(svgData)
+        } catch (error: any) {
+            setModal({
+                isOpen: true,
+                title: 'Error',
+                message: error.message || 'Error desconocido',
+            })
         }
     }
 
     return (
         <div className="max-w-4xl mx-auto">
+            <ConfirmationModal
+                isOpen={modal.isOpen}
+                onClose={() => setModal({ ...modal, isOpen: false })}
+                onConfirm={() => setModal({ ...modal, isOpen: false })}
+                title={modal.title}
+                message={modal.message}
+                confirmText="Ok"
+                cancelText=""
+                isDanger={true}
+            />
             <div className="mb-8">
                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <QrCode className="w-6 h-6 text-brand-600" /> Generador QR

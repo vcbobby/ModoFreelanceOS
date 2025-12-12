@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import imageCompression from 'browser-image-compression'
 import { Upload, Download, Zap, ArrowRight } from 'lucide-react'
-import { Button, Card } from '../components/ui'
+import { Button, Card, ConfirmationModal } from '../components/ui'
 import { addDoc, collection } from 'firebase/firestore'
 import { db } from '../firebase'
 import { downloadFile } from '../utils/downloadUtils'
@@ -19,7 +19,11 @@ export const OptimizerTool: React.FC<OptimizerToolProps> = ({
     const [compressedFile, setCompressedFile] = useState<Blob | null>(null)
     const [isCompressing, setIsCompressing] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
-
+    const [modal, setModal] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+    })
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files && event.target.files[0]) {
             setOriginalFile(event.target.files[0])
@@ -40,9 +44,14 @@ export const OptimizerTool: React.FC<OptimizerToolProps> = ({
             }
             const compressedBlob = await imageCompression(originalFile, options)
             setCompressedFile(compressedBlob)
-        } catch (error) {
+        } catch (error: any) {
             console.error(error)
-            alert('Error al comprimir.')
+            setModal({
+                isOpen: true,
+                title: 'Error',
+                message:
+                    'No se pudo optimizar la imagen. Intenta con otro archivo.',
+            })
         } finally {
             setIsCompressing(false)
         }
@@ -74,8 +83,13 @@ export const OptimizerTool: React.FC<OptimizerToolProps> = ({
                         compressedFile.size
                     )}\n- **Espacio Ahorrado: ${savedSize} KB (${percent}%)**`,
                 })
-            } catch (e) {
-                console.error('Error guardando historial:', e)
+            } catch (error: any) {
+                setModal({
+                    isOpen: true,
+                    title: 'Error de descarga',
+                    message: error.message,
+                })
+                setIsSaving(false)
             }
             // Convertir el Blob comprimido a DataURL para pasarlo a la utilidad
             const reader = new FileReader()
@@ -86,12 +100,7 @@ export const OptimizerTool: React.FC<OptimizerToolProps> = ({
                 setIsSaving(false)
             }
         }
-        const link = document.createElement('a')
-        link.href = URL.createObjectURL(compressedFile)
-        link.download = `optimized-${originalFile.name}`
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
+
         setIsSaving(false)
     }
 
@@ -99,6 +108,16 @@ export const OptimizerTool: React.FC<OptimizerToolProps> = ({
 
     return (
         <div className="max-w-3xl mx-auto">
+            <ConfirmationModal
+                isOpen={modal.isOpen}
+                onClose={() => setModal({ ...modal, isOpen: false })}
+                onConfirm={() => setModal({ ...modal, isOpen: false })}
+                title={modal.title}
+                message={modal.message}
+                confirmText="Entendido"
+                cancelText=""
+                isDanger={true}
+            />
             <div className="mb-8 text-center">
                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center justify-center gap-2">
                     <Zap className="w-6 h-6 text-brand-600" /> Optimizador de

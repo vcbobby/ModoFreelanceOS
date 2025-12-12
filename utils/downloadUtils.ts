@@ -10,12 +10,17 @@ import { Toast } from '@capacitor/toast'
 export const downloadFile = async (source: string, filename: string) => {
     // --- 1. MODO WEB (PC/Browser) ---
     if (!Capacitor.isNativePlatform()) {
-        const link = document.createElement('a')
-        link.href = source
-        link.download = filename
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
+        try {
+            const link = document.createElement('a')
+            link.href = source
+            link.download = filename
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+        } catch (error) {
+            // LANZAMOS EL ERROR PARA QUE LO MANEJE EL MODAL DEL COMPONENTE
+            throw new Error('No se pudo iniciar la descarga en el navegador.')
+        }
         return
     }
 
@@ -35,7 +40,7 @@ export const downloadFile = async (source: string, filename: string) => {
         }
 
         // Guardar en la carpeta de Descargas pública
-        const savedFile = await Filesystem.writeFile({
+        await Filesystem.writeFile({
             path: `Download/${filename}`,
             data: base64Data,
             directory: Directory.ExternalStorage, // En Android guarda en /storage/emulated/0/Download/
@@ -48,6 +53,7 @@ export const downloadFile = async (source: string, filename: string) => {
         })
     } catch (error) {
         console.error('Error descargando:', error)
+        throw new Error(error.message || 'Error al guardar en el dispositivo.')
         await Toast.show({
             text: 'Error al guardar. Verifica permisos de almacenamiento.',
             duration: 'long',

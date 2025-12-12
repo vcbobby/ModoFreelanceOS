@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Download, Plus, Trash2, FileText, Upload } from 'lucide-react'
-import { Button, Card } from '../components/ui'
+import { Button, Card, ConfirmationModal } from '../components/ui'
 // @ts-ignore
 import html2pdf from 'html2pdf.js'
 import { collection, addDoc, doc, getDoc, setDoc } from 'firebase/firestore'
@@ -50,6 +50,13 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({
     const subtotal = items.reduce((acc, item) => acc + item.qty * item.price, 0)
     const taxAmount = (subtotal * taxRate) / 100
     const total = subtotal + taxAmount
+    const [modal, setModal] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+    })
+    const showError = (msg: string) =>
+        setModal({ isOpen: true, title: '¡Ups! Algo salió mal', message: msg })
 
     useEffect(() => {
         const fetchInvoiceData = async () => {
@@ -149,17 +156,33 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         }
 
-        const pdfDataUri = await html2pdf()
-            .set(opt)
-            .from(element)
-            .outputPdf('datauristring')
-        await downloadFile(pdfDataUri, `factura-${invoiceNumber}.pdf`)
-
-        setIsDownloading(false)
+        try {
+            const pdfDataUri = await html2pdf()
+                .set(opt)
+                .from(element)
+                .outputPdf('datauristring')
+            await downloadFile(pdfDataUri, opt.filename)
+        } catch (error: any) {
+            console.error(error)
+            // --- AQUÍ USAMOS EL MODAL ---
+            showError(`No se pudo generar la factura. ${error.message || ''}`)
+        } finally {
+            setIsDownloading(false)
+        }
     }
 
     return (
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-start pb-20">
+            <ConfirmationModal
+                isOpen={modal.isOpen}
+                onClose={() => setModal({ ...modal, isOpen: false })}
+                onConfirm={() => setModal({ ...modal, isOpen: false })}
+                title={modal.title}
+                message={modal.message}
+                confirmText="Entendido"
+                cancelText="" // Ocultar cancelar
+                isDanger={true} // Rojo para errores
+            />
             <div className="space-y-6">
                 <div>
                     <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">

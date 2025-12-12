@@ -9,7 +9,7 @@ import {
     PenLine,
     Type,
 } from 'lucide-react'
-import { Button, Card } from '../components/ui'
+import { Button, Card, ConfirmationModal } from '../components/ui'
 import { collection, addDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import { downloadFile } from '../utils/downloadUtils' // <--- IMPORTANTE
@@ -29,6 +29,13 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
     const [generatedImages, setGeneratedImages] = useState<
         { url: string; id: string }[]
     >([])
+    const [modal, setModal] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+    })
+    const showError = (msg: string) =>
+        setModal({ isOpen: true, title: 'Error', message: msg })
 
     const styles = [
         'Minimalista',
@@ -78,6 +85,7 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
             } catch (error) {
                 console.error(error)
                 setIsGenerating(false)
+                showError('Error al iniciar el generador. Intenta de nuevo.')
             }
         }, 100)
     }
@@ -95,8 +103,9 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
                     content: details || 'Sin detalles adicionales',
                     imageUrl: url,
                 })
-            } catch (e) {
-                console.error('Error guardando en historial', e)
+            } catch (error: any) {
+                console.error(error)
+                showError(`No se pudo descargar la imagen. ${error.message}`)
             }
         }
 
@@ -109,6 +118,16 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
 
     return (
         <div className="max-w-6xl mx-auto">
+            <ConfirmationModal
+                isOpen={modal.isOpen}
+                onClose={() => setModal({ ...modal, isOpen: false })}
+                onConfirm={() => setModal({ ...modal, isOpen: false })}
+                title={modal.title}
+                message={modal.message}
+                confirmText="Ok"
+                cancelText=""
+                isDanger={true}
+            />
             <div className="mb-8">
                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <Palette className="w-6 h-6 text-brand-600" />

@@ -422,7 +422,7 @@ const LogoHistoryCard = ({
     const [showImage, setShowImage] = useState(false)
     const [copied, setCopied] = useState(false)
     const [isDownloading, setIsDownloading] = useState(false)
-
+    const [errorMsg, setErrorMsg] = useState('')
     // DETECCIÓN DE TIPO
     const isQR = item.platform === 'QR Generator' || item.type === 'QR Code'
     const isPortfolio = item.type === 'portfolio-gen'
@@ -489,16 +489,11 @@ const LogoHistoryCard = ({
             if (isPortfolio) prefix = 'caso-estudio'
             if (isBgRemoval) prefix = 'sin-fondo'
             const filename = `${prefix}-${Date.now()}.png`
-            link.download = `${prefix}-${item.clientName
-                .replace(/\s+/g, '-')
-                .toLowerCase()}-${Date.now()}.png`
-            document.body.appendChild(link)
-            link.click()
-            document.body.removeChild(link)
-            window.URL.revokeObjectURL(blobUrl)
+
             await downloadFile(item.imageUrl, filename)
-        } catch (error) {
-            window.open(item.imageUrl, '_blank')
+        } catch (error: any) {
+            console.error(error)
+            setErrorMsg(error.message) // Guardamos el error
         } finally {
             setIsDownloading(false)
         }
@@ -506,6 +501,16 @@ const LogoHistoryCard = ({
 
     return (
         <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+            <ConfirmationModal
+                isOpen={!!errorMsg}
+                onClose={() => setErrorMsg('')}
+                onConfirm={() => setErrorMsg('')}
+                title="Error de Descarga"
+                message={errorMsg}
+                confirmText="Ok"
+                cancelText=""
+                isDanger={true}
+            />
             {/* ENCABEZADO */}
             <div className="p-4 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
                 <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
@@ -673,8 +678,9 @@ const InvoiceHistoryCard = ({
     // Para ahorrar espacio, es el mismo que te di antes.
     const [isDownloading, setIsDownloading] = useState(false)
     const dateStr = new Date(item.createdAt).toLocaleDateString()
+    const [errorMsg, setErrorMsg] = useState('')
 
-    const handleRedownload = () => {
+    const handleRedownload = async () => {
         setIsDownloading(true)
         const data = item.invoiceData
         if (!data) return
@@ -821,17 +827,34 @@ const InvoiceHistoryCard = ({
             html2canvas: { scale: 2 },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         }
-        html2pdf()
-            .set(opt)
-            .from(content)
-            .save()
-            .then(() => {
-                setIsDownloading(false)
-            })
+        try {
+            // --- CORRECCIÓN: Generar string y usar downloadFile ---
+            const pdfDataUri = await html2pdf()
+                .set(opt)
+                .from(content)
+                .outputPdf('datauristring')
+
+            await downloadFile(pdfDataUri, opt.filename)
+        } catch (error: any) {
+            console.error(error)
+            setErrorMsg(error.message) // Guardamos el error
+        } finally {
+            setIsDownloading(false)
+        }
     }
 
     return (
         <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+            <ConfirmationModal
+                isOpen={!!errorMsg}
+                onClose={() => setErrorMsg('')}
+                onConfirm={() => setErrorMsg('')}
+                title="Error de Descarga"
+                message={errorMsg}
+                confirmText="Ok"
+                cancelText=""
+                isDanger={true}
+            />
             <div className="p-4 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
                 <div className="flex items-center gap-3">
                     <span className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-bold px-2 py-1 rounded-md uppercase flex items-center gap-1">
