@@ -111,15 +111,40 @@ export const FiverrTool: React.FC<FiverrToolProps> = ({ onUsage, userId }) => {
 
                 {result && (
                     <div className="space-y-6">
-                        {/* ... (Tarjeta de Título & SEO igual) ... */}
-
-                        {/* PAQUETES REDISEÑADOS */}
-                        <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
-                            <h3 className="font-bold text-lg mb-4 text-slate-900 dark:text-white">
-                                Paquetes de Servicio
+                        <Card className="p-6 bg-white dark:bg-slate-800">
+                            <h3 className="font-bold text-lg mb-2 text-slate-900 dark:text-white">
+                                Título & SEO
                             </h3>
+                            <p className="text-xl font-bold text-green-600 mb-2">
+                                {result.title}
+                            </p>
+                            <div className="flex flex-wrap gap-2 mb-4">
+                                {result.searchTags.map(
+                                    (tag: string, i: number) => (
+                                        <span
+                                            key={i}
+                                            className="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-1 rounded text-xs"
+                                        >
+                                            #{tag}
+                                        </span>
+                                    )
+                                )}
+                            </div>
+                            <h4 className="font-bold text-sm mb-1 text-slate-700 dark:text-slate-300">
+                                Descripción
+                            </h4>
+                            <div
+                                className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap"
+                                dangerouslySetInnerHTML={{
+                                    __html: result.description,
+                                }}
+                            ></div>
+                        </Card>
 
-                            {/* DISEÑO RESPONSIVE: Stack en móvil, Grid en Desktop */}
+                        <Card className="p-6 bg-white dark:bg-slate-800 overflow-x-auto">
+                            <h3 className="font-bold text-lg mb-4 text-slate-900 dark:text-white">
+                                Paquetes
+                            </h3>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 {Object.entries(result.packages).map(
                                     ([key, pkg]: any) => (
@@ -153,7 +178,7 @@ export const FiverrTool: React.FC<FiverrToolProps> = ({ onUsage, userId }) => {
                                     )
                                 )}
                             </div>
-                        </div>
+                        </Card>
                     </div>
                 )}
             </div>
