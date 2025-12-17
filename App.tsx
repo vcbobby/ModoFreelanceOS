@@ -490,11 +490,6 @@ const AppContent = () => {
             default:
                 return (
                     <div className="max-w-4xl mx-auto py-8">
-                        <DashboardPomodoroWidget
-                            onGoToPomodoro={() =>
-                                setCurrentView(AppView.POMODORO)
-                            }
-                        />
                         {showSuccessMsg && (
                             <div className="mb-6 bg-green-500 text-white p-4 rounded-xl shadow-lg flex items-center justify-center gap-2 animate-bounce">
                                 <CheckCircle className="w-6 h-6" />
@@ -586,6 +581,11 @@ const AppContent = () => {
                                 </div>
                             </div>
                         </div>
+                        <DashboardPomodoroWidget
+                            onGoToPomodoro={() =>
+                                setCurrentView(AppView.POMODORO)
+                            }
+                        />
                         {firebaseUser && (
                             <DashboardUpcomingEvents
                                 userId={firebaseUser.uid}
