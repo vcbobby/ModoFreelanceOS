@@ -145,7 +145,7 @@ export const FiverrTool: React.FC<FiverrToolProps> = ({ onUsage, userId }) => {
                             <h3 className="font-bold text-lg mb-4 text-slate-900 dark:text-white">
                                 Paquetes
                             </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                                 {Object.entries(result.packages).map(
                                     ([key, pkg]: any) => (
                                         <div
