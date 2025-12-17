@@ -214,7 +214,9 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ userId }) => {
                     if (
                         item.category === 'logo' ||
                         item.type === 'background-removal' ||
-                        item.type === 'portfolio-gen'
+                        item.type === 'portfolio-gen' ||
+                        item.type === 'fiverr-gig' || // Fiverr tiene estructura compleja, mejor ver resumen
+                        item.type === 'cover-letter' // Cover Letter es texto largo
                     )
                         return (
                             <LogoHistoryCard
@@ -232,6 +234,17 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ userId }) => {
                                 onDelete={() => handleDelete(item.id)}
                             />
                         )
+                    if (item.type === 'cv') {
+                        // El CV no guardó el PDF, solo el registro de que se hizo.
+                        // Usamos HistoryCard simple para mostrar que se hizo.
+                        return (
+                            <HistoryCard
+                                key={item.id}
+                                item={item}
+                                onDelete={() => handleDelete(item.id)}
+                            />
+                        )
+                    }
                     // Si es texto (briefing checklist, propuestas, etc)
                     return (
                         <HistoryCard
@@ -613,11 +626,22 @@ const LogoHistoryCard = ({
                                 !showImage ? 'line-clamp-3' : ''
                             } break-all whitespace-pre-wrap`}
                         >
-                            {isQR
-                                ? item.content.replace('Enlace: ', '')
-                                : isPortfolio
-                                ? item.content
-                                : `"${item.content}"`}
+                            {isQR ? (
+                                item.content.replace('Enlace: ', '')
+                            ) : item.type === 'fiverr-gig' && item.gigData ? (
+                                // Si es Fiverr, mostramos un resumen bonito
+                                <div>
+                                    <strong>Título:</strong>{' '}
+                                    {item.gigData.title}
+                                    <br />
+                                    <strong>Categoría:</strong>{' '}
+                                    {item.gigData.category}
+                                </div>
+                            ) : isPortfolio ? (
+                                item.content
+                            ) : (
+                                `"${item.content}"`
+                            )}
                         </div>
                     </div>
 

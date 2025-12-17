@@ -7,6 +7,10 @@ import {
     Clock,
     Shield,
     Eye,
+    User,
+    Briefcase,
+    GraduationCap,
+    Heart,
 } from 'lucide-react'
 
 export const freelanceTips = [
@@ -72,5 +76,40 @@ export const freelanceTips = [
         icon: Eye,
         color: 'text-indigo-600',
         bg: 'bg-indigo-50',
+    },
+    {
+        category: 'Networking',
+        text: 'Tu red es tu patrimonio. Dedica 15 min a la semana a comentar en LinkedIn o saludar a antiguos clientes.',
+        icon: User, // Importar User de lucide-react
+        color: 'text-pink-600',
+        bg: 'bg-pink-50',
+    },
+    {
+        category: 'Herramientas',
+        text: 'Mantén tu portfolio actualizado. No esperes a buscar trabajo para agregar ese último proyecto exitoso.',
+        icon: Briefcase, // Importar Briefcase
+        color: 'text-cyan-600',
+        bg: 'bg-cyan-50',
+    },
+    {
+        category: 'Finanzas',
+        text: 'Separa tus cuentas. Tener una cuenta bancaria solo para el negocio facilita enormemente los impuestos.',
+        icon: DollarSign,
+        color: 'text-teal-600',
+        bg: 'bg-teal-50',
+    },
+    {
+        category: 'Cliente',
+        text: 'Educa a tu cliente. Si te piden algo imposible, explica por qué lo es y ofrece una alternativa viable.',
+        icon: GraduationCap, // Importar GraduationCap
+        color: 'text-violet-600',
+        bg: 'bg-violet-50',
+    },
+    {
+        category: 'Salud',
+        text: 'Invierte en una buena silla. Pasarás más tiempo en ella que en tu cama. Tu espalda te lo agradecerá.',
+        icon: Heart, // Importar Heart
+        color: 'text-rose-600',
+        bg: 'bg-rose-50',
     },
 ]

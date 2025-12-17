@@ -13,6 +13,9 @@ export enum AppView {
     FINANCES = 'finances',
     PORTFOLIO = 'PORTFOLIO',
     BRIEFING = 'BRIEFING',
+    FIVERR = 'FIVERR',
+    POMODORO = 'POMODORO',
+    CV_BUILDER = 'CV_BUILDER',
 }
 
 export interface Proposal {
@@ -40,4 +43,5 @@ export interface HistoryItem {
 
     // Datos específicos para facturas (los guardaremos en el mismo objeto para simplificar)
     invoiceData?: any
+    gigData?: any
 }

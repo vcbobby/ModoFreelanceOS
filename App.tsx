@@ -22,6 +22,9 @@ import {
     Sun,
     Briefcase,
     ClipboardList,
+    Globe,
+    Timer,
+    FileUser,
 } from 'lucide-react'
 import { useTheme } from './context/ThemeContext'
 import { DashboardTips } from './components/DashboardTips'
@@ -46,7 +49,9 @@ import { DashboardUpcomingEvents } from './components/DashboardUpcomingEvents'
 import { PortfolioTool } from './views/PortfolioTool'
 import { BriefingTool } from './views/BriefingTool'
 import { UpdateChecker } from './components/UpdateChecker'
-
+import { FiverrTool } from './views/FiverrTool'
+import { PomodoroTool } from './views/PomodoroTool'
+import { CVBuilder } from './views/CVBuilder'
 // Firebase
 import { auth, db } from './firebase'
 import { onAuthStateChanged, signOut, User } from 'firebase/auth'
@@ -403,6 +408,22 @@ const App = () => {
                         userId={firebaseUser?.uid}
                     />
                 )
+            case AppView.FIVERR:
+                return (
+                    <FiverrTool
+                        onUsage={handleFeatureUsage}
+                        userId={firebaseUser?.uid}
+                    />
+                )
+            case AppView.POMODORO:
+                return <PomodoroTool />
+            case AppView.CV_BUILDER:
+                return (
+                    <CVBuilder
+                        onUsage={handleFeatureUsage}
+                        userId={firebaseUser?.uid}
+                    />
+                )
             default:
                 return (
                     <div className="max-w-4xl mx-auto py-8">
@@ -631,12 +652,32 @@ const App = () => {
                         }}
                     />
                     <NavItem
+                        icon={<Globe />}
+                        label="Generador Fiverr"
+                        active={currentView === AppView.FIVERR}
+                        onClick={() => {
+                            setCurrentView(AppView.FIVERR)
+                            setIsMobileMenuOpen(false)
+                        }}
+                    />
+
+                    <NavItem
                         icon={<StickyNote />}
                         label="Agenda & Notas"
                         active={currentView === AppView.NOTES}
                         badge={agendaAlerts}
                         onClick={() => {
                             setCurrentView(AppView.NOTES)
+                            setIsMobileMenuOpen(false)
+                        }}
+                    />
+
+                    <NavItem
+                        icon={<Timer />}
+                        label="Pomodoro Focus"
+                        active={currentView === AppView.POMODORO}
+                        onClick={() => {
+                            setCurrentView(AppView.POMODORO)
                             setIsMobileMenuOpen(false)
                         }}
                     />
@@ -660,6 +701,15 @@ const App = () => {
                         active={currentView === AppView.PORTFOLIO}
                         onClick={() => {
                             setCurrentView(AppView.PORTFOLIO)
+                            setIsMobileMenuOpen(false)
+                        }}
+                    />
+                    <NavItem
+                        icon={<FileUser />}
+                        label="Constructor CV"
+                        active={currentView === AppView.CV_BUILDER}
+                        onClick={() => {
+                            setCurrentView(AppView.CV_BUILDER)
                             setIsMobileMenuOpen(false)
                         }}
                     />

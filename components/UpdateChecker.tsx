@@ -4,7 +4,7 @@ import { ConfirmationModal } from './ui' // Tu modal existente
 import { Download } from 'lucide-react'
 
 // Esta versión debe coincidir con la que pongas en tu package.json
-const CURRENT_APP_VERSION = '1.1.0'
+const CURRENT_APP_VERSION = '1.2.0'
 
 export const UpdateChecker = () => {
     const [showUpdate, setShowUpdate] = useState(false)

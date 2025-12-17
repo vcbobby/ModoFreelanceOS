@@ -264,6 +264,20 @@ export const NotesView: React.FC<NotesViewProps> = ({
             setEditMode('edit')
         }
     }
+    const insertCheckbox = () => {
+        if (!editingNote) return
+        // Añadimos el checkbox al final o en una nueva línea
+        const currentContent = editingNote.content
+        const newContent =
+            currentContent +
+            (currentContent.endsWith('\n') || currentContent === ''
+                ? ''
+                : '\n') +
+            '☐ '
+        setEditingNote({ ...editingNote, content: newContent })
+        // Forzamos modo edición para que el usuario escriba
+        setEditMode('edit')
+    }
 
     return (
         <div className="max-w-7xl mx-auto min-h-screen pb-20 px-4">
@@ -454,6 +468,17 @@ export const NotesView: React.FC<NotesViewProps> = ({
 
                             {/* FIX DE UI: Usamos flex-none para que el contenedor de botones no se encoja */}
                             <div className="flex bg-black/5 dark:bg-white/10 rounded-lg p-1 flex-none mt-2 md:mt-0">
+                                <button
+                                    onClick={insertCheckbox}
+                                    className="p-1.5 rounded-md text-slate-500 hover:text-brand-600 hover:bg-white dark:hover:bg-slate-700 transition-colors mr-2"
+                                    title="Agregar Tarea"
+                                >
+                                    <span className="font-bold text-lg leading-none">
+                                        +☐
+                                    </span>
+                                </button>
+
+                                <div className="w-px h-4 bg-slate-300 dark:bg-slate-600 mx-1"></div>
                                 <button
                                     onClick={() => setEditMode('view')}
                                     className={`p-1.5 rounded-md transition-colors ${

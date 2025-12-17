@@ -61,6 +61,7 @@ export const BriefingTool: React.FC<BriefingToolProps> = ({
         goals: '',
         audience: '',
         style: '',
+        agreedTasks: '',
     })
 
     const BACKEND_URL = import.meta.env.PROD
@@ -110,6 +111,7 @@ export const BriefingTool: React.FC<BriefingToolProps> = ({
                 Estilo: ${formData.style}. 
                 Presupuesto: ${formData.budget}. 
                 Fecha límite: ${formData.deadline}.
+                PUNTOS ACORDADOS / TAREAS ESPECÍFICAS: ${formData.agreedTasks}
             `
 
             const data = new FormData()
@@ -497,6 +499,22 @@ export const BriefingTool: React.FC<BriefingToolProps> = ({
                                 }
                                 placeholder="Ej: Jóvenes de 18-25 años..."
                             />
+                        </div>
+                        <div>
+                            <label className="text-sm font-bold text-slate-600 dark:text-slate-400">
+                                Puntos Acordados / Tareas Específicas
+                            </label>
+                            <textarea
+                                className="w-full p-3 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white rounded-lg mt-1 h-32 resize-none outline-none focus:ring-2 focus:ring-brand-500"
+                                value={formData.agreedTasks}
+                                onChange={(e) =>
+                                    updateForm('agreedTasks', e.target.value)
+                                }
+                                placeholder="Ej: - Entregar 3 bocetos iniciales&#10;- Incluir versión blanco y negro&#10;- Formato final en SVG y PNG"
+                            />
+                            <p className="text-[10px] text-slate-400 mt-1">
+                                La IA usará esto para crear tu checklist.
+                            </p>
                         </div>
                         <div>
                             <label className="text-sm font-bold text-slate-600 dark:text-slate-400">

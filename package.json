@@ -3,7 +3,7 @@
     "main": "electron/main.cjs",
     "homepage": "./",
     "private": true,
-    "version": "1.0.0",
+    "version": "1.2.0",
     "description": "El Sistema Operativo para Freelancers",
     "author": "ModoFreelance",
     "type": "module",
