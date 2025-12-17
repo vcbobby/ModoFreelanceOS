@@ -503,13 +503,15 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                         </div>
                     </div>
 
-                    {/* VISTA PREVIA ESCALABLE (NO SCROLL HORIZONTAL) */}
-                    <div className="relative bg-slate-200 dark:bg-slate-900 rounded-xl border border-slate-300 dark:border-slate-700 overflow-hidden flex items-center justify-center min-h-[200px]">
-                        {/* Contenedor escalado */}
-                        <div className="origin-top scale-[0.45] md:scale-[0.55] lg:scale-[0.6] xl:scale-[0.7]">
+                    {/* VISTA PREVIA ESCALABLE MEJORADA */}
+                    {/* 1. Ajustamos la altura del contenedor gris (h-[550px] en móvil, h-[850px] en desktop) para quitar espacio sobrante */}
+                    <div className="relative bg-slate-200 dark:bg-slate-900 rounded-xl border border-slate-300 dark:border-slate-700 overflow-hidden flex justify-center h-[550px] md:h-[850px]">
+                        {/* 2. Wrapper de escala: Ajustamos el 'scale' y agregamos sombra fuerte */}
+                        <div className="mt-8 origin-top scale-[0.45] md:scale-[0.7] shadow-[0_0_50px_-12px_rgba(0,0,0,0.25)]">
+                            {/* 3. LA HOJA DE PAPEL: Agregamos 'p-12' (padding) para los márgenes internos */}
                             <div
                                 id="cv-preview"
-                                className="bg-white text-slate-800 w-[210mm] min-h-[297mm] p-[15mm] shadow-2xl"
+                                className="bg-white text-slate-800 w-[210mm] min-h-[297mm] p-10 md:p-14 box-border"
                                 style={{ fontFamily: 'Inter, sans-serif' }}
                             >
                                 {/* Header */}
@@ -518,11 +520,13 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                                         <img
                                             src={cvData.photo}
                                             alt="Profile"
-                                            className="w-32 h-32 rounded-full object-cover border-2 border-slate-100"
+                                            className="w-32 h-32 rounded-full object-cover border-2 border-slate-100 shrink-0"
                                         />
                                     )}
-                                    <div className="flex-1">
-                                        <h1 className="text-4xl font-bold uppercase tracking-tight">
+                                    <div className="flex-1 min-w-0">
+                                        {' '}
+                                        {/* min-w-0 evita desbordes de texto */}
+                                        <h1 className="text-4xl font-bold uppercase tracking-tight break-words">
                                             {cvData.fullName || 'Tu Nombre'}
                                         </h1>
                                         <p className="text-xl text-slate-600 font-medium mt-1">
@@ -557,7 +561,7 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                                         <h3 className="font-bold uppercase text-slate-700 border-b border-slate-200 mb-3 pb-1 text-sm tracking-wider">
                                             Perfil
                                         </h3>
-                                        <p className="text-justify text-base leading-relaxed">
+                                        <p className="text-justify text-base leading-relaxed whitespace-pre-wrap">
                                             {cvData.summary}
                                         </p>
                                     </div>
@@ -574,7 +578,7 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                                                 <h4 className="font-bold text-lg">
                                                     {exp.role}
                                                 </h4>
-                                                <span className="text-sm text-slate-500 italic">
+                                                <span className="text-sm text-slate-500 italic shrink-0 ml-2">
                                                     {exp.dates}
                                                 </span>
                                             </div>
@@ -604,7 +608,7 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                                                         <h4 className="font-bold text-base">
                                                             {edu.degree}
                                                         </h4>
-                                                        <span className="text-sm text-slate-500 italic">
+                                                        <span className="text-sm text-slate-500 italic shrink-0 ml-2">
                                                             {edu.dates}
                                                         </span>
                                                     </div>
