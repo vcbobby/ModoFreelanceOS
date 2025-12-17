@@ -706,6 +706,7 @@ const AppContent = () => {
                         label="Inicio"
                         active={currentView === AppView.DASHBOARD}
                         onClick={() => {
+                            event.preventDefault()
                             setCurrentView(AppView.DASHBOARD)
                             setIsMobileMenuOpen(false)
                         }}
@@ -715,6 +716,7 @@ const AppContent = () => {
                         label="Propuestas IA"
                         active={currentView === AppView.PROPOSALS}
                         onClick={() => {
+                            event.preventDefault()
                             setCurrentView(AppView.PROPOSALS)
                             setIsMobileMenuOpen(false)
                         }}
@@ -724,6 +726,7 @@ const AppContent = () => {
                         label="Generador Fiverr"
                         active={currentView === AppView.FIVERR}
                         onClick={() => {
+                            event.preventDefault()
                             setCurrentView(AppView.FIVERR)
                             setIsMobileMenuOpen(false)
                         }}
@@ -735,6 +738,7 @@ const AppContent = () => {
                         active={currentView === AppView.NOTES}
                         badge={agendaAlerts}
                         onClick={() => {
+                            event.preventDefault()
                             setCurrentView(AppView.NOTES)
                             setIsMobileMenuOpen(false)
                         }}
@@ -745,6 +749,7 @@ const AppContent = () => {
                         label="Pomodoro Focus"
                         active={currentView === AppView.POMODORO}
                         onClick={() => {
+                            event.preventDefault()
                             setCurrentView(AppView.POMODORO)
                             setIsMobileMenuOpen(false)
                         }}
@@ -755,6 +760,7 @@ const AppContent = () => {
                         active={currentView === AppView.FINANCES}
                         badge={financeAlerts}
                         onClick={() => {
+                            event.preventDefault()
                             if (userState.isSubscribed) {
                                 setCurrentView(AppView.FINANCES)
                                 setIsMobileMenuOpen(false)
@@ -768,6 +774,7 @@ const AppContent = () => {
                         label="Creador Portafolio"
                         active={currentView === AppView.PORTFOLIO}
                         onClick={() => {
+                            event.preventDefault()
                             setCurrentView(AppView.PORTFOLIO)
                             setIsMobileMenuOpen(false)
                         }}
@@ -777,6 +784,7 @@ const AppContent = () => {
                         label="Constructor CV"
                         active={currentView === AppView.CV_BUILDER}
                         onClick={() => {
+                            event.preventDefault()
                             setCurrentView(AppView.CV_BUILDER)
                             setIsMobileMenuOpen(false)
                         }}
@@ -786,6 +794,7 @@ const AppContent = () => {
                         label="Briefing & Tareas"
                         active={currentView === AppView.BRIEFING}
                         onClick={() => {
+                            event.preventDefault()
                             setCurrentView(AppView.BRIEFING)
                             setIsMobileMenuOpen(false)
                         }}
@@ -795,6 +804,7 @@ const AppContent = () => {
                         label="Generador Logos"
                         active={currentView === AppView.LOGOS}
                         onClick={() => {
+                            event.preventDefault()
                             setCurrentView(AppView.LOGOS)
                             setIsMobileMenuOpen(false)
                         }}
@@ -804,6 +814,7 @@ const AppContent = () => {
                         label="Facturación"
                         active={currentView === AppView.INVOICES}
                         onClick={() => {
+                            event.preventDefault()
                             setCurrentView(AppView.INVOICES)
                             setIsMobileMenuOpen(false)
                         }}
@@ -813,6 +824,7 @@ const AppContent = () => {
                         label="Generador QR"
                         active={currentView === AppView.QR}
                         onClick={() => {
+                            event.preventDefault()
                             setCurrentView(AppView.QR)
                             setIsMobileMenuOpen(false)
                         }}
@@ -822,6 +834,7 @@ const AppContent = () => {
                         label="Optimizar Img"
                         active={currentView === AppView.OPTIMIZER}
                         onClick={() => {
+                            event.preventDefault()
                             setCurrentView(AppView.OPTIMIZER)
                             setIsMobileMenuOpen(false)
                         }}
@@ -832,6 +845,7 @@ const AppContent = () => {
                         label="Analizar Doc"
                         active={currentView === AppView.ANALYZER}
                         onClick={() => {
+                            event.preventDefault()
                             setCurrentView(AppView.ANALYZER)
                             setIsMobileMenuOpen(false)
                         }}
@@ -841,6 +855,7 @@ const AppContent = () => {
                         label="Historial"
                         active={currentView === AppView.HISTORY}
                         onClick={() => {
+                            event.preventDefault()
                             setCurrentView(AppView.HISTORY)
                             setIsMobileMenuOpen(false)
                         }}
