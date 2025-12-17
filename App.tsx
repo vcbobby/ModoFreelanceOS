@@ -25,7 +25,10 @@ import {
     Globe,
     Timer,
     FileUser,
+    Play,
+    Pause,
 } from 'lucide-react'
+import { PomodoroProvider, usePomodoro } from './context/PomodoroContext'
 import { useTheme } from './context/ThemeContext'
 import { DashboardTips } from './components/DashboardTips'
 import { ProposalTool } from './views/ProposalTool'
@@ -62,7 +65,63 @@ const BACKEND_URL = import.meta.env.PROD
     ? 'https://backend-freelanceos.onrender.com' // Se usa en Vercel, Windows (.exe) y Android (.apk)
     : 'http://localhost:8000' // Se usa solo en tu PC cuando haces "npm run dev"
 
-const App = () => {
+const DashboardPomodoroWidget = ({
+    onGoToPomodoro,
+}: {
+    onGoToPomodoro: () => void
+}) => {
+    const { isActive, timeLeft, toggleTimer, mode } = usePomodoro()
+
+    // Solo mostrar si está activo o en pausa (no reseteado)
+    const totalTime = mode === 'work' ? 1500 : mode === 'short' ? 300 : 900
+    if (timeLeft === totalTime && !isActive) return null
+
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60)
+        const secs = seconds % 60
+        return `${mins}:${secs < 10 ? '0' : ''}${secs}`
+    }
+
+    return (
+        <div className="mb-6 bg-slate-900 dark:bg-slate-800 text-white p-4 rounded-xl shadow-lg flex items-center justify-between border-l-4 border-brand-500 animate-in slide-in-from-top-2">
+            <div className="flex items-center gap-3">
+                <div
+                    className={`w-3 h-3 rounded-full animate-pulse ${
+                        mode === 'work' ? 'bg-red-500' : 'bg-green-500'
+                    }`}
+                ></div>
+                <div>
+                    <p className="text-xs font-bold uppercase opacity-70">
+                        {mode === 'work' ? 'Focus Mode' : 'Descanso'}
+                    </p>
+                    <p className="text-2xl font-mono font-bold tracking-widest">
+                        {formatTime(timeLeft)}
+                    </p>
+                </div>
+            </div>
+            <div className="flex gap-2">
+                <button
+                    onClick={toggleTimer}
+                    className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
+                >
+                    {isActive ? (
+                        <Pause className="w-5 h-5" />
+                    ) : (
+                        <Play className="w-5 h-5" />
+                    )}
+                </button>
+                <button
+                    onClick={onGoToPomodoro}
+                    className="px-3 py-2 bg-brand-600 rounded-lg text-xs font-bold hover:bg-brand-500"
+                >
+                    Ver
+                </button>
+            </div>
+        </div>
+    )
+}
+
+const AppContent = () => {
     const [currentView, setCurrentView] = useState<AppView>(AppView.DASHBOARD)
     const [isPricingOpen, setIsPricingOpen] = useState(false)
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -277,7 +336,10 @@ const App = () => {
 
     const NavItem = ({ icon, label, active, onClick, badge }: any) => (
         <button
-            onClick={onClick}
+            onClick={(e) => {
+                e.preventDefault() // Prevenir comportamiento default
+                onClick()
+            }}
             className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-colors group ${
                 active
                     ? 'bg-brand-600 text-white shadow-md'
@@ -424,9 +486,15 @@ const App = () => {
                         userId={firebaseUser?.uid}
                     />
                 )
+
             default:
                 return (
                     <div className="max-w-4xl mx-auto py-8">
+                        <DashboardPomodoroWidget
+                            onGoToPomodoro={() =>
+                                setCurrentView(AppView.POMODORO)
+                            }
+                        />
                         {showSuccessMsg && (
                             <div className="mb-6 bg-green-500 text-white p-4 rounded-xl shadow-lg flex items-center justify-center gap-2 animate-bounce">
                                 <CheckCircle className="w-6 h-6" />
@@ -871,6 +939,14 @@ const App = () => {
                 cancelText=""
             />
         </div>
+    )
+}
+
+const App = () => {
+    return (
+        <PomodoroProvider>
+            <AppContent />
+        </PomodoroProvider>
     )
 }
 

@@ -1,14 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { Play, Pause, RotateCcw, Coffee, Brain, Bell } from 'lucide-react'
-import { Button, Card } from '../components/ui'
-import { LocalNotifications } from '@capacitor/local-notifications'
-import { Capacitor } from '@capacitor/core'
+import React from 'react'
+import { Play, Pause, RotateCcw, Coffee, Brain } from 'lucide-react'
+import { Card } from '../components/ui'
+import { usePomodoro } from '../context/PomodoroContext'
 
 export const PomodoroTool = () => {
-    const [timeLeft, setTimeLeft] = useState(25 * 60)
-    const [isActive, setIsActive] = useState(false)
-    const [mode, setMode] = useState<'work' | 'short' | 'long'>('work')
-    const [cycle, setCycle] = useState(0)
+    const { timeLeft, isActive, mode, toggleTimer, switchMode, resetTimer } =
+        usePomodoro()
 
     const tips = {
         work: [
@@ -19,83 +16,19 @@ export const PomodoroTool = () => {
         ],
         short: [
             'Estira las piernas.',
-            'Mira por la ventana (Regla 20-20-20).',
-            'Toma un vaso de agua.',
-            'Respira profundo 10 veces.',
+            'Mira por la ventana.',
+            'Toma agua.',
+            'Respira profundo.',
         ],
         long: [
             'Camina un poco.',
             'No mires pantallas.',
-            'Come un snack saludable.',
-            'Medita unos minutos.',
+            'Come algo sano.',
+            'Medita.',
         ],
     }
-    const [currentTip, setCurrentTip] = useState(tips.work[0])
-
-    useEffect(() => {
-        let interval: any = null
-        if (isActive && timeLeft > 0) {
-            interval = setInterval(() => setTimeLeft((t) => t - 1), 1000)
-        } else if (timeLeft === 0) {
-            handleComplete()
-        }
-        return () => clearInterval(interval)
-    }, [isActive, timeLeft])
-
-    const handleComplete = async () => {
-        setIsActive(false)
-        const nextMode =
-            mode === 'work'
-                ? (cycle + 1) % 4 === 0
-                    ? 'long'
-                    : 'short'
-                : 'work'
-        if (mode === 'work') setCycle((c) => c + 1)
-
-        // Notificación
-        if (Capacitor.isNativePlatform()) {
-            await LocalNotifications.schedule({
-                notifications: [
-                    {
-                        title:
-                            mode === 'work'
-                                ? '¡Tiempo de descanso! ☕'
-                                : '¡A trabajar! 🚀',
-                        body:
-                            mode === 'work'
-                                ? 'Buen trabajo. Tómate un break.'
-                                : 'Hora de enfocarse de nuevo.',
-                        id: Math.floor(Math.random() * 1000),
-                        schedule: { at: new Date(Date.now() + 100) },
-                    },
-                ],
-            })
-        } else if (
-            'Notification' in window &&
-            Notification.permission === 'granted'
-        ) {
-            new Notification(mode === 'work' ? '¡Descanso!' : '¡A trabajar!')
-        }
-
-        // Cambio automático (o esperar click, aquí esperamos click para cambiar configuración)
-        // Solo cambiamos el tiempo, el usuario debe iniciar
-        switchMode(nextMode)
-    }
-
-    const switchMode = (newMode: 'work' | 'short' | 'long') => {
-        setMode(newMode)
-        setIsActive(false)
-        setTimeLeft(
-            newMode === 'work'
-                ? 25 * 60
-                : newMode === 'short'
-                ? 5 * 60
-                : 15 * 60
-        )
-        setCurrentTip(
-            tips[newMode][Math.floor(Math.random() * tips[newMode].length)]
-        )
-    }
+    // Tip aleatorio simple basado en el tiempo para no complicar estado
+    const currentTip = tips[mode][timeLeft % tips[mode].length]
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60)
@@ -103,10 +36,8 @@ export const PomodoroTool = () => {
         return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`
     }
 
-    const progress =
-        100 -
-        (timeLeft / (mode === 'work' ? 1500 : mode === 'short' ? 300 : 900)) *
-            100
+    const totalTime = mode === 'work' ? 1500 : mode === 'short' ? 300 : 900
+    const progress = 100 - (timeLeft / totalTime) * 100
 
     return (
         <div className="max-w-xl mx-auto text-center">
@@ -114,10 +45,8 @@ export const PomodoroTool = () => {
                 <Brain className="w-6 h-6 text-brand-600" /> Pomodoro Focus
             </h2>
 
-            <Card className="p-8 relative overflow-hidden transition-colors duration-500 border-2 border-slate-100 dark:border-slate-700">
-                {/* Barra de Progreso Circular (Simulada con CSS simple) */}
+            <Card className="p-8 relative overflow-hidden border-2 border-slate-100 dark:border-slate-700">
                 <div className="relative w-64 h-64 mx-auto mb-8 flex items-center justify-center rounded-full border-8 border-slate-100 dark:border-slate-700">
-                    {/* SVG para el circulo de progreso */}
                     <svg
                         className="absolute inset-0 w-full h-full -rotate-90"
                         viewBox="0 0 100 100"
@@ -175,7 +104,7 @@ export const PomodoroTool = () => {
 
                 <div className="flex justify-center gap-4">
                     <button
-                        onClick={() => setIsActive(!isActive)}
+                        onClick={toggleTimer}
                         className="p-4 bg-brand-600 hover:bg-brand-700 text-white rounded-full shadow-lg transition-transform active:scale-95"
                     >
                         {isActive ? (
@@ -185,7 +114,7 @@ export const PomodoroTool = () => {
                         )}
                     </button>
                     <button
-                        onClick={() => switchMode(mode)}
+                        onClick={resetTimer}
                         className="p-4 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full hover:bg-slate-300 dark:hover:bg-slate-600 transition-transform active:scale-95"
                     >
                         <RotateCcw className="w-8 h-8" />

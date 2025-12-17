@@ -214,6 +214,19 @@ export const BriefingTool: React.FC<BriefingToolProps> = ({
                             {formData.goals || 'Sin objetivos definidos.'}
                         </p>
                     </div>
+                    {/* NUEVO: PUNTOS ACORDADOS */}
+                    {formData.agreedTasks && (
+                        <div className="mb-4">
+                            <h4 className="text-xs font-bold text-slate-500 mb-2">
+                                Puntos Acordados / Entregables
+                            </h4>
+                            <div className="bg-white border border-slate-200 p-4 rounded-lg">
+                                <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                                    {formData.agreedTasks}
+                                </p>
+                            </div>
+                        </div>
+                    )}
                 </section>
                 <section className="grid grid-cols-2 gap-8">
                     <div>

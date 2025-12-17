@@ -27,6 +27,7 @@ import {
     FileText,
     QrCode,
     Eraser, // <--- Nuevo icono importado
+    Globe,
 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import html2pdf from 'html2pdf.js'
@@ -440,6 +441,9 @@ const LogoHistoryCard = ({
     const isQR = item.platform === 'QR Generator' || item.type === 'QR Code'
     const isPortfolio = item.type === 'portfolio-gen'
     const isBgRemoval = item.type === 'background-removal'
+    // NUEVOS TIPOS
+    const isCoverLetter = item.type === 'cover-letter'
+    const isFiverr = item.type === 'fiverr-gig'
 
     // Configuración dinámica
     let badgeLabel = 'LOGO'
@@ -464,6 +468,16 @@ const LogoHistoryCard = ({
         BadgeIcon = Eraser
         badgeColor =
             'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300'
+    } else if (isCoverLetter) {
+        badgeLabel = 'CARTA'
+        BadgeIcon = FileText
+        badgeColor =
+            'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'
+    } else if (isFiverr) {
+        badgeLabel = 'GIG FIVERR'
+        BadgeIcon = Globe
+        badgeColor =
+            'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
     }
 
     const dateStr =
