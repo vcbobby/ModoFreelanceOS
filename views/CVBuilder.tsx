@@ -11,6 +11,9 @@ import {
     GraduationCap,
     Camera,
     Briefcase,
+    Copy,
+    Check,
+    Globe,
 } from 'lucide-react'
 import { Button, Card, ConfirmationModal } from '../components/ui'
 import { doc, getDoc, setDoc, addDoc, collection } from 'firebase/firestore'
