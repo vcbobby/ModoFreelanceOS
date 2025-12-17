@@ -504,50 +504,51 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                     </div>
 
                     {/* VISTA PREVIA ESCALABLE MEJORADA */}
-                    {/* 1. Ajustamos la altura del contenedor gris (h-[550px] en móvil, h-[850px] en desktop) para quitar espacio sobrante */}
                     <div className="relative bg-slate-200 dark:bg-slate-900 rounded-xl border border-slate-300 dark:border-slate-700 overflow-hidden flex justify-center h-[550px] md:h-[850px]">
-                        {/* 2. Wrapper de escala: Ajustamos el 'scale' y agregamos sombra fuerte */}
-                        <div className="mt-8 origin-top scale-[0.45] md:scale-[0.7] shadow-[0_0_50px_-12px_rgba(0,0,0,0.25)]">
-                            {/* 3. LA HOJA DE PAPEL: Agregamos 'p-12' (padding) para los márgenes internos */}
+                        {/* Wrapper de escala */}
+                        <div className="mt-8 origin-top scale-[0.42] sm:scale-[0.5] md:scale-[0.7] shadow-[0_0_50px_-12px_rgba(0,0,0,0.3)]">
+                            {/* LA HOJA DE PAPEL A4 */}
+                            {/* CAMBIO CLAVE: 'px-16' (aprox 64px de margen lateral) y 'py-12' (48px vertical) */}
+                            {/* Esto asegura que el texto no toque los bordes */}
                             <div
                                 id="cv-preview"
-                                className="bg-white text-slate-800 w-[210mm] min-h-[297mm] p-10 md:p-14 box-border"
+                                className="bg-white text-slate-800 w-[210mm] min-h-[297mm] px-16 py-12 box-border"
                                 style={{ fontFamily: 'Inter, sans-serif' }}
                             >
                                 {/* Header */}
-                                <div className="border-b-2 border-slate-800 pb-6 mb-6 flex gap-6 items-center">
+                                <div className="border-b-2 border-slate-800 pb-6 mb-8 flex gap-8 items-center">
                                     {cvData.photo && (
                                         <img
                                             src={cvData.photo}
                                             alt="Profile"
-                                            className="w-32 h-32 rounded-full object-cover border-2 border-slate-100 shrink-0"
+                                            className="w-36 h-36 rounded-full object-cover border-4 border-slate-100 shadow-sm shrink-0"
                                         />
                                     )}
                                     <div className="flex-1 min-w-0">
-                                        {' '}
-                                        {/* min-w-0 evita desbordes de texto */}
-                                        <h1 className="text-4xl font-bold uppercase tracking-tight break-words">
+                                        <h1 className="text-4xl font-extrabold uppercase tracking-tight break-words text-slate-900 leading-tight">
                                             {cvData.fullName || 'Tu Nombre'}
                                         </h1>
-                                        <p className="text-xl text-slate-600 font-medium mt-1">
+                                        <p className="text-xl text-slate-600 font-medium mt-2 mb-4">
                                             {cvData.title ||
                                                 'Título Profesional'}
                                         </p>
-                                        <div className="flex gap-4 mt-3 text-sm text-slate-500 flex-wrap">
+
+                                        {/* Info de contacto organizada */}
+                                        <div className="flex flex-wrap gap-y-2 gap-x-6 text-sm text-slate-500">
                                             {cvData.email && (
-                                                <span className="flex items-center gap-1">
-                                                    <Mail className="w-4 h-4" />{' '}
+                                                <span className="flex items-center gap-1.5">
+                                                    <Mail className="w-4 h-4 text-brand-600" />{' '}
                                                     {cvData.email}
                                                 </span>
                                             )}
                                             {cvData.phone && (
-                                                <span className="flex items-center gap-1">
-                                                    {cvData.phone}
+                                                <span className="flex items-center gap-1.5">
+                                                    Tel: {cvData.phone}
                                                 </span>
                                             )}
                                             {cvData.address && (
-                                                <span className="flex items-center gap-1">
-                                                    <MapPin className="w-4 h-4" />{' '}
+                                                <span className="flex items-center gap-1.5">
+                                                    <MapPin className="w-4 h-4 text-brand-600" />{' '}
                                                     {cvData.address}
                                                 </span>
                                             )}
@@ -557,32 +558,35 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
 
                                 {/* Resumen */}
                                 {cvData.summary && (
-                                    <div className="mb-8">
-                                        <h3 className="font-bold uppercase text-slate-700 border-b border-slate-200 mb-3 pb-1 text-sm tracking-wider">
+                                    <div className="mb-10">
+                                        <h3 className="font-bold uppercase text-slate-900 border-b-2 border-slate-100 mb-3 pb-1 text-sm tracking-widest">
                                             Perfil
                                         </h3>
-                                        <p className="text-justify text-base leading-relaxed whitespace-pre-wrap">
+                                        <p className="text-justify text-base leading-relaxed whitespace-pre-wrap text-slate-700">
                                             {cvData.summary}
                                         </p>
                                     </div>
                                 )}
 
                                 {/* Experiencia */}
-                                <div className="mb-8">
-                                    <h3 className="font-bold uppercase text-slate-700 border-b border-slate-200 mb-4 pb-1 text-sm tracking-wider">
+                                <div className="mb-10">
+                                    <h3 className="font-bold uppercase text-slate-900 border-b-2 border-slate-100 mb-4 pb-1 text-sm tracking-widest">
                                         Experiencia Profesional
                                     </h3>
                                     {cvData.experience.map((exp) => (
-                                        <div key={exp.id} className="mb-5">
+                                        <div
+                                            key={exp.id}
+                                            className="mb-6 last:mb-0"
+                                        >
                                             <div className="flex justify-between items-baseline mb-1">
-                                                <h4 className="font-bold text-lg">
+                                                <h4 className="font-bold text-lg text-slate-800">
                                                     {exp.role}
                                                 </h4>
-                                                <span className="text-sm text-slate-500 italic shrink-0 ml-2">
+                                                <span className="text-sm text-slate-500 font-medium italic shrink-0 ml-4">
                                                     {exp.dates}
                                                 </span>
                                             </div>
-                                            <p className="text-slate-700 font-medium text-base mb-2">
+                                            <p className="text-brand-700 font-semibold text-base mb-2">
                                                 {exp.company}
                                             </p>
                                             <p className="text-sm whitespace-pre-wrap text-slate-600 leading-relaxed">
@@ -595,8 +599,8 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                                 {/* Educación */}
                                 {cvData.education.length > 0 &&
                                     cvData.education[0].degree && (
-                                        <div className="mb-8">
-                                            <h3 className="font-bold uppercase text-slate-700 border-b border-slate-200 mb-4 pb-1 text-sm tracking-wider">
+                                        <div className="mb-10">
+                                            <h3 className="font-bold uppercase text-slate-900 border-b-2 border-slate-100 mb-4 pb-1 text-sm tracking-widest">
                                                 Formación
                                             </h3>
                                             {cvData.education.map((edu) => (
@@ -605,10 +609,10 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                                                     className="mb-3"
                                                 >
                                                     <div className="flex justify-between items-baseline">
-                                                        <h4 className="font-bold text-base">
+                                                        <h4 className="font-bold text-base text-slate-800">
                                                             {edu.degree}
                                                         </h4>
-                                                        <span className="text-sm text-slate-500 italic shrink-0 ml-2">
+                                                        <span className="text-sm text-slate-500 italic shrink-0 ml-4">
                                                             {edu.dates}
                                                         </span>
                                                     </div>
@@ -623,10 +627,10 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                                 {/* Habilidades */}
                                 {cvData.skills && (
                                     <div>
-                                        <h3 className="font-bold uppercase text-slate-700 border-b border-slate-200 mb-3 pb-1 text-sm tracking-wider">
+                                        <h3 className="font-bold uppercase text-slate-900 border-b-2 border-slate-100 mb-3 pb-1 text-sm tracking-widest">
                                             Habilidades
                                         </h3>
-                                        <p className="text-base leading-relaxed">
+                                        <p className="text-base leading-relaxed text-slate-700">
                                             {cvData.skills}
                                         </p>
                                     </div>
