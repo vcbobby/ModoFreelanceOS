@@ -504,7 +504,7 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                     </div>
 
                     {/* VISTA PREVIA ESCALABLE (NO SCROLL HORIZONTAL) */}
-                    <div className="relative bg-slate-200 dark:bg-slate-900 rounded-xl border border-slate-300 dark:border-slate-700 overflow-hidden flex items-center justify-center min-h-[500px]">
+                    <div className="relative bg-slate-200 dark:bg-slate-900 rounded-xl border border-slate-300 dark:border-slate-700 overflow-hidden flex items-center justify-center min-h-[200px]">
                         {/* Contenedor escalado */}
                         <div className="origin-top scale-[0.45] md:scale-[0.55] lg:scale-[0.6] xl:scale-[0.7]">
                             <div
