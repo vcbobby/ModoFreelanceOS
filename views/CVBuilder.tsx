@@ -691,7 +691,7 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                         {coverLetter.content && (
                             <button
                                 onClick={handleCopyCover}
-                                className="absolute top-4 right-4 text-brand-600 font-bold text-xs hover:underline flex items-center gap-1"
+                                className="absolute bottom-4 right-4 text-brand-600 font-bold text-xs hover:underline flex items-center gap-1"
                             >
                                 {copied ? (
                                     <Check className="w-3 h-3" />
