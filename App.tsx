@@ -216,87 +216,138 @@ const AppContent = () => {
         }
     }
 
+    // const fetchUserData = async (uid: string) => {
+    //     try {
+    //         const docRef = doc(db, 'users', uid)
+    //         const docSnap = await getDoc(docRef)
+    //         const now = Date.now()
+    //         const oneWeekMs = 7 * 24 * 60 * 60 * 1000
+
+    //         if (docSnap.exists()) {
+    //             const data = docSnap.data()
+    //             const nameFromDb = data.displayName || data.email?.split('@')[0]
+    //             setDisplayName(nameFromDb)
+
+    //             let isSub = data.isSubscribed || false
+    //             let credits = data.credits !== undefined ? data.credits : 0
+    //             let subEnd = data.subscriptionEnd
+    //             let lastReset = data.lastReset
+
+    //             if (!lastReset) {
+    //                 const createdTime = data.createdAt
+    //                     ? new Date(data.createdAt).getTime()
+    //                     : now
+    //                 lastReset = createdTime
+    //                 await updateDoc(docRef, { lastReset: createdTime })
+    //             }
+
+    //             if (!isSub) {
+    //                 const timeDiff = now - lastReset
+    //                 if (timeDiff > oneWeekMs) {
+    //                     credits = 3
+    //                     lastReset = now
+    //                     await updateDoc(docRef, {
+    //                         credits: 3,
+    //                         lastReset: now,
+    //                     })
+    //                 }
+    //             }
+
+    //             if (isSub) {
+    //                 const expirationTime = subEnd || 0
+    //                 if (now > expirationTime) {
+    //                     isSub = false
+    //                     credits = 3
+    //                     lastReset = now
+    //                     await updateDoc(docRef, {
+    //                         isSubscribed: false,
+    //                         credits: 3,
+    //                         lastReset: now,
+    //                         subscriptionEnd: null,
+    //                     })
+    //                     showAlert(
+    //                         'Plan Vencido',
+    //                         'Tu plan PRO ha finalizado. Has vuelto al plan gratuito con 3 créditos semanales.'
+    //                     )
+    //                 }
+    //             }
+
+    //             const nextResetDate = lastReset + oneWeekMs
+    //             setUserState({
+    //                 isSubscribed: isSub,
+    //                 credits: credits,
+    //                 subscriptionEnd: subEnd,
+    //                 nextReset: nextResetDate,
+    //             })
+    //         } else {
+    //             const initialData = {
+    //                 email: auth.currentUser?.email,
+    //                 credits: 3,
+    //                 isSubscribed: false,
+    //                 createdAt: new Date().toISOString(),
+    //                 lastReset: now,
+    //                 displayName: auth.currentUser?.displayName || '',
+    //             }
+    //             await setDoc(docRef, initialData)
+    //             setUserState({
+    //                 isSubscribed: false,
+    //                 credits: 3,
+    //                 nextReset: now + oneWeekMs,
+    //             })
+    //         }
+    //     } catch (error) {
+    //         console.error('Error fetchUserData:', error)
+    //     }
+    // }
     const fetchUserData = async (uid: string) => {
         try {
-            const docRef = doc(db, 'users', uid)
-            const docSnap = await getDoc(docRef)
-            const now = Date.now()
-            const oneWeekMs = 7 * 24 * 60 * 60 * 1000
+            const formData = new FormData()
+            formData.append('userId', uid)
 
-            if (docSnap.exists()) {
-                const data = docSnap.data()
-                const nameFromDb = data.displayName || data.email?.split('@')[0]
+            // Llamamos al endpoint de "Mantenimiento"
+            // Python se encarga de revisar fechas y resetear si hace falta
+            const response = await fetch(`${BACKEND_URL}/api/check-status`, {
+                method: 'POST',
+                body: formData,
+            })
+
+            if (response.ok) {
+                const result = await response.json()
+                const data = result.data
+
+                // Actualizamos la UI con los datos frescos y calculados
+                const nameFromDb =
+                    data.displayName ||
+                    firebaseUser?.email?.split('@')[0] ||
+                    'Freelancer'
                 setDisplayName(nameFromDb)
 
-                let isSub = data.isSubscribed || false
-                let credits = data.credits !== undefined ? data.credits : 0
-                let subEnd = data.subscriptionEnd
-                let lastReset = data.lastReset
+                // Calcular próxima fecha de reset visualmente
+                const lastReset = data.lastReset || Date.now()
+                const nextResetDate = lastReset + 7 * 24 * 60 * 60 * 1000
 
-                if (!lastReset) {
-                    const createdTime = data.createdAt
-                        ? new Date(data.createdAt).getTime()
-                        : now
-                    lastReset = createdTime
-                    await updateDoc(docRef, { lastReset: createdTime })
-                }
-
-                if (!isSub) {
-                    const timeDiff = now - lastReset
-                    if (timeDiff > oneWeekMs) {
-                        credits = 3
-                        lastReset = now
-                        await updateDoc(docRef, {
-                            credits: 3,
-                            lastReset: now,
-                        })
-                    }
-                }
-
-                if (isSub) {
-                    const expirationTime = subEnd || 0
-                    if (now > expirationTime) {
-                        isSub = false
-                        credits = 3
-                        lastReset = now
-                        await updateDoc(docRef, {
-                            isSubscribed: false,
-                            credits: 3,
-                            lastReset: now,
-                            subscriptionEnd: null,
-                        })
-                        showAlert(
-                            'Plan Vencido',
-                            'Tu plan PRO ha finalizado. Has vuelto al plan gratuito con 3 créditos semanales.'
-                        )
-                    }
-                }
-
-                const nextResetDate = lastReset + oneWeekMs
                 setUserState({
-                    isSubscribed: isSub,
-                    credits: credits,
-                    subscriptionEnd: subEnd,
+                    isSubscribed: data.isSubscribed || false,
+                    credits: data.credits !== undefined ? data.credits : 0,
+                    subscriptionEnd: data.subscriptionEnd,
                     nextReset: nextResetDate,
-                })
-            } else {
-                const initialData = {
-                    email: auth.currentUser?.email,
-                    credits: 3,
-                    isSubscribed: false,
-                    createdAt: new Date().toISOString(),
-                    lastReset: now,
-                    displayName: auth.currentUser?.displayName || '',
-                }
-                await setDoc(docRef, initialData)
-                setUserState({
-                    isSubscribed: false,
-                    credits: 3,
-                    nextReset: now + oneWeekMs,
                 })
             }
         } catch (error) {
-            console.error('Error fetchUserData:', error)
+            console.error('Error sincronizando usuario:', error)
+            // Fallback: Si falla el backend, intentamos leer local de Firebase como antes
+            // para que la app no se quede en blanco, aunque no reseteará créditos.
+            const docRef = doc(db, 'users', uid)
+            const docSnap = await getDoc(docRef)
+            if (docSnap.exists()) {
+                const data = docSnap.data()
+                setUserState({
+                    isSubscribed: data.isSubscribed || false,
+                    credits: data.credits || 0,
+                    subscriptionEnd: data.subscriptionEnd,
+                    nextReset: (data.lastReset || Date.now()) + 604800000,
+                })
+            }
         }
     }
 
