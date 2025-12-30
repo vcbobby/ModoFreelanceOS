@@ -170,19 +170,26 @@ const AppContent = () => {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             setFirebaseUser(currentUser)
+
             if (currentUser) {
+                // Aquí llamamos a la nueva función optimizada
                 await fetchUserData(currentUser.uid)
+
+                // El ping sigue siendo útil para despertar el servidor si no se ha llamado aún
                 sendWakeUpPing()
+
                 const urlParams = new URLSearchParams(window.location.search)
                 if (urlParams.get('payment_success') === 'true') {
                     await activateProPlan(currentUser.uid)
                 }
+
                 if (currentView === AppView.LANDING)
                     setCurrentView(AppView.DASHBOARD)
             } else {
                 setUserState({ isSubscribed: false, credits: 0 })
+                setLoadingAuth(false) // Importante cerrar loading si no hay user
             }
-            setLoadingAuth(false)
+            // Nota: setLoadingAuth(false) ya se llama dentro de fetchUserData para usuarios logueados
         })
         return () => unsubscribe()
     }, [])
@@ -299,13 +306,50 @@ const AppContent = () => {
     //         console.error('Error fetchUserData:', error)
     //     }
     // }
+    // 1. LÓGICA DE CARGA DE DATOS OPTIMIZADA
     const fetchUserData = async (uid: string) => {
+        // PASO A: Cargar datos locales de Firebase (INSTANTÁNEO)
+        // Esto permite quitar la pantalla de carga de inmediato
+        try {
+            const docRef = doc(db, 'users', uid)
+            const docSnap = await getDoc(docRef)
+
+            if (docSnap.exists()) {
+                const data = docSnap.data()
+                const nameFromDb =
+                    data.displayName ||
+                    firebaseUser?.email?.split('@')[0] ||
+                    'Freelancer'
+                setDisplayName(nameFromDb)
+
+                // Mostramos lo que tenemos guardado en caché/db
+                setUserState({
+                    isSubscribed: data.isSubscribed || false,
+                    credits: data.credits !== undefined ? data.credits : 0,
+                    subscriptionEnd: data.subscriptionEnd,
+                    nextReset: (data.lastReset || Date.now()) + 604800000, // Calculo visual
+                })
+            }
+        } catch (e) {
+            console.error('Error leyendo Firebase local', e)
+        }
+
+        // PASO B: Quitar pantalla de carga AHORA MISMO
+        setLoadingAuth(false)
+
+        // PASO C: Llamar al Backend en SEGUNDO PLANO (LENTO)
+        // Esto corre "por detrás". Si el servidor está dormido, no bloquea al usuario.
+        // Cuando despierte, actualizará los créditos reales.
+        syncWithBackend(uid)
+    }
+
+    // Nueva función separada para hablar con el Backend
+    const syncWithBackend = async (uid: string) => {
         try {
             const formData = new FormData()
             formData.append('userId', uid)
 
-            // Llamamos al endpoint de "Mantenimiento"
-            // Python se encarga de revisar fechas y resetear si hace falta
+            // Esta llamada puede tardar 40s si Render duerme, pero el usuario ya está usando la app
             const response = await fetch(`${BACKEND_URL}/api/check-status`, {
                 method: 'POST',
                 body: formData,
@@ -315,39 +359,21 @@ const AppContent = () => {
                 const result = await response.json()
                 const data = result.data
 
-                // Actualizamos la UI con los datos frescos y calculados
-                const nameFromDb =
-                    data.displayName ||
-                    firebaseUser?.email?.split('@')[0] ||
-                    'Freelancer'
-                setDisplayName(nameFromDb)
-
-                // Calcular próxima fecha de reset visualmente
-                const lastReset = data.lastReset || Date.now()
-                const nextResetDate = lastReset + 7 * 24 * 60 * 60 * 1000
+                // Si el backend responde, actualizamos la interfaz con los datos "reales" y frescos
+                console.log('Backend sincronizado: Datos actualizados.')
 
                 setUserState({
                     isSubscribed: data.isSubscribed || false,
                     credits: data.credits !== undefined ? data.credits : 0,
                     subscriptionEnd: data.subscriptionEnd,
-                    nextReset: nextResetDate,
-                })
-            }
-        } catch (error) {
-            console.error('Error sincronizando usuario:', error)
-            // Fallback: Si falla el backend, intentamos leer local de Firebase como antes
-            // para que la app no se quede en blanco, aunque no reseteará créditos.
-            const docRef = doc(db, 'users', uid)
-            const docSnap = await getDoc(docRef)
-            if (docSnap.exists()) {
-                const data = docSnap.data()
-                setUserState({
-                    isSubscribed: data.isSubscribed || false,
-                    credits: data.credits || 0,
-                    subscriptionEnd: data.subscriptionEnd,
                     nextReset: (data.lastReset || Date.now()) + 604800000,
                 })
             }
+        } catch (error) {
+            // Si falla el backend, no pasa nada grave, el usuario sigue usando los datos locales
+            console.log(
+                'Backend todavía despertando o error de red (no crítico).'
+            )
         }
     }
 
