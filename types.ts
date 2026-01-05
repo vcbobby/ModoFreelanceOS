@@ -16,6 +16,8 @@ export enum AppView {
     FIVERR = 'FIVERR',
     POMODORO = 'POMODORO',
     CV_BUILDER = 'CV_BUILDER',
+    JOBS = 'JOBS',
+    ACADEMY = 'ACADEMY',
 }
 
 export interface Proposal {

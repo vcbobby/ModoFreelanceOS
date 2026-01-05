@@ -1,7 +1,7 @@
 {
-    "version": "1.2.0",
+    "version": "1.3.0",
     "critical": true,
-    "apkUrl": "https://github.com/vcbobby/ModoFreelanceOS/releases/download/v1.0.0/app-release-v1.2.0.apk",
-    "exeUrl": "https://github.com/vcbobby/ModoFreelanceOS/releases/download/v1.0.0/ModoFreelanceOS.Setup.1.2.0.exe",
-    "message": "Nuevas herramientas: Fiverr, CV Builder y Pomodoro."
+    "apkUrl": "https://github.com/vcbobby/ModoFreelanceOS/releases/download/v1.0.0/app-release-v1.3.0.apk",
+    "exeUrl": "https://github.com/vcbobby/ModoFreelanceOS/releases/download/v1.0.0/ModoFreelanceOS.Setup.1.3.0.exe",
+    "message": "Nuevas herramientas: Academia IA, Buscador de Trabajo y Corrección de Finanzas."
 }

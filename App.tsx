@@ -27,6 +27,8 @@ import {
     FileUser,
     Play,
     Pause,
+    GraduationCap,
+    Radar,
 } from 'lucide-react'
 import { PomodoroProvider, usePomodoro } from './context/PomodoroContext'
 import { useTheme } from './context/ThemeContext'
@@ -55,6 +57,8 @@ import { UpdateChecker } from './components/UpdateChecker'
 import { FiverrTool } from './views/FiverrTool'
 import { PomodoroTool } from './views/PomodoroTool'
 import { CVBuilder } from './views/CVBuilder'
+import { JobsView } from './views/JobsView'
+import { AcademyView } from './views/AcademyView'
 // Firebase
 import { auth, db } from './firebase'
 import { onAuthStateChanged, signOut, User } from 'firebase/auth'
@@ -563,6 +567,20 @@ const AppContent = () => {
                         userId={firebaseUser?.uid}
                     />
                 )
+            case AppView.JOBS:
+                return (
+                    <JobsView
+                        onUsage={handleFeatureUsage}
+                        userId={firebaseUser?.uid}
+                    />
+                )
+            case AppView.ACADEMY:
+                return (
+                    <AcademyView
+                        onUsage={handleFeatureUsage}
+                        userId={firebaseUser?.uid}
+                    />
+                )
 
             default:
                 return (
@@ -844,6 +862,25 @@ const AppContent = () => {
                             } else {
                                 setIsPricingOpen(true)
                             }
+                        }}
+                    />
+                    <NavItem
+                        icon={<Radar />}
+                        label="Buscar Trabajo"
+                        active={currentView === AppView.JOBS}
+                        onClick={() => {
+                            setCurrentView(AppView.JOBS)
+                            setIsMobileMenuOpen(false)
+                        }}
+                    />
+
+                    <NavItem
+                        icon={<GraduationCap />}
+                        label="Academia Freelance"
+                        active={currentView === AppView.ACADEMY}
+                        onClick={() => {
+                            setCurrentView(AppView.ACADEMY)
+                            setIsMobileMenuOpen(false)
                         }}
                     />
                     <NavItem
