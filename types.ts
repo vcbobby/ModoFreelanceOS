@@ -18,6 +18,7 @@ export enum AppView {
     CV_BUILDER = 'CV_BUILDER',
     JOBS = 'JOBS',
     ACADEMY = 'ACADEMY',
+    ADMIN = 'ADMIN',
 }
 
 export interface Proposal {

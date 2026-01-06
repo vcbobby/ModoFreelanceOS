@@ -29,6 +29,7 @@ import {
     Pause,
     GraduationCap,
     Radar,
+    ShieldAlert,
 } from 'lucide-react'
 import { PomodoroProvider, usePomodoro } from './context/PomodoroContext'
 import { useTheme } from './context/ThemeContext'
@@ -59,6 +60,7 @@ import { PomodoroTool } from './views/PomodoroTool'
 import { CVBuilder } from './views/CVBuilder'
 import { JobsView } from './views/JobsView'
 import { AcademyView } from './views/AcademyView'
+import { AdminDashboard } from './views/AdminDashboard'
 // Firebase
 import { auth, db } from './firebase'
 import { onAuthStateChanged, signOut, User } from 'firebase/auth'
@@ -69,6 +71,7 @@ const BACKEND_URL = import.meta.env.PROD
     ? 'https://backend-freelanceos.onrender.com' // Se usa en Vercel, Windows (.exe) y Android (.apk)
     : 'http://localhost:8000' // Se usa solo en tu PC cuando haces "npm run dev"
 
+const ADMIN_EMAILS = ['castillovictor2461@gmail.com']
 const DashboardPomodoroWidget = ({
     onGoToPomodoro,
 }: {
@@ -581,7 +584,8 @@ const AppContent = () => {
                         userId={firebaseUser?.uid}
                     />
                 )
-
+            case AppView.ADMIN:
+                return <AdminDashboard userId={firebaseUser?.uid} />
             default:
                 return (
                     <div className="max-w-4xl mx-auto py-8">
@@ -974,6 +978,24 @@ const AppContent = () => {
                             setIsMobileMenuOpen(false)
                         }}
                     />
+                    {/* ZONA ADMIN - SOLO VISIBLE PARA EL DUEÑO */}
+                    {firebaseUser?.email &&
+                        ADMIN_EMAILS.includes(firebaseUser.email) && (
+                            <>
+                                <div className="my-2 border-t border-slate-700/50 mx-4"></div>
+                                <NavItem
+                                    icon={
+                                        <ShieldAlert className="text-red-500" />
+                                    }
+                                    label="Super Admin"
+                                    active={currentView === AppView.ADMIN}
+                                    onClick={() => {
+                                        setCurrentView(AppView.ADMIN)
+                                        setIsMobileMenuOpen(false)
+                                    }}
+                                />
+                            </>
+                        )}
                 </nav>
 
                 <div className="p-4 bg-slate-900 shrink-0 border-t border-slate-800">
