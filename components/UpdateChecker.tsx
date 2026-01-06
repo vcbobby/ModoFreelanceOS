@@ -1,62 +1,59 @@
 import React, { useEffect, useState } from 'react'
 import { Capacitor } from '@capacitor/core'
-import { App } from '@capacitor/app' // <--- IMPORTANTE
+import { App } from '@capacitor/app'
 import { ConfirmationModal } from './ui'
+
+// ESTA ES LA VERSIÓN DE TU CÓDIGO ACTUAL
+// Cuando subes a Vercel, esto se actualiza automáticamente en todas las apps
+const CURRENT_APP_VERSION = '1.3.5'
 
 export const UpdateChecker = () => {
     const [showUpdate, setShowUpdate] = useState(false)
     const [updateData, setUpdateData] = useState<any>(null)
 
-    // Detectar Electron (Windows) de forma sencilla
+    // Detectar Electron (Windows)
     const isElectron = navigator.userAgent.toLowerCase().includes(' electron/')
 
     useEffect(() => {
         const checkVersion = async () => {
             try {
-                // 1. Obtener la versión que dice el servidor (version.json)
-                // Usamos timestamp para evitar que el navegador guarde caché vieja
+                // 1. Consultar la versión más reciente en la nube
                 const res = await fetch(`/version.json?t=${Date.now()}`)
                 const serverData = await res.json()
 
-                let currentNativeVersion = '0.0.0'
+                let installedVersion = CURRENT_APP_VERSION // Por defecto usamos la del código (Web/Windows)
 
-                // 2. Obtener la versión REAL instalada en el dispositivo
+                // 2. Si es Android, preguntamos al sistema operativo la versión real del APK
                 if (Capacitor.isNativePlatform()) {
                     const info = await App.getInfo()
-                    currentNativeVersion = info.version // Ej: "1.0"
+                    installedVersion = info.version
 
-                    // Pequeño fix: a veces Android devuelve "1.0", y el json es "1.0.0"
-                    // Normalizamos agregando .0 si falta
-                    if (currentNativeVersion.split('.').length === 2) {
-                        currentNativeVersion += '.0'
+                    // Fix para formatos tipo "1.3" vs "1.3.0"
+                    if (installedVersion.split('.').length === 2) {
+                        installedVersion += '.0'
                     }
-                } else if (isElectron) {
-                    // En Electron Web Wrapper, es difícil leer el .exe sin IPC.
-                    // Usaremos una constante de fallback o lógica web por ahora.
-                    // Si quieres forzar update en windows, cambias esto manualmente antes de subir.
-                    currentNativeVersion = '1.0.0' // Asumimos que los viejos son 1.0.0
-                } else {
-                    return // Si es web normal, no hacemos nada
                 }
+                // En Windows (isElectron), nos quedamos con CURRENT_APP_VERSION.
+                // Como la app de Windows carga el código de Vercel, al hacer git push
+                // la versión instalada se "actualiza" lógicamente sola.
 
                 console.log(
-                    `Versión Instalada: ${currentNativeVersion} vs Nueva: ${serverData.version}`
+                    `Versión Detectada: ${installedVersion} | Nueva: ${serverData.version}`
                 )
 
                 // 3. Comparar
-                if (isNewerVersion(currentNativeVersion, serverData.version)) {
+                if (isNewerVersion(installedVersion, serverData.version)) {
                     setUpdateData(serverData)
                     setShowUpdate(true)
                 }
             } catch (e) {
-                console.error('Error verificando actualizaciones', e)
+                console.error('Error updates', e)
             }
         }
 
         checkVersion()
     }, [isElectron])
 
-    // Función comparadora (Semantic Versioning)
     const isNewerVersion = (oldVer: string, newVer: string) => {
         const oldParts = oldVer.split('.').map(Number)
         const newParts = newVer.split('.').map(Number)
@@ -74,10 +71,10 @@ export const UpdateChecker = () => {
         if (!updateData) return
 
         if (Capacitor.isNativePlatform()) {
-            // Android: Abrir enlace externo
+            // Android: Descargar APK
             window.open(updateData.apkUrl, '_system')
         } else if (isElectron) {
-            // Windows: Abrir enlace externo
+            // Windows: Descargar EXE
             window.open(updateData.exeUrl, '_blank')
         }
     }
@@ -89,11 +86,8 @@ export const UpdateChecker = () => {
                 if (!updateData?.critical) setShowUpdate(false)
             }}
             onConfirm={handleUpdate}
-            title="¡Actualización Necesaria! 🚀"
-            message={
-                updateData?.message ||
-                'Hay una nueva versión de la app con funciones mejoradas.'
-            }
+            title="¡Actualización Disponible! 🚀"
+            message={updateData?.message || 'Hay una nueva versión de la app.'}
             confirmText="Descargar e Instalar"
             cancelText={updateData?.critical ? '' : 'Más tarde'}
             isDanger={false}
