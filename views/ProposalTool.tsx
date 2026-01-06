@@ -364,24 +364,33 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
                                     {proposals[activeTab].title}
                                 </h3>
 
-                                <div className="prose prose-slate dark:prose-invert prose-sm max-w-none text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
+                                <div className="prose prose-slate dark:prose-invert prose-sm max-w-none text-slate-700 dark:text-slate-300">
                                     <ReactMarkdown
                                         components={{
+                                            // 1. Reducimos el margen a mb-2 (antes era 4)
+                                            // 2. Agregamos leading-relaxed para que las líneas de un mismo párrafo respiren bien
+                                            // 3. Quitamos whitespace-pre-wrap del padre para que Markdown controle el flujo
                                             p: ({ node, ...props }) => (
                                                 <p
-                                                    className="mb-4"
+                                                    className="mb-2 text-slate-700 dark:text-slate-300 leading-relaxed last:mb-0"
                                                     {...props}
                                                 />
                                             ),
                                             ul: ({ node, ...props }) => (
                                                 <ul
-                                                    className="list-disc pl-4 mb-4 space-y-1"
+                                                    className="list-disc pl-4 mb-2 space-y-1"
+                                                    {...props}
+                                                />
+                                            ),
+                                            ol: ({ node, ...props }) => (
+                                                <ol
+                                                    className="list-decimal pl-4 mb-2 space-y-1"
                                                     {...props}
                                                 />
                                             ),
                                             li: ({ node, ...props }) => (
                                                 <li
-                                                    className="pl-1"
+                                                    className="pl-1 marker:text-slate-400"
                                                     {...props}
                                                 />
                                             ),
