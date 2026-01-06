@@ -425,7 +425,7 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
 
                 {/* VISTA PREVIA ESCALABLE (Derecha) */}
                 <div className="relative bg-slate-200 dark:bg-slate-900 rounded-xl border border-slate-300 dark:border-slate-700 overflow-hidden flex justify-center h-[550px] md:h-[850px]">
-                    <div className="mt-8 origin-top scale-[0.42] sm:scale-[0.5] md:scale-[0.5] lg:scale-[0.35] xl:scale-[0.7] shadow-[0_0_50px_-12px_rgba(0,0,0,0.3)]">
+                    <div className="mt-8 origin-top scale-[0.42] sm:scale-[0.5] md:scale-[0.4] lg:scale-[0.35] xl:scale-[0.5] shadow-[0_0_50px_-12px_rgba(0,0,0,0.3)]">
                         <div
                             id="cv-preview"
                             className="bg-white text-slate-800 w-[210mm] min-h-[297mm] px-16 py-12 box-border"
