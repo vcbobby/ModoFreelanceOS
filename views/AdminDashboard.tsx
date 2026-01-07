@@ -11,7 +11,10 @@ import {
     Filter,
     XCircle,
     UserPlus,
-    Calendar,
+    Smartphone,
+    Monitor,
+    Globe,
+    BarChart,
 } from 'lucide-react'
 import { Card, Button, ConfirmationModal } from '../components/ui'
 
@@ -37,6 +40,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
         ? 'https://backend-freelanceos.onrender.com'
         : 'http://localhost:8000'
 
+    // --- CARGA DE DATOS ---
     const loadData = async () => {
         setLoading(true)
         try {
@@ -60,6 +64,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
         loadData()
     }, [])
 
+    // --- ACCIONES DE SUSCRIPCIÓN ---
     const handleSubscriptionAction = (
         type: 'grant' | 'revoke',
         targetId: string,
@@ -115,6 +120,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
                 isDanger: true,
             })
         }
+    }
+
+    // --- HELPER PARA ICONOS DE PLATAFORMA ---
+    const getPlatformIcon = (plat: string) => {
+        if (!plat) return <Globe className="w-4 h-4 text-slate-300" />
+        if (plat.includes('Android'))
+            return <Smartphone className="w-4 h-4 text-green-500" />
+        if (plat.includes('Windows'))
+            return <Monitor className="w-4 h-4 text-blue-500" />
+        return <Globe className="w-4 h-4 text-slate-400" />
     }
 
     const filteredUsers =
@@ -173,47 +188,140 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
                 </Button>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                {/* COLUMNA IZQUIERDA: MÉTRICAS Y USUARIOS (3/4 ancho) */}
-                <div className="lg:col-span-3 space-y-8">
-                    {/* Tarjetas KPI */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <Card className="p-5 bg-white dark:bg-slate-800 border-l-4 border-blue-500 shadow-sm flex justify-between items-center">
-                            <div>
-                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                    Usuarios
-                                </p>
-                                <h3 className="text-3xl font-bold text-slate-800 dark:text-white mt-1">
-                                    {data?.stats.total_users}
-                                </h3>
-                            </div>
-                            <Users className="w-8 h-8 text-blue-500 opacity-50" />
-                        </Card>
-                        <Card className="p-5 bg-white dark:bg-slate-800 border-l-4 border-green-500 shadow-sm flex justify-between items-center">
-                            <div>
-                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                    Clientes PRO
-                                </p>
-                                <h3 className="text-3xl font-bold text-green-600">
-                                    {data?.stats.active_pro}
-                                </h3>
-                            </div>
-                            <CheckCircle className="w-6 h-6 text-green-500 opacity-50" />
-                        </Card>
-                        <Card className="p-5 bg-white dark:bg-slate-800 border-l-4 border-brand-500 shadow-sm flex justify-between items-center">
-                            <div>
-                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                    MRR Estimado
-                                </p>
-                                <h3 className="text-3xl font-bold text-brand-600 dark:text-brand-400">
-                                    ${estimatedMRR}
-                                </h3>
-                            </div>
-                            <DollarSign className="w-6 h-6 text-brand-500 opacity-50" />
-                        </Card>
+            {/* 1. SECCIÓN DE MÉTRICAS (KPIs) */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+                <Card className="p-5 bg-white dark:bg-slate-800 border-l-4 border-blue-500 shadow-sm flex justify-between items-center">
+                    <div>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                            Usuarios
+                        </p>
+                        <h3 className="text-3xl font-bold text-slate-800 dark:text-white mt-1">
+                            {data?.stats.total_users}
+                        </h3>
                     </div>
+                    <Users className="w-8 h-8 text-blue-500 opacity-50" />
+                </Card>
+                <Card className="p-5 bg-white dark:bg-slate-800 border-l-4 border-green-500 shadow-sm flex justify-between items-center">
+                    <div>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                            Clientes PRO
+                        </p>
+                        <h3 className="text-3xl font-bold text-green-600">
+                            {data?.stats.active_pro}
+                        </h3>
+                        <p className="text-[10px] text-slate-400 mt-1">
+                            {data?.stats.total_users > 0
+                                ? (
+                                      (data?.stats.active_pro /
+                                          data?.stats.total_users) *
+                                      100
+                                  ).toFixed(1)
+                                : 0}
+                            % Conv.
+                        </p>
+                    </div>
+                    <CheckCircle className="w-6 h-6 text-green-500 opacity-50" />
+                </Card>
+                <Card className="p-5 bg-white dark:bg-slate-800 border-l-4 border-brand-500 shadow-sm flex justify-between items-center">
+                    <div>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                            MRR Estimado
+                        </p>
+                        <h3 className="text-3xl font-bold text-brand-600 dark:text-brand-400">
+                            ${estimatedMRR}
+                        </h3>
+                    </div>
+                    <DollarSign className="w-6 h-6 text-brand-500 opacity-50" />
+                </Card>
+            </div>
 
-                    {/* SECCIÓN USUARIOS */}
+            {/* 2. NUEVA SECCIÓN: ANALÍTICAS DE USO */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                {/* Dispositivos */}
+                <Card className="p-5 bg-white dark:bg-slate-800">
+                    <h3 className="font-bold text-slate-700 dark:text-white mb-4 flex items-center gap-2">
+                        <Smartphone className="w-5 h-5 text-brand-600" />{' '}
+                        Dispositivos de Registro
+                    </h3>
+                    <div className="space-y-3">
+                        {data?.stats &&
+                            Object.entries(data.stats.platforms).map(
+                                ([plat, count]: any) =>
+                                    count > 0 && (
+                                        <div
+                                            key={plat}
+                                            className="flex justify-between items-center text-sm"
+                                        >
+                                            <span className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                                                {getPlatformIcon(plat)}{' '}
+                                                {plat === 'Unknown'
+                                                    ? 'Web (Antiguo)'
+                                                    : plat}
+                                            </span>
+                                            <span className="font-bold text-slate-800 dark:text-white">
+                                                {count}
+                                            </span>
+                                        </div>
+                                    )
+                            )}
+                    </div>
+                </Card>
+
+                {/* Top Herramientas */}
+                <Card className="p-5 bg-white dark:bg-slate-800">
+                    <h3 className="font-bold text-slate-700 dark:text-white mb-4 flex items-center gap-2">
+                        <BarChart className="w-5 h-5 text-brand-600" /> Top
+                        Herramientas
+                    </h3>
+                    <div className="space-y-3">
+                        {data?.tool_usage
+                            ?.slice(0, 5)
+                            .map(([tool, count]: any, i: number) => (
+                                <div
+                                    key={i}
+                                    className="flex items-center gap-3 text-sm"
+                                >
+                                    <div className="w-6 text-slate-400 font-bold">
+                                        #{i + 1}
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="flex justify-between mb-1">
+                                            <span className="text-slate-700 dark:text-slate-300">
+                                                {tool}
+                                            </span>
+                                            <span className="text-xs font-bold">
+                                                {count} usos
+                                            </span>
+                                        </div>
+                                        <div className="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                                            <div
+                                                className="bg-brand-500 h-full rounded-full"
+                                                style={{
+                                                    width: `${
+                                                        (count /
+                                                            data
+                                                                .tool_usage[0][1]) *
+                                                        100
+                                                    }%`,
+                                                }}
+                                            ></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        {(!data?.tool_usage ||
+                            data.tool_usage.length === 0) && (
+                            <p className="text-xs text-slate-400">
+                                Aún no hay datos de uso.
+                            </p>
+                        )}
+                    </div>
+                </Card>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                {/* 3. COLUMNA IZQUIERDA: LISTA DE USUARIOS (3/4 ancho) */}
+                <div className="lg:col-span-3">
                     <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
                         <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50 dark:bg-slate-900/50">
                             <div className="flex bg-slate-200 dark:bg-slate-700 p-1 rounded-lg w-full md:w-auto">
@@ -262,14 +370,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
                             </div>
                         </div>
 
-                        {/* --- LISTA DE USUARIOS (Responsive) --- */}
-
-                        {/* 1. MODO ESCRITORIO (Tabla) - Oculto en móvil */}
+                        {/* TABLA ESCRITORIO */}
                         <div className="hidden md:block overflow-x-auto">
                             <table className="w-full text-sm text-left">
                                 <thead className="bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 font-bold uppercase text-xs">
                                     <tr>
                                         <th className="p-4">Usuario</th>
+                                        <th className="p-4">Origen</th>{' '}
+                                        {/* NUEVA COLUMNA */}
                                         <th className="p-4">Plan</th>
                                         <th className="p-4 text-center">
                                             Créditos
@@ -292,6 +400,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
                                                 <p className="text-xs text-slate-500">
                                                     {u.email}
                                                 </p>
+                                                <p className="text-[10px] text-slate-400 mt-0.5">
+                                                    {new Date(
+                                                        u.joined
+                                                    ).toLocaleDateString()}
+                                                </p>
+                                            </td>
+                                            <td className="p-4">
+                                                <div
+                                                    className="flex items-center gap-2"
+                                                    title={u.platform}
+                                                >
+                                                    {getPlatformIcon(
+                                                        u.platform
+                                                    )}
+                                                    <span className="text-xs text-slate-500">
+                                                        {u.platform ===
+                                                        'Unknown'
+                                                            ? '-'
+                                                            : u.platform}
+                                                    </span>
+                                                </div>
                                             </td>
                                             <td className="p-4">
                                                 {u.isPro ? (
@@ -344,7 +473,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
                             </table>
                         </div>
 
-                        {/* 2. MODO MÓVIL (Tarjetas) - Visible solo en móvil */}
+                        {/* TARJETAS MÓVIL */}
                         <div className="md:hidden p-4 space-y-4">
                             {filteredUsers.map((u: any) => (
                                 <div
@@ -359,6 +488,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
                                             <p className="text-xs text-slate-500 break-all">
                                                 {u.email}
                                             </p>
+                                            <div className="flex items-center gap-1 mt-1 text-xs text-slate-400">
+                                                {getPlatformIcon(u.platform)}{' '}
+                                                {u.platform}
+                                            </div>
                                         </div>
                                         {u.isPro ? (
                                             <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">
@@ -410,7 +543,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
                     </div>
                 </div>
 
-                {/* COLUMNA DERECHA: NOTIFICACIONES (Con CSS arreglado) */}
+                {/* 4. COLUMNA DERECHA: NOTIFICACIONES (1/4 ancho) */}
                 <div className="lg:col-span-1 space-y-4">
                     <div className="flex items-center gap-2 mb-2">
                         <Bell className="w-5 h-5 text-brand-600" />
@@ -431,7 +564,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
                                 key={i}
                                 className="bg-white dark:bg-slate-800 p-3 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700"
                             >
-                                <div className="flex items-center gap-2 mb-2">
+                                <div className="flex items-center gap-2 mb-1">
                                     {notif.type === 'sale' ? (
                                         <div className="p-1 bg-green-100 text-green-600 rounded-full shrink-0">
                                             <DollarSign className="w-3 h-3" />
@@ -460,7 +593,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
                                 <h4 className="text-sm font-bold text-slate-800 dark:text-white leading-tight mb-1">
                                     {notif.title}
                                 </h4>
-                                {/* FIX CSS: break-words permite que emails largos o mensajes no rompan el ancho */}
                                 <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed break-words whitespace-normal">
                                     {notif.message}
                                 </p>

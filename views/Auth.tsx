@@ -47,6 +47,12 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
         }
     }, [])
 
+    const getPlatformName = () => {
+        if (Capacitor.isNativePlatform()) return 'Android App'
+        if (navigator.userAgent.toLowerCase().includes(' electron/'))
+            return 'Windows App'
+        return 'Web Browser'
+    }
     // Función para avisar al backend (Fire and Forget)
     const notifyBackendSignup = async (userEmail: string) => {
         try {
@@ -67,6 +73,7 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
         const docSnap = await getDoc(docRef)
 
         if (!docSnap.exists()) {
+            const platform = getPlatformName()
             // Usuario Nuevo
             await setDoc(docRef, {
                 email: user.email,
@@ -74,6 +81,7 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
                 isSubscribed: false,
                 createdAt: new Date().toISOString(),
                 lastReset: Date.now(),
+                signupPlatform: platform,
             })
             // Notificamos al backend que hay un nuevo usuario
             notifyBackendSignup(user.email)
