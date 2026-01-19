@@ -397,9 +397,11 @@ export const LandingModern: React.FC = () => {
                     </h2>
                     <div className="aspect-video rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-black">
                         <iframe
+                            loading="lazy"
                             className="w-full h-full"
-                            src="https://youtu.be/C-zqxKImJG4"
+                            src="https://www.youtube.com/embed/C-zqxKImJG4"
                             title="Demo"
+                            allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                             allowFullScreen
                         ></iframe>
                     </div>
