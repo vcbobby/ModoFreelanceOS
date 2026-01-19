@@ -156,8 +156,10 @@ export const LandingModern: React.FC = () => {
 
     const handleLogin = () =>
         (window.location.href = 'https://app.modofreelanceos.com')
-    const ANDROID_LINK = 'https://freelanceos-app.vercel.app/app-android.apk'
-    const WINDOWS_LINK = 'https://freelanceos-app.vercel.app/app-windows.exe'
+    const ANDROID_LINK =
+        'https://github.com/vcbobby/ModoFreelanceOS/releases/download/v1.0.0/app-release.apk'
+    const WINDOWS_LINK =
+        'https://github.com/vcbobby/ModoFreelanceOS/releases/download/v1.0.0/ModoFreelanceOS.Setup.exe'
 
     const scrollTo = (id: string) => {
         document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
@@ -238,15 +240,9 @@ export const LandingModern: React.FC = () => {
                     <div className="hidden md:flex gap-4">
                         <button
                             onClick={handleLogin}
-                            className="text-sm font-bold text-slate-700 dark:text-white hover:text-brand-600 transition-colors"
-                        >
-                            Ingresar
-                        </button>
-                        <button
-                            onClick={handleLogin}
                             className="bg-brand-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-brand-700 transition-all hover:scale-105 shadow-lg shadow-brand-500/30"
                         >
-                            Comenzar Gratis
+                            Ingresar
                         </button>
                     </div>
                     <button
@@ -282,7 +278,7 @@ export const LandingModern: React.FC = () => {
                             onClick={handleLogin}
                             className="w-full py-4 bg-brand-600 rounded-lg font-bold text-white text-lg"
                         >
-                            Comenzar Gratis
+                            Ingresar
                         </button>
                     </div>
                 )}
@@ -308,7 +304,7 @@ export const LandingModern: React.FC = () => {
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                         </span>
-                        Nueva Versión 1.3.0
+                        Nueva Versión 1.3.5
                     </motion.div>
 
                     <h1 className="text-6xl md:text-8xl lg:text-9xl font-black mb-8 leading-[1] tracking-tighter text-slate-900 dark:text-white drop-shadow-sm">
@@ -335,13 +331,6 @@ export const LandingModern: React.FC = () => {
                         >
                             Comenzar Gratis <ArrowRight className="w-5 h-5" />
                         </motion.button>
-                        <motion.a
-                            whileHover={{ scale: 1.05 }}
-                            href="#video"
-                            className="flex items-center justify-center gap-2 h-14 px-10 w-full sm:w-auto text-lg font-bold border-2 border-slate-200 dark:border-white/20 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 transition-colors text-slate-700 dark:text-white"
-                        >
-                            <PlayCircle className="w-5 h-5" /> Ver Demo
-                        </motion.a>
                     </div>
 
                     {/* ELEMENTOS FLOTANTES (DECORACIÓN) */}
@@ -409,7 +398,7 @@ export const LandingModern: React.FC = () => {
                     <div className="aspect-video rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-black">
                         <iframe
                             className="w-full h-full"
-                            src="https://www.youtube.com/embed/TU_ID_DE_VIDEO?rel=0"
+                            src="https://youtu.be/OKN-YrL-luA"
                             title="Demo"
                             allowFullScreen
                         ></iframe>
@@ -658,37 +647,37 @@ export const LandingModern: React.FC = () => {
                         </p>
                         <div className="flex gap-4">
                             <a
-                                href="#"
+                                href="https://www.instagram.com/modofreelance/"
                                 className="hover:text-brand-600 transition-colors"
                             >
                                 <Instagram className="w-5 h-5" />
                             </a>
                             <a
-                                href="#"
+                                href="https://www.linkedin.com/showcase/modofreelancedev"
                                 className="hover:text-brand-600 transition-colors"
                             >
                                 <Linkedin className="w-5 h-5" />
                             </a>
                             <a
-                                href="#"
+                                href="https://www.youtube.com/@modo_freelance"
                                 className="hover:text-brand-600 transition-colors"
                             >
                                 <Youtube className="w-5 h-5" />
                             </a>
                             <a
-                                href="#"
+                                href="https://x.com/modo_freelance"
                                 className="hover:text-brand-600 transition-colors"
                             >
                                 <Twitter className="w-5 h-5" />
                             </a>
                             <a
-                                href="#"
+                                href="https://www.facebook.com/modofreelancedev/"
                                 className="hover:text-brand-600 transition-colors"
                             >
                                 <Facebook className="w-5 h-5" />
                             </a>
                             <a
-                                href="#"
+                                href="https://www.twitch.tv/modofreelance"
                                 className="hover:text-brand-600 transition-colors"
                             >
                                 <Zap className="w-5 h-5" />
