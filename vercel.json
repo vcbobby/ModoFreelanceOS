@@ -1,0 +1,8 @@
+{
+    "rewrites": [
+        {
+            "source": "/p/:path*",
+            "destination": "https://app.modofreelanceos.com/p/:path*"
+        }
+    ]
+}

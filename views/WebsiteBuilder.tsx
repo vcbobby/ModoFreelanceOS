@@ -600,7 +600,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                     </label>
                                     <div className="flex items-center">
                                         <span className="text-slate-400 dark:text-slate-500 text-sm mr-2 font-mono">
-                                            modofreelanceos.com/p/
+                                            app.modofreelanceos.com/p/
                                         </span>
                                         <input
                                             className="flex-1 bg-transparent border-b-2 border-blue-300 focus:border-blue-600 outline-none text-blue-900 dark:text-white font-bold text-lg p-1"
