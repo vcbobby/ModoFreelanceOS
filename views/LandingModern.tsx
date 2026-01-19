@@ -23,40 +23,47 @@ import {
     Check,
     ChevronDown,
     Star,
+    Facebook,
+    Twitch,
+    MousePointer2,
     Briefcase,
+    Twitter,
+    BarChart,
 } from 'lucide-react'
 import { Button } from '../components/ui'
 
-// --- MOCKUPS VISUALES (COMPONENTES DE ADORNO) ---
+// --- COMPONENTES UI MEJORADOS (MOCKUPS) ---
+
 const MockProposal = () => (
-    <div className="bg-slate-900 border border-slate-700 rounded-xl p-4 w-full shadow-2xl relative overflow-hidden group-hover:scale-105 transition-transform duration-500">
+    <div className="bg-slate-900 border border-slate-700 rounded-xl p-4 w-full shadow-2xl relative overflow-hidden group-hover:scale-105 transition-transform duration-500 hidden md:block">
         <div className="flex items-center gap-2 mb-4 border-b border-slate-800 pb-2">
             <div className="w-2 h-2 rounded-full bg-red-500"></div>
             <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
             <div className="w-2 h-2 rounded-full bg-green-500"></div>
-            <div className="ml-auto text-[10px] text-slate-500">AI Writer</div>
+            <div className="ml-auto text-[10px] text-slate-500 font-mono">
+                AI_WRITER.EXE
+            </div>
         </div>
         <div className="space-y-3">
             <div className="h-3 bg-slate-700 rounded w-3/4 animate-pulse"></div>
             <div className="h-3 bg-slate-700 rounded w-1/2 animate-pulse delay-75"></div>
-            <div className="bg-brand-900/20 border border-brand-500/30 rounded p-3 text-xs text-brand-200 mt-2">
-                <span className="text-brand-400 font-bold">
+            <div className="bg-green-900/20 border border-green-500/30 rounded p-3 text-xs text-green-200 mt-2">
+                <span className="text-green-400 font-bold">
                     ✨ Propuesta Generada:
                 </span>
                 <br />
-                "Hola, he analizado tu proyecto de e-commerce y tengo la
-                solución exacta..."
+                "Hola, analicé tu proyecto y tengo la solución exacta para
+                aumentar tus ventas..."
             </div>
             <div className="h-2 bg-slate-800 rounded w-full mt-2"></div>
-            <div className="h-2 bg-slate-800 rounded w-5/6"></div>
         </div>
     </div>
 )
 
 const MockFinance = () => (
-    <div className="bg-white text-slate-900 rounded-xl p-4 shadow-xl w-full relative overflow-hidden group-hover:-translate-y-2 transition-transform duration-500">
+    <div className="bg-white text-slate-900 rounded-xl p-4 shadow-xl w-full relative overflow-hidden group-hover:-translate-y-2 transition-transform duration-500 hidden md:block">
         <div className="flex justify-between items-center mb-4">
-            <div className="font-bold text-base">Ingresos</div>
+            <div className="font-bold text-sm">Ingresos</div>
             <div className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">
                 +12%
             </div>
@@ -70,14 +77,15 @@ const MockFinance = () => (
                 ></div>
             ))}
         </div>
-        <div className="flex justify-between text-[10px] text-slate-400 font-mono">
-            <span>Lun</span>
-            <span>Dom</span>
+        <div className="flex gap-2">
+            <div className="flex-1 bg-slate-100 h-6 rounded"></div>
+            <div className="flex-1 bg-brand-600 h-6 rounded text-white flex items-center justify-center text-[10px] font-bold">
+                Ver Reporte
+            </div>
         </div>
     </div>
 )
 
-// --- COMPONENTE FAQ ---
 const FAQItem = ({
     question,
     answer,
@@ -92,15 +100,17 @@ const FAQItem = ({
                 onClick={() => setIsOpen(!isOpen)}
                 className="w-full py-6 flex justify-between items-center text-left hover:text-brand-400 transition-colors"
             >
-                <span className="font-bold text-lg">{question}</span>
+                <span className="font-bold text-lg pr-4">{question}</span>
                 <ChevronDown
                     className={`w-5 h-5 transition-transform ${
                         isOpen ? 'rotate-180' : ''
-                    }`}
+                    } shrink-0`}
                 />
             </button>
             {isOpen && (
-                <p className="pb-6 text-slate-400 leading-relaxed">{answer}</p>
+                <p className="pb-6 text-slate-400 leading-relaxed text-sm">
+                    {answer}
+                </p>
             )}
         </div>
     )
@@ -113,6 +123,12 @@ export const LandingModern: React.FC = () => {
 
     useEffect(() => {
         document.title = 'ModoFreelanceOS | Tu Oficina Virtual con IA'
+        const metaDesc = document.querySelector('meta[name="description"]')
+        if (metaDesc)
+            metaDesc.setAttribute(
+                'content',
+                'Automatiza tu vida freelance. Genera propuestas, contratos, facturas, portafolios y encuentra trabajo con IA.'
+            )
     }, [])
 
     const handleLogin = () =>
@@ -133,7 +149,7 @@ export const LandingModern: React.FC = () => {
             {/* NAVBAR */}
             <nav className="fixed top-0 w-full z-50 bg-[#05050A]/80 backdrop-blur-xl border-b border-white/5">
                 <div className="container mx-auto px-6 h-20 flex justify-between items-center">
-                    <div className="flex items-center gap-2 font-bold text-xl tracking-tighter">
+                    <div className="text-xl font-bold tracking-tighter flex items-center gap-2">
                         <div className="w-8 h-8 bg-gradient-to-tr from-brand-600 to-green-400 rounded-lg flex items-center justify-center shadow-lg shadow-brand-500/20">
                             <Zap
                                 className="w-5 h-5 text-white"
@@ -146,8 +162,7 @@ export const LandingModern: React.FC = () => {
                         </span>
                     </div>
 
-                    {/* Desktop Menu */}
-                    <div className="hidden md:flex gap-8 text-sm font-medium text-slate-400">
+                    <div className="hidden md:flex gap-8 text-sm font-medium text-slate-300">
                         <button
                             onClick={() => scrollTo('features')}
                             className="hover:text-white transition-colors"
@@ -183,7 +198,6 @@ export const LandingModern: React.FC = () => {
                         </button>
                     </div>
 
-                    {/* Mobile Toggle */}
                     <button
                         className="md:hidden"
                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -192,7 +206,6 @@ export const LandingModern: React.FC = () => {
                     </button>
                 </div>
 
-                {/* Mobile Menu */}
                 {mobileMenuOpen && (
                     <div className="md:hidden absolute top-20 left-0 w-full bg-[#05050A] border-b border-white/10 p-6 flex flex-col gap-4 shadow-2xl">
                         <button
@@ -226,7 +239,6 @@ export const LandingModern: React.FC = () => {
 
             {/* HERO SECTION */}
             <header className="relative pt-40 pb-20 md:pt-52 md:pb-32 px-6 text-center">
-                {/* Glow Effects */}
                 <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-brand-600/20 rounded-full blur-[120px] -z-10 pointer-events-none"></div>
 
                 <motion.div
@@ -235,12 +247,12 @@ export const LandingModern: React.FC = () => {
                     transition={{ duration: 0.8 }}
                     className="container mx-auto max-w-5xl"
                 >
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-bold text-brand-300 mb-8 uppercase tracking-wide">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-bold text-brand-300 mb-8 uppercase tracking-wide hover:bg-white/10 transition-colors cursor-default">
                         <span className="relative flex h-2 w-2">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-500"></span>
                         </span>
-                        Nueva Versión 1.3.0
+                        Nueva Versión 1.3.0 Disponible
                     </div>
 
                     <h1 className="text-5xl md:text-7xl lg:text-8xl font-black mb-8 leading-[1.1] tracking-tight text-white">
@@ -252,33 +264,33 @@ export const LandingModern: React.FC = () => {
                     </h1>
 
                     <p className="text-lg md:text-2xl text-slate-400 mb-12 max-w-3xl mx-auto leading-relaxed">
-                        La única herramienta que combina{' '}
-                        <strong>Inteligencia Artificial</strong> con gestión de
-                        negocio. Consigue clientes, crea contratos y cobra más
-                        rápido.
+                        Deja de perder horas en tareas administrativas. Usa
+                        nuestra <strong>Inteligencia Artificial</strong> para
+                        conseguir clientes, crear contratos, gestionar tu dinero
+                        y construir tu marca personal.
                     </p>
 
                     <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full max-w-md mx-auto sm:max-w-none">
-                        <Button
+                        {/* FIX: Botón con texto explícito negro para legibilidad */}
+                        <button
                             onClick={handleLogin}
-                            className="h-14 px-8 w-full sm:w-auto text-lg bg-white text-black hover:bg-slate-200 font-bold rounded-full shadow-[0_0_40px_-10px_rgba(255,255,255,0.4)]"
+                            className="h-14 px-8 w-full sm:w-auto text-lg bg-white text-slate-900 hover:bg-slate-200 font-bold rounded-full shadow-[0_0_40px_-10px_rgba(255,255,255,0.4)] flex items-center justify-center transition-all hover:scale-105"
                         >
-                            Probar Gratis en Web{' '}
-                            <ArrowRight className="ml-2 w-5 h-5" />
-                        </Button>
+                            Usar en Web <ArrowRight className="ml-2 w-5 h-5" />
+                        </button>
                         <a
                             href="#video"
                             className="flex items-center justify-center gap-2 h-14 px-8 w-full sm:w-auto text-lg font-bold border border-white/20 rounded-full hover:bg-white/10 transition-colors"
                         >
-                            <PlayCircle className="w-5 h-5" /> Ver Demo (1 min)
+                            <PlayCircle className="w-5 h-5" /> Ver Demo
                         </a>
                     </div>
                 </motion.div>
 
                 {/* Social Proof */}
                 <div className="mt-20 pt-10 border-t border-white/5 container mx-auto max-w-4xl">
-                    <p className="text-sm font-bold text-slate-600 uppercase tracking-widest mb-6">
-                        Optimizado para plataformas como
+                    <p className="text-xs font-bold text-slate-600 uppercase tracking-widest mb-6">
+                        Funciona para plataformas como
                     </p>
                     <div className="flex flex-wrap justify-center gap-8 md:gap-16 opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500">
                         <div className="flex items-center gap-2 text-xl font-bold">
@@ -302,8 +314,11 @@ export const LandingModern: React.FC = () => {
                 <div className="container mx-auto px-6">
                     <div className="grid md:grid-cols-2 gap-16 items-center">
                         <div>
-                            <h2 className="text-3xl md:text-5xl font-bold mb-6">
-                                El problema del Freelancer promedio
+                            <span className="text-red-500 font-bold tracking-widest text-xs uppercase mb-2 block">
+                                El Problema
+                            </span>
+                            <h2 className="text-3xl md:text-5xl font-bold mb-6 leading-tight">
+                                Ser Freelancer es difícil.
                             </h2>
                             <ul className="space-y-6">
                                 <li className="flex gap-4">
@@ -323,36 +338,74 @@ export const LandingModern: React.FC = () => {
                                 <li className="flex gap-4">
                                     <X className="w-6 h-6 text-red-500 shrink-0 mt-1" />
                                     <p className="text-slate-400 text-lg">
-                                        Empiezas trabajos sin contrato y el
-                                        cliente no paga.
+                                        No tienes portafolio y los clientes no
+                                        confían en ti.
+                                    </p>
+                                </li>
+                                <li className="flex gap-4">
+                                    <X className="w-6 h-6 text-red-500 shrink-0 mt-1" />
+                                    <p className="text-slate-400 text-lg">
+                                        No sabes cómo cobrar ni hacer contratos
+                                        legales.
                                     </p>
                                 </li>
                             </ul>
                         </div>
-                        <div className="bg-gradient-to-br from-brand-900/20 to-black p-8 rounded-3xl border border-brand-500/20 shadow-2xl">
+                        <div className="bg-gradient-to-br from-brand-900/20 to-black p-8 rounded-3xl border border-brand-500/20 shadow-2xl relative">
+                            <div className="absolute top-0 right-0 p-4 bg-brand-600 text-white text-xs font-bold rounded-bl-xl">
+                                SOLUCIÓN
+                            </div>
                             <h3 className="text-2xl font-bold text-brand-400 mb-6">
-                                La Solución ModoFreelance
+                                El Método ModoFreelance
                             </h3>
                             <ul className="space-y-6">
                                 <li className="flex gap-4">
                                     <CheckCircle className="w-6 h-6 text-brand-500 shrink-0 mt-1" />
-                                    <p className="text-slate-300 text-lg">
-                                        Propuestas generadas por IA en 30
-                                        segundos.
-                                    </p>
+                                    <div>
+                                        <h4 className="font-bold text-white">
+                                            Propuestas con IA
+                                        </h4>
+                                        <p className="text-slate-400 text-sm">
+                                            Redacta cartas de venta persuasivas
+                                            en 30 segundos.
+                                        </p>
+                                    </div>
                                 </li>
                                 <li className="flex gap-4">
                                     <CheckCircle className="w-6 h-6 text-brand-500 shrink-0 mt-1" />
-                                    <p className="text-slate-300 text-lg">
-                                        Dashboard financiero automático.
-                                    </p>
+                                    <div>
+                                        <h4 className="font-bold text-white">
+                                            Dashboard Financiero
+                                        </h4>
+                                        <p className="text-slate-400 text-sm">
+                                            Controla ingresos, gastos y
+                                            suscripciones automáticamente.
+                                        </p>
+                                    </div>
                                 </li>
                                 <li className="flex gap-4">
                                     <CheckCircle className="w-6 h-6 text-brand-500 shrink-0 mt-1" />
-                                    <p className="text-slate-300 text-lg">
-                                        Generador de Contratos y Briefs legales
-                                        al instante.
-                                    </p>
+                                    <div>
+                                        <h4 className="font-bold text-white">
+                                            Web Builder PRO
+                                        </h4>
+                                        <p className="text-slate-400 text-sm">
+                                            Crea tu sitio web profesional sin
+                                            saber programar.
+                                        </p>
+                                    </div>
+                                </li>
+                                <li className="flex gap-4">
+                                    <CheckCircle className="w-6 h-6 text-brand-500 shrink-0 mt-1" />
+                                    <div>
+                                        <h4 className="font-bold text-white">
+                                            Academia & Jobs
+                                        </h4>
+                                        <p className="text-slate-400 text-sm">
+                                            Aprende nuevas habilidades y
+                                            encuentra trabajo remoto real.
+                                        </p>
+                                    </div>
                                 </li>
                             </ul>
                         </div>
@@ -360,24 +413,24 @@ export const LandingModern: React.FC = () => {
                 </div>
             </section>
 
-            {/* BENTO GRID (FEATURES) */}
-            <section id="features" className="py-24 px-6">
+            {/* FEATURES GRID (LAS NUEVAS HERRAMIENTAS) */}
+            <section id="features" className="py-24 px-6 bg-slate-950">
                 <div className="container mx-auto">
                     <div className="text-center mb-20 max-w-3xl mx-auto">
                         <span className="text-brand-500 font-bold uppercase tracking-widest text-xs">
                             Características
                         </span>
                         <h2 className="text-4xl md:text-5xl font-bold mt-4 mb-6">
-                            Todo lo que necesitas para escalar
+                            Tu navaja suiza digital
                         </h2>
                         <p className="text-slate-400 text-lg">
-                            No es solo una herramienta, es tu departamento de
-                            ventas, legal y finanzas en una sola app.
+                            Todas las herramientas que necesitas para escalar tu
+                            negocio, en una sola suscripción.
                         </p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[350px] md:auto-rows-[400px]">
-                        {/* FEATURE 1: PROPUESTAS */}
+                        {/* FEATURE 1 */}
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
@@ -393,15 +446,17 @@ export const LandingModern: React.FC = () => {
                                 <p className="text-slate-400">
                                     Pega la descripción del trabajo y obtén una
                                     carta de presentación persuasiva adaptada a
-                                    la plataforma.
+                                    la plataforma (Upwork, Freelancer,
+                                    LinkedIn).
                                 </p>
                             </div>
-                            <div className="absolute top-1/2 right-[-20px] md:right-10 w-72 transform -translate-y-1/2 group-hover:scale-105 transition-transform duration-500">
+                            <div className="absolute top-20 right-[-50px] md:right-10 w-80 transform group-hover:translate-y-[-10px] transition-transform duration-500 hidden md:block">
                                 <MockProposal />
                             </div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent z-0"></div>
                         </motion.div>
 
-                        {/* FEATURE 2: FINANZAS */}
+                        {/* FEATURE 2 */}
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
@@ -415,14 +470,15 @@ export const LandingModern: React.FC = () => {
                                 Finanzas
                             </h3>
                             <p className="text-slate-400 text-sm mb-auto">
-                                Control total de tu flujo de caja.
+                                Control total de tu flujo de caja. Ve tus
+                                ingresos reales vs proyectados.
                             </p>
-                            <div className="mt-8 transform group-hover:translate-y-[-10px] transition-transform">
+                            <div className="mt-8 transform group-hover:translate-y-[-10px] transition-transform hidden md:block">
                                 <MockFinance />
                             </div>
                         </motion.div>
 
-                        {/* FEATURE 3: WEB BUILDER */}
+                        {/* FEATURE 3 */}
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
@@ -436,16 +492,12 @@ export const LandingModern: React.FC = () => {
                                 Web Builder
                             </h3>
                             <p className="text-slate-400 text-sm mb-6">
-                                Tu portafolio online en minutos.
+                                Tu portafolio online con dominio propio en
+                                minutos. 15 diseños profesionales.
                             </p>
-                            <div className="absolute -right-4 -bottom-4 bg-slate-800 p-4 rounded-xl border border-slate-700 w-48 shadow-2xl rotate-[-5deg] group-hover:rotate-0 transition-transform">
-                                <div className="h-2 w-20 bg-slate-600 rounded mb-2"></div>
-                                <div className="h-20 bg-slate-700 rounded mb-2"></div>
-                                <div className="h-2 w-full bg-slate-600 rounded"></div>
-                            </div>
                         </motion.div>
 
-                        {/* FEATURE 4: JOB HUNTER & ACADEMY */}
+                        {/* FEATURE 4 */}
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
@@ -469,40 +521,19 @@ export const LandingModern: React.FC = () => {
                                         Un buscador que rastrea 20+ sitios de
                                         empleo remoto en tiempo real, combinado
                                         con una Academia IA que genera cursos
-                                        personalizados.
+                                        personalizados para ti.
                                     </p>
-                                    <div className="flex gap-2">
-                                        <span className="px-3 py-1 bg-white/10 rounded-full text-xs font-bold">
-                                            WeWorkRemotely
-                                        </span>
-                                        <span className="px-3 py-1 bg-white/10 rounded-full text-xs font-bold">
-                                            LinkedIn
-                                        </span>
-                                        <span className="px-3 py-1 bg-white/10 rounded-full text-xs font-bold">
-                                            +15 más
-                                        </span>
-                                    </div>
-                                </div>
-                                <div className="bg-black/40 rounded-xl p-4 border border-white/5 h-full relative">
-                                    <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0E] to-transparent pointer-events-none"></div>
-                                    {/* Mock List */}
-                                    <div className="space-y-3 opacity-60">
-                                        {[1, 2, 3].map((i) => (
-                                            <div
-                                                key={i}
-                                                className="flex gap-3 items-center p-3 bg-white/5 rounded border border-white/5"
-                                            >
-                                                <div className="w-8 h-8 rounded bg-slate-700"></div>
-                                                <div className="flex-1 space-y-2">
-                                                    <div className="h-2 bg-slate-600 rounded w-3/4"></div>
-                                                    <div className="h-2 bg-slate-700 rounded w-1/4"></div>
-                                                </div>
-                                                <div className="text-green-500 text-xs font-bold">
-                                                    $3k+
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
+                                    <ul className="space-y-2 text-slate-300 text-sm">
+                                        <li className="flex items-center gap-2">
+                                            <Check className="w-4 h-4 text-brand-500" />{' '}
+                                            Ofertas de WeWorkRemotely, LinkedIn,
+                                            etc.
+                                        </li>
+                                        <li className="flex items-center gap-2">
+                                            <Check className="w-4 h-4 text-brand-500" />{' '}
+                                            Cursos generados al instante.
+                                        </li>
+                                    </ul>
                                 </div>
                             </div>
                         </motion.div>
@@ -511,19 +542,19 @@ export const LandingModern: React.FC = () => {
             </section>
 
             {/* VIDEO SECTION */}
-            <section className="py-20 bg-black relative">
+            <section
+                id="video"
+                className="py-24 bg-black relative border-t border-white/5"
+            >
                 <div className="container mx-auto px-6 max-w-5xl text-center">
                     <h2 className="text-3xl font-bold mb-12">
-                        Mira todo lo que puedes hacer
+                        Míralo en acción
                     </h2>
-                    <div className="aspect-video rounded-3xl overflow-hidden shadow-[0_0_100px_-20px_rgba(34,197,94,0.3)] border border-slate-800 bg-slate-900 relative group">
-                        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none group-hover:scale-110 transition-transform duration-300">
-                            {/* Puedes quitar este play si el iframe tiene controles */}
-                        </div>
-                        {/* REEMPLAZA EL SRC CON TU VIDEO */}
+                    <div className="aspect-video rounded-3xl overflow-hidden shadow-[0_0_100px_-20px_rgba(34,197,94,0.3)] border border-slate-800 bg-slate-900 relative">
+                        {/* REEMPLAZA EL ID DEL VIDEO AQUÍ */}
                         <iframe
                             className="w-full h-full"
-                            src="https://www.youtube.com/embed/TU_ID_DE_VIDEO?rel=0"
+                            src="https://www.youtube.com/embed/TU_ID_DE_VIDEO?rel=0&modestbranding=1"
                             title="Demo"
                             allowFullScreen
                         ></iframe>
@@ -544,7 +575,7 @@ export const LandingModern: React.FC = () => {
                         </p>
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-8 items-center">
+                    <div className="grid md:grid-cols-2 gap-8 items-center max-w-3xl mx-auto">
                         {/* PLAN GRATIS */}
                         <div className="p-8 rounded-3xl border border-slate-800 bg-slate-900/50 hover:bg-slate-900 transition-colors">
                             <h3 className="text-xl font-bold text-slate-300 mb-2">
@@ -649,97 +680,113 @@ export const LandingModern: React.FC = () => {
                         />
                         <FAQItem
                             question="¿Puedo cancelar cuando quiera?"
-                            answer="Sí, no hay contratos forzosos. Puedes cancelar desde tu panel de control en cualquier momento y mantendrás el acceso hasta el final de tu ciclo de facturación."
+                            answer="Sí, no hay contratos forzosos. Puedes cancelar desde tu panel de control en cualquier momento."
                         />
                         <FAQItem
                             question="¿Funciona para cualquier país?"
-                            answer="Absolutamente. Nuestra pasarela de pagos (Gumroad) acepta tarjetas internacionales y PayPal. La app está optimizada para el mercado global y latino."
+                            answer="Absolutamente. Nuestra pasarela de pagos (Gumroad) acepta tarjetas internacionales y PayPal. La app está optimizada para el mercado global."
                         />
-                        <FAQItem
-                            question="¿Mis datos están seguros?"
-                            answer="Tus finanzas y datos privados se guardan encriptados en Firebase (Google). Nadie, ni siquiera nosotros, leemos tus contratos o cifras financieras."
-                        />
-                    </div>
-                </div>
-            </section>
-
-            {/* DOWNLOAD FINAL */}
-            <section
-                id="download"
-                className="py-24 px-6 bg-gradient-to-b from-slate-900 to-black relative overflow-hidden"
-            >
-                <div className="container mx-auto max-w-4xl text-center relative z-10">
-                    <h2 className="text-4xl md:text-5xl font-black mb-8">
-                        Lleva tu oficina en el bolsillo
-                    </h2>
-                    <p className="text-slate-400 mb-12 text-lg">
-                        Disponible para todos tus dispositivos.
-                    </p>
-
-                    <div className="flex flex-col sm:flex-row justify-center gap-6">
-                        <a
-                            href={ANDROID_LINK}
-                            className="flex items-center gap-4 bg-white/10 hover:bg-white/20 border border-white/10 p-4 rounded-2xl text-left transition-all backdrop-blur-sm"
-                        >
-                            <div className="bg-green-500 p-3 rounded-xl text-black">
-                                <Smartphone className="w-6 h-6" />
-                            </div>
-                            <div>
-                                <div className="text-xs text-slate-400 uppercase font-bold">
-                                    Descargar para
-                                </div>
-                                <div className="text-xl font-bold text-white">
-                                    Android APK
-                                </div>
-                            </div>
-                        </a>
-                        <a
-                            href={WINDOWS_LINK}
-                            className="flex items-center gap-4 bg-white/10 hover:bg-white/20 border border-white/10 p-4 rounded-2xl text-left transition-all backdrop-blur-sm"
-                        >
-                            <div className="bg-blue-500 p-3 rounded-xl text-white">
-                                <Monitor className="w-6 h-6" />
-                            </div>
-                            <div>
-                                <div className="text-xs text-slate-400 uppercase font-bold">
-                                    Descargar para
-                                </div>
-                                <div className="text-xl font-bold text-white">
-                                    Windows
-                                </div>
-                            </div>
-                        </a>
                     </div>
                 </div>
             </section>
 
             {/* FOOTER */}
-            <footer className="py-12 border-t border-white/10 bg-black text-sm text-slate-500">
-                <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+            <footer className="py-16 border-t border-white/10 bg-black text-sm text-slate-500">
+                <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between gap-10">
                     <div>
-                        &copy; 2026 ModoFreelanceOS. Todos los derechos
-                        reservados.
+                        <div className="text-white font-bold text-xl mb-4">
+                            ModoFreelanceOS
+                        </div>
+                        <p className="max-w-xs mb-6">
+                            Herramientas inteligentes para la nueva generación
+                            de trabajadores remotos.
+                        </p>
+                        <div className="flex gap-4">
+                            <a
+                                href="#"
+                                className="hover:text-white transition-colors"
+                            >
+                                <Instagram className="w-5 h-5" />
+                            </a>
+                            <a
+                                href="#"
+                                className="hover:text-white transition-colors"
+                            >
+                                <Linkedin className="w-5 h-5" />
+                            </a>
+                            <a
+                                href="#"
+                                className="hover:text-white transition-colors"
+                            >
+                                <Youtube className="w-5 h-5" />
+                            </a>
+                            <a
+                                href="#"
+                                className="hover:text-white transition-colors"
+                            >
+                                <Twitter className="w-5 h-5" />
+                            </a>
+                            <a
+                                href="#"
+                                className="hover:text-white transition-colors"
+                            >
+                                <Twitch className="w-5 h-5" />
+                            </a>
+                            <a
+                                href="#"
+                                className="hover:text-white transition-colors"
+                            >
+                                <Facebook className="w-5 h-5" />
+                            </a>
+                        </div>
                     </div>
-                    <div className="flex gap-6">
-                        <a
-                            href="#"
-                            className="hover:text-white transition-colors"
-                        >
-                            <Instagram className="w-5 h-5" />
-                        </a>
-                        <a
-                            href="#"
-                            className="hover:text-white transition-colors"
-                        >
-                            <Linkedin className="w-5 h-5" />
-                        </a>
-                        <a
-                            href="#"
-                            className="hover:text-white transition-colors"
-                        >
-                            <Youtube className="w-5 h-5" />
-                        </a>
+                    <div>
+                        <h4 className="text-white font-bold mb-4">Producto</h4>
+                        <ul className="space-y-2">
+                            <li>
+                                <a
+                                    href="#features"
+                                    className="hover:text-brand-400"
+                                >
+                                    Herramientas
+                                </a>
+                            </li>
+                            <li>
+                                <a
+                                    href="#pricing"
+                                    className="hover:text-brand-400"
+                                >
+                                    Precios
+                                </a>
+                            </li>
+                            <li>
+                                <a
+                                    href="#download"
+                                    className="hover:text-brand-400"
+                                >
+                                    Descargar App
+                                </a>
+                            </li>
+                        </ul>
                     </div>
+                    <div>
+                        <h4 className="text-white font-bold mb-4">Legal</h4>
+                        <ul className="space-y-2">
+                            <li>
+                                <a href="#" className="hover:text-brand-400">
+                                    Términos y Condiciones
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" className="hover:text-brand-400">
+                                    Privacidad
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div className="text-center mt-12 pt-8 border-t border-white/5">
+                    &copy; 2026 ModoFreelanceOS. Todos los derechos reservados.
                 </div>
             </footer>
         </div>
