@@ -19,6 +19,7 @@ export enum AppView {
     JOBS = 'JOBS',
     ACADEMY = 'ACADEMY',
     ADMIN = 'ADMIN',
+    WEBSITE_BUILDER = 'WEBSITE_BUILDER',
 }
 
 export interface Proposal {

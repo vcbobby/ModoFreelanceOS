@@ -15,6 +15,7 @@ import {
     Monitor,
     Globe,
     BarChart,
+    Trash2,
 } from 'lucide-react'
 import { Card, Button, ConfirmationModal } from '../components/ui'
 
@@ -130,6 +131,32 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
         if (plat.includes('Windows'))
             return <Monitor className="w-4 h-4 text-blue-500" />
         return <Globe className="w-4 h-4 text-slate-400" />
+    }
+    // Función para borrar usuario
+    const handleDeleteUser = (targetId: string, email: string) => {
+        setModalConfig({
+            isOpen: true,
+            title: '¿ELIMINAR USUARIO?',
+            message: `Vas a borrar permanentemente a ${email}. Esta acción es irreversible.`,
+            isDanger: true,
+            action: async () => {
+                try {
+                    const formData = new FormData()
+                    formData.append('adminId', userId)
+                    formData.append('targetUserId', targetId)
+                    const res = await fetch(
+                        `${BACKEND_URL}/api/admin/delete-user`,
+                        { method: 'POST', body: formData }
+                    )
+                    if (res.ok) {
+                        alert('Usuario eliminado')
+                        loadData()
+                    } else throw new Error()
+                } catch (e) {
+                    alert('Error al eliminar')
+                }
+            },
+        })
     }
 
     const filteredUsers =
@@ -466,6 +493,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
                                                         Quitar
                                                     </button>
                                                 )}
+                                                <button
+                                                    onClick={() =>
+                                                        handleDeleteUser(
+                                                            u.id,
+                                                            u.email
+                                                        )
+                                                    }
+                                                    className="p-2 text-slate-300 hover:text-red-600 transition-colors ml-2"
+                                                    title="Eliminar Usuario"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
                                             </td>
                                         </tr>
                                     ))}
@@ -536,6 +575,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
                                                 Quitar
                                             </button>
                                         )}
+                                        <button
+                                            onClick={() =>
+                                                handleDeleteUser(u.id, u.email)
+                                            }
+                                            className="p-2 text-slate-300 hover:text-red-600 transition-colors ml-2"
+                                            title="Eliminar Usuario"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
                                     </div>
                                 </div>
                             ))}

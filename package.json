@@ -29,6 +29,7 @@
         "browser-image-compression": "^2.0.2",
         "electron-is-dev": "^3.0.1",
         "firebase": "^12.6.0",
+        "framer-motion": "^12.27.0",
         "html2pdf.js": "^0.12.1",
         "lucide-react": "^0.555.0",
         "pdfjs-dist": "^5.4.449",

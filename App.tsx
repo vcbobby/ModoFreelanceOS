@@ -30,6 +30,7 @@ import {
     GraduationCap,
     Radar,
     ShieldAlert,
+    Monitor,
 } from 'lucide-react'
 import { PomodoroProvider, usePomodoro } from './context/PomodoroContext'
 import { useTheme } from './context/ThemeContext'
@@ -61,6 +62,8 @@ import { CVBuilder } from './views/CVBuilder'
 import { JobsView } from './views/JobsView'
 import { AcademyView } from './views/AcademyView'
 import { AdminDashboard } from './views/AdminDashboard'
+import { WebsiteBuilder } from './views/WebsiteBuilder'
+import { Capacitor } from '@capacitor/core'
 // Firebase
 import { auth, db } from './firebase'
 import { onAuthStateChanged, signOut, User } from 'firebase/auth'
@@ -353,8 +356,13 @@ const AppContent = () => {
     // Nueva función separada para hablar con el Backend
     const syncWithBackend = async (uid: string) => {
         try {
+            // Detectar Plataforma
+            let currentPlatform = 'Web Browser'
+            if (Capacitor.isNativePlatform()) currentPlatform = 'Android App'
+            else if (navigator.userAgent.toLowerCase().includes(' electron/'))
+                currentPlatform = 'Windows App'
             const formData = new FormData()
-            formData.append('userId', uid)
+            formData.append('platform', currentPlatform)
 
             // Esta llamada puede tardar 40s si Render duerme, pero el usuario ya está usando la app
             const response = await fetch(`${BACKEND_URL}/api/check-status`, {
@@ -586,6 +594,38 @@ const AppContent = () => {
                 )
             case AppView.ADMIN:
                 return <AdminDashboard userId={firebaseUser?.uid} />
+            case AppView.WEBSITE_BUILDER:
+                // CANDADO PRO: Si no está suscrito, mostramos pantalla de bloqueo
+                if (!userState.isSubscribed) {
+                    return (
+                        <div className="flex flex-col items-center justify-center h-[50vh] text-center p-6">
+                            <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-full mb-4">
+                                <Monitor className="w-12 h-12 text-slate-400" />
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">
+                                Función Exclusiva PRO
+                            </h3>
+                            <p className="text-slate-500 dark:text-slate-400 mb-6 max-w-md">
+                                El Constructor de Portafolios Web te permite
+                                tener tu propia página web profesional.
+                                Actualiza tu plan para acceder.
+                            </p>
+                            <button
+                                onClick={() => setIsPricingOpen(true)}
+                                className="bg-brand-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-brand-700 transition-colors"
+                            >
+                                Desbloquear Ahora
+                            </button>
+                        </div>
+                    )
+                }
+                // Si es PRO, mostramos la herramienta
+                return (
+                    <WebsiteBuilder
+                        onUsage={handleFeatureUsage}
+                        userId={firebaseUser?.uid}
+                    />
+                )
             default:
                 return (
                     <div className="max-w-4xl mx-auto py-8">
@@ -811,6 +851,15 @@ const AppContent = () => {
                         }}
                     />
                     <NavItem
+                        icon={<Monitor />}
+                        label="Web Builder"
+                        active={currentView === AppView.WEBSITE_BUILDER}
+                        onClick={() => {
+                            setCurrentView(AppView.WEBSITE_BUILDER)
+                            setIsMobileMenuOpen(false)
+                        }}
+                    />
+                    <NavItem
                         icon={<PenTool />}
                         label="Propuestas IA"
                         active={currentView === AppView.PROPOSALS}
@@ -820,6 +869,7 @@ const AppContent = () => {
                             setIsMobileMenuOpen(false)
                         }}
                     />
+
                     <NavItem
                         icon={<Globe />}
                         label="Generador Fiverr"
