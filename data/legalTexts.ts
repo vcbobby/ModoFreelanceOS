@@ -68,3 +68,40 @@ Utilizamos "LocalStorage" y tecnologías similares para mantener tu sesión inic
 7. CAMBIOS A ESTA POLÍTICA
 Podemos actualizar esta política ocasionalmente. Te notificaremos cualquier cambio significativo a través de la aplicación.
 `
+export const TERMS_AND_CONDITIONS = `
+**Términos y Condiciones de Uso**
+
+1. **Aceptación de los Términos**
+Al acceder y utilizar ModoFreelanceOS, aceptas cumplir con estos términos.
+
+2. **Uso de la IA**
+El contenido generado por nuestra Inteligencia Artificial es una sugerencia. No garantizamos resultados laborales ni legales. Eres responsable de revisar los contratos y propuestas antes de enviarlos.
+
+3. **Suscripciones y Pagos**
+Los pagos son procesados por Gumroad. Las suscripciones se renuevan automáticamente salvo cancelación. No se ofrecen reembolsos parciales por meses no utilizados.
+
+4. **Propiedad Intelectual**
+Todo el contenido generado por ti (portafolios, datos) es de tu propiedad. El software y su código fuente son propiedad de ModoFreelanceOS.
+
+5. **Limitación de Responsabilidad**
+ModoFreelanceOS no se hace responsable por pérdidas de oportunidades laborales o problemas con clientes derivados del uso de la plataforma.
+`
+
+export const PRIVACY_POLICY = `
+**Política de Privacidad**
+
+1. **Datos que Recopilamos**
+Recopilamos tu correo electrónico, nombre y datos de uso de la aplicación para mejorar el servicio. No almacenamos datos de tarjetas de crédito (son manejados por Gumroad).
+
+2. **Uso de la Información**
+Utilizamos tu información para proporcionarte las herramientas de IA, guardar tu historial y procesar tu suscripción.
+
+3. **Compartir Información**
+No vendemos tus datos a terceros. Compartimos datos estrictamente necesarios con proveedores de servicios (Google Cloud, Cloudinary) para el funcionamiento de la app.
+
+4. **Seguridad**
+Tus datos están protegidos en servidores seguros de Google Firebase.
+
+5. **Tus Derechos**
+Puedes solicitar la eliminación de tu cuenta y todos tus datos en cualquier momento desde el panel de soporte.
+`
