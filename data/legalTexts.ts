@@ -68,7 +68,7 @@ Utilizamos "LocalStorage" y tecnologías similares para mantener tu sesión inic
 7. CAMBIOS A ESTA POLÍTICA
 Podemos actualizar esta política ocasionalmente. Te notificaremos cualquier cambio significativo a través de la aplicación.
 `
-export const TERMS_AND_CONDITIONS = `
+export const TERMS_AND_CONDITIONS2 = `
 **Términos y Condiciones de Uso**
 
 1. **Aceptación de los Términos**
@@ -87,7 +87,7 @@ Todo el contenido generado por ti (portafolios, datos) es de tu propiedad. El so
 ModoFreelanceOS no se hace responsable por pérdidas de oportunidades laborales o problemas con clientes derivados del uso de la plataforma.
 `
 
-export const PRIVACY_POLICY = `
+export const PRIVACY_POLICY2 = `
 **Política de Privacidad**
 
 1. **Datos que Recopilamos**

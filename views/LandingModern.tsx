@@ -35,7 +35,7 @@ import {
     BarChart,
 } from 'lucide-react'
 import { Button, ConfirmationModal } from '../components/ui'
-import { TERMS_AND_CONDITIONS, PRIVACY_POLICY } from '../data/legalTexts' // Asegúrate de tener este archivo (te lo doy abajo)
+import { TERMS_AND_CONDITIONS2, PRIVACY_POLICY2 } from '../data/legalTexts' // Asegúrate de tener este archivo (te lo doy abajo)
 
 // --- FONDO DINÁMICO (EFECTO MOUSE + SCROLL) ---
 const HeroBackground = () => {
@@ -171,7 +171,7 @@ export const LandingModern: React.FC = () => {
                 type === 'terms'
                     ? 'Términos y Condiciones'
                     : 'Política de Privacidad',
-            content: type === 'terms' ? TERMS_AND_CONDITIONS : PRIVACY_POLICY,
+            content: type === 'terms' ? TERMS_AND_CONDITIONS2 : PRIVACY_POLICY2,
         })
     }
 
