@@ -398,7 +398,7 @@ export const LandingModern: React.FC = () => {
                     <div className="aspect-video rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-black">
                         <iframe
                             className="w-full h-full"
-                            src="https://youtu.be/OKN-YrL-luA"
+                            src="https://youtu.be/C-zqxKImJG4"
                             title="Demo"
                             allowFullScreen
                         ></iframe>
