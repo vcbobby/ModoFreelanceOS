@@ -6,7 +6,6 @@ import { PublicPortfolioViewer } from './views/PublicPortfolioViewer'
 import { db } from './firebase'
 import { doc, getDoc } from 'firebase/firestore'
 import { LandingModern } from './views/LandingModern'
-
 import { Analytics } from '@vercel/analytics/react'
 
 const rootElement = document.getElementById('root')
@@ -14,15 +13,21 @@ if (!rootElement) throw new Error('Failed to find the root element')
 
 const root = ReactDOM.createRoot(rootElement)
 
+// 1. Detección robusta del entorno
 const hostname = window.location.hostname
-const isAppDomain =
-    hostname.includes('app.modofreelanceos.com') ||
-    hostname.includes('localhost:5173')
-const path = window.location.pathname
-const isPortfolioRoute = path.startsWith('/p/')
+const pathname = window.location.pathname
+
+// 'hostname' NO incluye el puerto (ej: localhost), 'host' sí (ej: localhost:5173)
+const isLocal = hostname === 'localhost' || hostname === '127.0.0.1'
+
+const isAppDomain = hostname === 'app.modofreelanceos.com' || isLocal // Tratamos localhost como si fuera la App
+
 const isLandingDomain =
     hostname === 'modofreelanceos.com' || hostname === 'www.modofreelanceos.com'
 
+const isPortfolioRoute = pathname.startsWith('/p/')
+
+// 2. Función para renderizar la App principal (SaaS)
 const renderApp = () => {
     root.render(
         <React.StrictMode>
@@ -33,21 +38,32 @@ const renderApp = () => {
         </React.StrictMode>
     )
 }
+
+// 3. Función para renderizar el Portafolio (Lógica de Slugs)
 const renderPortfolio = async (slugOrId: string) => {
+    // Renderizamos un estado de carga inicial para evitar pantalla blanca
+    root.render(
+        <div className="flex items-center justify-center h-screen bg-gray-900 text-white">
+            Cargando portafolio...
+        </div>
+    )
+
     let finalUserId = slugOrId
 
-    // 1. Intentar buscar si es un SLUG (apodo)
     try {
+        // Intentar buscar si es un SLUG
         const slugRef = doc(db, 'slugs', slugOrId)
         const slugSnap = await getDoc(slugRef)
+
         if (slugSnap.exists()) {
-            finalUserId = slugSnap.data().userId // "victor" -> "Hj8d..."
+            finalUserId = slugSnap.data().userId
         }
     } catch (e) {
         console.error('Error resolviendo slug', e)
+        // Opcional: Renderizar página de error aquí
     }
 
-    // 2. Renderizar con el ID real
+    // Renderizar con el ID resuelto
     root.render(
         <React.StrictMode>
             <PublicPortfolioViewer userId={finalUserId} />
@@ -55,13 +71,22 @@ const renderPortfolio = async (slugOrId: string) => {
     )
 }
 
-if (isPortfolioRoute && isAppDomain) {
-    // Es una ruta de portafolio Y estamos en el dominio de la aplicación
-    root.render(<PublicPortfolioViewer userId={param} />)
+// 4. LÓGICA PRINCIPAL (Router manual)
+// Extraemos el slug de la URL: /p/mi-usuario -> 'mi-usuario'
+const portfolioSlug = isPortfolioRoute ? pathname.split('/')[2] : null
+
+if (isPortfolioRoute && portfolioSlug) {
+    // Caso 1: Es ruta de portafolio (/p/...)
+    // IMPORTANTE: Llamamos a la función renderPortfolio, no a root.render directo
+    renderPortfolio(portfolioSlug)
 } else if (isLandingDomain) {
-    // Caso: Estamos en modofreelanceos.com (pero no en /p/...), mostramos la Landing
-    root.render(<LandingModern />)
+    // Caso 2: Es el dominio principal -> Landing Page
+    root.render(
+        <React.StrictMode>
+            <LandingModern />
+        </React.StrictMode>
+    )
 } else {
-    // Caso 3: Estamos en 'app.' o localhost -> Mostrar el SaaS
+    // Caso 3: Es app.modofreelanceos.com o localhost -> App SaaS
     renderApp()
 }
