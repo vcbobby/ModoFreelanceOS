@@ -1910,7 +1910,17 @@ const ClassicLayout = ({ data, accent, openProject }: any) => (
 
 const SplitLayout = ({ data, accent, openProject }: any) => (
     <div className="lg:flex min-h-screen">
-        <div className="lg:w-[40%] p-12 lg:fixed lg:h-screen flex flex-col justify-center bg-slate-100 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 z-10">
+        <div
+            className="
+    lg:w-[40%] p-12 lg:fixed lg:h-screen flex flex-col justify-center
+    bg-slate-100 dark:bg-slate-900
+    border-r border-slate-200 dark:border-slate-800
+    z-10
+    text-slate-800 dark:text-white
+    [&_svg]:text-slate-700 dark:[&_svg]:text-white
+    [&_a]:text-slate-700 dark:[&_a]:text-white
+  "
+        >
             <div>
                 {data.photo && (
                     <img
@@ -1941,7 +1951,12 @@ const SplitLayout = ({ data, accent, openProject }: any) => (
                 <Footer name={data.name} />
             </div>
         </div>
-        <div className="lg:w-[60%] lg:ml-[40%] p-8 lg:p-24 bg-white dark:bg-black">
+        <div
+            className="lg:w-[60%] lg:ml-[40%] p-8 lg:p-24
+    bg-white dark:bg-black
+    text-slate-900 dark:text-white
+    [&_svg]:text-slate-700 dark:[&_svg]:text-white"
+        >
             <SharedSections
                 data={data}
                 accent={accent}
