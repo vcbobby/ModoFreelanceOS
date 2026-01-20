@@ -1908,67 +1908,67 @@ const ClassicLayout = ({ data, accent, openProject }: any) => (
     </div>
 )
 
-const SplitLayout = ({ data, accent, openProject }: any) => (
-    <div className="lg:flex min-h-screen">
-        <div
-            className="
-    lg:w-[40%] p-12 lg:fixed lg:h-screen flex flex-col justify-center
-    bg-slate-100 dark:bg-slate-900
-    border-r border-slate-200 dark:border-slate-800
-    z-10
-    text-slate-800 dark:text-white
-    [&_svg]:text-slate-700 dark:[&_svg]:text-white
-    [&_a]:text-slate-700 dark:[&_a]:text-white
-  "
-        >
-            <div>
-                {data.photo && (
-                    <img
-                        src={data.photo}
-                        className="w-32 h-32 rounded-full mb-8 object-cover shadow-lg border-4 border-white dark:border-slate-800"
-                        alt="Profile"
-                    />
-                )}
-                <h1 className="text-5xl font-black mb-4 leading-none tracking-tighter text-slate-900 dark:text-white">
-                    {data.name}
-                </h1>
-                <p
-                    className="text-xl font-mono mb-8 opacity-90"
-                    style={{ color: accent }}
-                >
-                    {data.role}
-                </p>
-                <p className="opacity-80 leading-relaxed text-lg mb-8 text-slate-600 dark:text-slate-400">
-                    {data.bio}
-                </p>
-                <ContactActions data={data} accent={accent} />
-                <div className="mt-8 flex flex-col gap-2">
-                    <Socials data={data} dark={true} />
-                    <FreelancePlatforms data={data} dark={true} />
-                </div>
-            </div>
-            <div className="mt-auto hidden lg:block pt-8">
-                <Footer name={data.name} />
-            </div>
-        </div>
-        <div
-            className="lg:w-[60%] lg:ml-[40%] p-8 lg:p-24
-    bg-white dark:bg-black
-    text-slate-900 dark:text-white
-    [&_svg]:text-slate-700 dark:[&_svg]:text-white"
-        >
-            <SharedSections
-                data={data}
-                accent={accent}
-                openProject={openProject}
-                isDark={true}
-            />
-            <div className="lg:hidden">
-                <Footer name={data.name} isDark={true} />
-            </div>
-        </div>
-    </div>
-)
+// const SplitLayout = ({ data, accent, openProject }: any) => (
+//     <div className="lg:flex min-h-screen">
+//         <div
+//             className="
+//     lg:w-[40%] p-12 lg:fixed lg:h-screen flex flex-col justify-center
+//     bg-slate-100 dark:bg-slate-900
+//     border-r border-slate-200 dark:border-slate-800
+//     z-10
+//     text-slate-800 dark:text-white
+//     [&_svg]:text-slate-700 dark:[&_svg]:text-white
+//     [&_a]:text-slate-700 dark:[&_a]:text-white
+//   "
+//         >
+//             <div>
+//                 {data.photo && (
+//                     <img
+//                         src={data.photo}
+//                         className="w-32 h-32 rounded-full mb-8 object-cover shadow-lg border-4 border-white dark:border-slate-800"
+//                         alt="Profile"
+//                     />
+//                 )}
+//                 <h1 className="text-5xl font-black mb-4 leading-none tracking-tighter text-slate-900 dark:text-white">
+//                     {data.name}
+//                 </h1>
+//                 <p
+//                     className="text-xl font-mono mb-8 opacity-90"
+//                     style={{ color: accent }}
+//                 >
+//                     {data.role}
+//                 </p>
+//                 <p className="opacity-80 leading-relaxed text-lg mb-8 text-slate-600 dark:text-slate-400">
+//                     {data.bio}
+//                 </p>
+//                 <ContactActions data={data} accent={accent} />
+//                 <div className="mt-8 flex flex-col gap-2">
+//                     <Socials data={data} dark={true} />
+//                     <FreelancePlatforms data={data} dark={true} />
+//                 </div>
+//             </div>
+//             <div className="mt-auto hidden lg:block pt-8">
+//                 <Footer name={data.name} />
+//             </div>
+//         </div>
+//         <div
+//             className="lg:w-[60%] lg:ml-[40%] p-8 lg:p-24
+//     bg-white dark:bg-black
+//     text-slate-900 dark:text-white
+//     [&_svg]:text-slate-700 dark:[&_svg]:text-white"
+//         >
+//             <SharedSections
+//                 data={data}
+//                 accent={accent}
+//                 openProject={openProject}
+//                 isDark={true}
+//             />
+//             <div className="lg:hidden">
+//                 <Footer name={data.name} isDark={true} />
+//             </div>
+//         </div>
+//     </div>
+// )
 
 const GridLayout = ({ data, accent, openProject }: any) => (
     <div className="min-h-screen pb-10">
@@ -2080,44 +2080,44 @@ const TerminalLayout = ({ data, accent, openProject }: any) => (
     </div>
 )
 
-const NeoLayout = ({ data, accent, openProject }: any) => (
-    <div className="bg-[#e0e7ff] dark:bg-slate-950 min-h-screen font-sans text-black p-4">
-        <div className="container mx-auto max-w-5xl bg-white dark:bg-slate-100 border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] p-8 md:p-16 mt-10 rounded-none">
-            <header className="mb-16">
-                <h1
-                    className="text-6xl md:text-8xl font-black uppercase mb-4 leading-none text-black"
-                    style={{ textShadow: `4px 4px 0px ${accent}` }}
-                >
-                    {data.name}
-                </h1>
-                <div className="bg-black text-white inline-block px-4 py-2 font-bold text-xl uppercase transform -rotate-2">
-                    {data.role}
-                </div>
-                <p className="text-xl font-bold mt-8 border-l-8 border-black pl-6 max-w-2xl text-black">
-                    {data.bio}
-                </p>
-                <div className="mt-8 flex flex-col items-start">
-                    <ContactActions data={data} accent={accent} style="neo" />
-                    <div className="mt-4 flex flex-col gap-2">
-                        <Socials data={data} />
-                        <FreelancePlatforms data={data} />
-                    </div>
-                </div>
-            </header>
-            <div className="border-t-4 border-black pt-10">
-                <SharedSections
-                    data={data}
-                    accent={accent}
-                    openProject={openProject}
-                    gridMode={true}
-                />
-            </div>
-        </div>
-        <div className="text-slate-900 dark:text-white">
-            <Footer name={data.name} />
-        </div>
-    </div>
-)
+// const NeoLayout = ({ data, accent, openProject }: any) => (
+//     <div className="bg-[#e0e7ff] dark:bg-slate-950 min-h-screen font-sans text-black p-4">
+//         <div className="container mx-auto max-w-5xl bg-white dark:bg-slate-100 border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] p-8 md:p-16 mt-10 rounded-none">
+//             <header className="mb-16">
+//                 <h1
+//                     className="text-6xl md:text-8xl font-black uppercase mb-4 leading-none text-black"
+//                     style={{ textShadow: `4px 4px 0px ${accent}` }}
+//                 >
+//                     {data.name}
+//                 </h1>
+//                 <div className="bg-black text-white inline-block px-4 py-2 font-bold text-xl uppercase transform -rotate-2">
+//                     {data.role}
+//                 </div>
+//                 <p className="text-xl font-bold mt-8 border-l-8 border-black pl-6 max-w-2xl text-black">
+//                     {data.bio}
+//                 </p>
+//                 <div className="mt-8 flex flex-col items-start">
+//                     <ContactActions data={data} accent={accent} style="neo" />
+//                     <div className="mt-4 flex flex-col gap-2">
+//                         <Socials data={data} />
+//                         <FreelancePlatforms data={data} />
+//                     </div>
+//                 </div>
+//             </header>
+//             <div className="border-t-4 border-black pt-10">
+//                 <SharedSections
+//                     data={data}
+//                     accent={accent}
+//                     openProject={openProject}
+//                     gridMode={true}
+//                 />
+//             </div>
+//         </div>
+//         <div className="text-slate-900 dark:text-white">
+//             <Footer name={data.name} />
+//         </div>
+//     </div>
+// )
 
 const GlassLayout = ({ data, accent, openProject }: any) => (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white font-sans relative overflow-x-hidden">
