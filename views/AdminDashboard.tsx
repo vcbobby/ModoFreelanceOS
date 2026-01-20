@@ -36,6 +36,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
         action: () => {},
         isDanger: false,
     })
+    const openInfoModal = (title: string, message: string) => {
+        setModalConfig({
+            isOpen: true,
+            title,
+            message,
+            isDanger: false,
+            action: () =>
+                setModalConfig((prev) => ({ ...prev, isOpen: false })),
+        })
+    }
+
+    const openErrorModal = (title: string, message: string) => {
+        setModalConfig({
+            isOpen: true,
+            title,
+            message,
+            isDanger: true,
+            action: () =>
+                setModalConfig((prev) => ({ ...prev, isOpen: false })),
+        })
+    }
 
     const BACKEND_URL = import.meta.env.PROD
         ? 'https://backend-freelanceos.onrender.com'
@@ -51,7 +72,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
                 method: 'POST',
                 body: formData,
             })
-            if (res.status === 403) return alert('Acceso denegado')
+            if (res.status === 403) {
+                openErrorModal(
+                    'Acceso denegado',
+                    'No tienes permisos para acceder al panel de administración.'
+                )
+                return
+            }
             const json = await res.json()
             if (json.success) setData(json)
         } catch (e) {
@@ -113,13 +140,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
                 loadData()
             }
         } catch (e) {
-            setModalConfig({
-                isOpen: true,
-                title: 'Error',
-                message: 'Falló la operación.',
-                action: () => {},
-                isDanger: true,
-            })
+            openErrorModal('Error', 'Falló la operación. Intenta nuevamente.')
         }
     }
 
@@ -144,16 +165,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
                     const formData = new FormData()
                     formData.append('adminId', userId)
                     formData.append('targetUserId', targetId)
+
                     const res = await fetch(
                         `${BACKEND_URL}/api/admin/delete-user`,
                         { method: 'POST', body: formData }
                     )
-                    if (res.ok) {
-                        alert('Usuario eliminado')
-                        loadData()
-                    } else throw new Error()
+
+                    if (!res.ok) throw new Error()
+
+                    openInfoModal(
+                        'Usuario eliminado',
+                        'El usuario fue eliminado correctamente.'
+                    )
+                    loadData()
                 } catch (e) {
-                    alert('Error al eliminar')
+                    openErrorModal('Error', 'No se pudo eliminar el usuario.')
                 }
             },
         })
@@ -189,11 +215,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
                 onClose={() =>
                     setModalConfig({ ...modalConfig, isOpen: false })
                 }
-                onConfirm={() => {
-                    modalConfig.action()
-                    if (!modalConfig.title.includes('Éxito'))
-                        setModalConfig({ ...modalConfig, isOpen: false })
-                }}
+                onConfirm={() => modalConfig.action()}
                 title={modalConfig.title}
                 message={modalConfig.message}
                 confirmText={

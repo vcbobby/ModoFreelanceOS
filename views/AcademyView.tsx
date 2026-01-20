@@ -65,6 +65,7 @@ export const AcademyView: React.FC<AcademyViewProps> = ({
             const formData = new FormData()
             formData.append('topic', topic)
             formData.append('level', level)
+            formData.append('userId', userId || '')
 
             const res = await fetch(`${BACKEND_URL}/api/generate-course`, {
                 method: 'POST',
