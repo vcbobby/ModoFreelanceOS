@@ -8,11 +8,12 @@ import {
     Wand2,
     PenLine,
     Type,
+    Clock, // Icono para indicar espera
 } from 'lucide-react'
 import { Button, Card, ConfirmationModal } from '../components/ui'
 import { collection, addDoc } from 'firebase/firestore'
 import { db } from '../firebase'
-import { downloadFile } from '../utils/downloadUtils' // <--- IMPORTANTE
+import { downloadFile } from '../utils/downloadUtils'
 
 interface LogoToolProps {
     onUsage: (cost: number) => Promise<boolean>
@@ -54,6 +55,7 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
         setIsGenerating(true)
         setGeneratedImages([])
 
+        // Pequeño timeout para no bloquear la UI
         setTimeout(() => {
             try {
                 const newImages = []
@@ -62,6 +64,7 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
                     : ''
                 let enhancedPrompt = ''
 
+                // Prompt Engineering mejorado para Flux
                 if (noText) {
                     enhancedPrompt = `pictorial vector symbol representing the concept of "${prompt}"${userDetails}, style ${style}, NO TEXT, no letters, no typography, no words, visual icon only, standalone graphic, white background, high quality, centered, vector art`
                 } else {
@@ -74,6 +77,7 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
 
                 for (let i = 0; i < 3; i++) {
                     const seed = Math.floor(Math.random() * 9999999)
+                    // Añadimos width/height fijos y seed aleatoria
                     const imageUrl = `https://image.pollinations.ai/prompt/${safePrompt}?seed=${seed}&width=1024&height=1024&nologo=true&model=flux&enhance=true&t=${timestamp}`
                     newImages.push({
                         url: imageUrl,
@@ -91,7 +95,6 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
     }
 
     const downloadImage = async (url: string, index: number) => {
-        // 1. Guardar en Historial (Firebase)
         if (userId) {
             try {
                 await addDoc(collection(db, 'users', userId, 'history'), {
@@ -105,11 +108,9 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
                 })
             } catch (error: any) {
                 console.error(error)
-                showError(`No se pudo descargar la imagen. ${error.message}`)
             }
         }
 
-        // 2. Descargar usando la utilidad Universal (Android/PC)
         const filename = `logo-${prompt
             .replace(/\s+/g, '-')
             .toLowerCase()}-${index}-${Date.now()}.jpg`
@@ -139,9 +140,14 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
                         Costo: 2 Créditos
                     </span>
                 </p>
+                <div className="mt-2 bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded text-xs text-yellow-800 dark:text-yellow-200 border border-yellow-200 dark:border-yellow-800 inline-block">
+                    ⚠️ Nota: Las imágenes se generan una por una para asegurar
+                    la calidad y evitar errores del servidor.
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Panel de Control (Izquierda) */}
                 <div className="lg:col-span-1 space-y-6">
                     <Card className="p-6 shadow-md sticky top-6">
                         <div className="space-y-4">
@@ -181,10 +187,6 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
                                     <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 select-none">
                                         Solo Icono (Sin texto)
                                     </span>
-                                    <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">
-                                        Genera un símbolo limpio para editar
-                                        después.
-                                    </p>
                                 </div>
                             </div>
 
@@ -195,7 +197,7 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
                                 </label>
                                 <textarea
                                     className="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none h-24 text-sm resize-none bg-white dark:bg-slate-900 dark:text-white"
-                                    placeholder="Ej: Una taza de café humeante, colores azul y dorado..."
+                                    placeholder="Ej: Una taza de café humeante..."
                                     value={details}
                                     onChange={(e) => setDetails(e.target.value)}
                                 />
@@ -222,14 +224,6 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
                                 </div>
                             </div>
 
-                            <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg text-xs text-blue-800 dark:text-blue-300 border border-blue-100 dark:border-blue-800 flex gap-2">
-                                <Wand2 className="w-4 h-4 shrink-0" />
-                                <p>
-                                    Consejo: Si la IA escribe mal tu nombre,
-                                    activa "Solo Icono" y agrégalo tú mismo.
-                                </p>
-                            </div>
-
                             <Button
                                 onClick={handleGenerate}
                                 isLoading={isGenerating}
@@ -244,16 +238,13 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
                     </Card>
                 </div>
 
+                {/* Galería de Resultados (Derecha) */}
                 <div className="lg:col-span-2">
                     {generatedImages.length === 0 && !isGenerating ? (
                         <div className="h-64 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 text-center p-6">
                             <ImageIcon className="w-12 h-12 mb-2 opacity-50" />
-                            <p className="font-medium text-slate-600 dark:text-slate-300">
-                                Comienza a diseñar tu logo
-                            </p>
-                            <p className="text-sm mt-1">
-                                Ingresa el nombre de la marca y describe tus
-                                ideas.
+                            <p className="font-medium">
+                                Tu marca comienza aquí
                             </p>
                         </div>
                     ) : (
@@ -268,22 +259,6 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
                                     }
                                 />
                             ))}
-
-                            {isGenerating &&
-                                generatedImages.length === 0 &&
-                                Array(3)
-                                    .fill(0)
-                                    .map((_, i) => (
-                                        <div
-                                            key={i}
-                                            className="aspect-square bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse flex flex-col items-center justify-center text-slate-400 gap-2"
-                                        >
-                                            <RefreshCw className="w-8 h-8 text-slate-300 dark:text-slate-600 animate-spin" />
-                                            <span className="text-xs font-medium">
-                                                Creando Arte Vectorial...
-                                            </span>
-                                        </div>
-                                    ))}
                         </div>
                     )}
                 </div>
@@ -292,6 +267,7 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
     )
 }
 
+// COMPONENTE INTELIGENTE: GESTIONA LA CARGA ESCALONADA
 const AutoRetryImage = ({
     src,
     idx,
@@ -301,23 +277,51 @@ const AutoRetryImage = ({
     idx: number
     onDownload: () => void
 }) => {
-    const [imgSrc, setImgSrc] = useState(src)
-    const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>(
-        'loading'
-    )
+    // Estado inicial vacío para no cargar nada aún
+    const [imgSrc, setImgSrc] = useState('')
+    const [status, setStatus] = useState<
+        'waiting' | 'loading' | 'loaded' | 'error'
+    >('waiting')
+    const [secondsLeft, setSecondsLeft] = useState(0)
+
     const retryCount = useRef(0)
-    const MAX_RETRIES = 8
+    const MAX_RETRIES = 5
 
     useEffect(() => {
-        setImgSrc(src)
-        setStatus('loading')
-        retryCount.current = 0
-    }, [src])
+        // --- LA MAGIA: RETARDO BASADO EN EL ÍNDICE ---
+        // Imagen 0: 0 segundos
+        // Imagen 1: 3.5 segundos
+        // Imagen 2: 7 segundos
+        const delayMs = idx * 3500
+
+        setStatus('waiting')
+        setSecondsLeft(delayMs / 1000)
+
+        // Cuenta regresiva visual
+        const interval = setInterval(() => {
+            setSecondsLeft((prev) => Math.max(0, prev - 1))
+        }, 1000)
+
+        // Iniciar carga después del delay
+        const timer = setTimeout(() => {
+            setImgSrc(src)
+            setStatus('loading')
+            clearInterval(interval)
+        }, delayMs)
+
+        return () => {
+            clearTimeout(timer)
+            clearInterval(interval)
+        }
+    }, [src, idx])
 
     const handleError = () => {
         if (retryCount.current < MAX_RETRIES) {
             retryCount.current += 1
-            const timeout = 2000 + retryCount.current * 1000
+            setStatus('loading')
+
+            // Si falla, esperamos 3 segundos extras aleatorios antes de reintentar
+            const timeout = 3000 + Math.random() * 2000
 
             setTimeout(() => {
                 setImgSrc((prev) => {
@@ -333,51 +337,71 @@ const AutoRetryImage = ({
     return (
         <div className="group relative bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-lg transition-all">
             <div className="aspect-square bg-slate-50 dark:bg-slate-900 rounded-lg overflow-hidden relative flex items-center justify-center">
+                {/* ESTADO DE ESPERA (COLA) */}
+                {status === 'waiting' && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 bg-slate-50 dark:bg-slate-900 z-10 p-4 text-center">
+                        <Clock className="w-8 h-8 mb-2 animate-pulse text-slate-300" />
+                        <span className="text-xs font-bold">En cola...</span>
+                        <span className="text-[10px] mt-1">
+                            Iniciando en {secondsLeft.toFixed(0)}s
+                        </span>
+                    </div>
+                )}
+
+                {/* ESTADO DE CARGA */}
                 {status === 'loading' && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 z-10 p-4 text-center">
                         <RefreshCw className="w-8 h-8 animate-spin mb-3 text-brand-600" />
                         <span className="text-xs font-bold animate-pulse">
-                            Generando Alta Calidad...
-                        </span>
-                        <span className="text-[10px] mt-1 text-slate-400">
-                            Intento {retryCount.current + 1}/{MAX_RETRIES}
+                            {retryCount.current > 0
+                                ? `Reintentando (${retryCount.current})...`
+                                : 'Diseñando Logo...'}
                         </span>
                     </div>
                 )}
+
+                {/* ESTADO DE ERROR */}
                 {status === 'error' && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-red-400 p-4 text-center bg-white dark:bg-slate-800 z-20">
                         <AlertCircle className="w-8 h-8 mb-2" />
                         <span className="text-xs font-medium mb-2">
-                            Servidor saturado
+                            Límite de API alcanzado
                         </span>
                         <button
                             onClick={() => {
                                 retryCount.current = 0
-                                handleError()
                                 setStatus('loading')
+                                // Forzar recarga url nueva
+                                setImgSrc(`${src}&manual_retry=${Date.now()}`)
                             }}
                             className="px-3 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 text-xs rounded-full transition-colors flex items-center gap-1"
                         >
-                            <RefreshCw className="w-3 h-3" /> Reintentar
+                            <RefreshCw className="w-3 h-3" /> Intentar de nuevo
                         </button>
                     </div>
                 )}
-                <img
-                    src={imgSrc}
-                    alt={`Logo ${idx}`}
-                    className={`w-full h-full object-contain p-2 transition-opacity duration-700 ${
-                        status === 'loaded' ? 'opacity-100' : 'opacity-0'
-                    }`}
-                    onLoad={() => setStatus('loaded')}
-                    onError={handleError}
-                />
+
+                {/* IMAGEN REAL */}
+                {imgSrc && (
+                    <img
+                        src={imgSrc}
+                        alt={`Logo ${idx}`}
+                        className={`w-full h-full object-contain p-2 transition-opacity duration-700 ${
+                            status === 'loaded' ? 'opacity-100' : 'opacity-0'
+                        }`}
+                        onLoad={() => setStatus('loaded')}
+                        onError={handleError}
+                    />
+                )}
+
+                {/* BOTÓN DESCARGA */}
                 {status === 'loaded' && (
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-30 backdrop-blur-[2px]">
                         <button
                             onClick={onDownload}
                             className="bg-white text-slate-900 px-5 py-2.5 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-brand-50 shadow-lg transform hover:scale-105 transition-all"
                         >
-                            <Download className="w-4 h-4" /> Descargar HD
+                            <Download className="w-4 h-4" /> Descargar
                         </button>
                     </div>
                 )}
