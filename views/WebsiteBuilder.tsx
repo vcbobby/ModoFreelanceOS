@@ -40,13 +40,13 @@ const LAYOUTS = [
         // bg: 'bg-white',
         // text: 'text-slate-900',
     },
-    {
-        id: 'split',
-        name: 'Pantalla Dividida',
-        desc: 'Foto lateral fija, contenido scroll.',
-        bg: 'bg-slate-50',
-        text: 'text-slate-900',
-    },
+    // {
+    //     id: 'split',
+    //     name: 'Pantalla Dividida',
+    //     desc: 'Foto lateral fija, contenido scroll.',
+    //     bg: 'bg-slate-50',
+    //     text: 'text-slate-900',
+    // },
     {
         id: 'grid',
         name: 'Grid Creativo',
@@ -79,13 +79,13 @@ const LAYOUTS = [
     },
 
     // --- TENDENCIAS ---
-    {
-        id: 'neo',
-        name: 'Neo-Brutalismo',
-        desc: 'Bordes gruesos, sombras duras, pop.',
-        bg: 'bg-yellow-100',
-        text: 'text-black',
-    },
+    // {
+    //     id: 'neo',
+    //     name: 'Neo-Brutalismo',
+    //     desc: 'Bordes gruesos, sombras duras, pop.',
+    //     bg: 'bg-yellow-100',
+    //     text: 'text-black',
+    // },
     {
         id: 'glass',
         name: 'Glassmorphism',
@@ -211,7 +211,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
         const load = async () => {
             try {
                 const snap = await getDoc(
-                    doc(db, 'users', userId, 'portfolio', 'site_config')
+                    doc(db, 'users', userId, 'portfolio', 'site_config'),
                 )
                 if (snap.exists())
                     setSiteData((prev) => ({ ...prev, ...snap.data() }))
@@ -239,7 +239,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
 
     const handleFileUpload = async (
         e: any,
-        callback: (url: string, type: string, name: string) => void
+        callback: (url: string, type: string, name: string) => void,
     ) => {
         const file = e.target.files[0]
         if (!file) return
@@ -322,13 +322,13 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
 
             await setDoc(
                 doc(db, 'users', userId, 'portfolio', 'site_config'),
-                dataToSave
+                dataToSave,
             )
             if (siteData.slug && siteData.slug.length > 3) {
                 await setDoc(
                     doc(db, 'slugs', siteData.slug.toLowerCase()),
                     { userId: userId },
-                    { merge: true }
+                    { merge: true },
                 )
             }
             setModal({
@@ -374,7 +374,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
     const removeProject = (i: number) =>
         update(
             'projects',
-            siteData.projects.filter((_, idx) => idx !== i)
+            siteData.projects.filter((_, idx) => idx !== i),
         )
 
     // Galería
@@ -382,7 +382,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
         idx: number,
         url: string,
         type: string,
-        name: string
+        name: string,
     ) => {
         const p = [...(siteData.projects || [])]
         p[idx].gallery = [...(p[idx].gallery || []), { url, type, name }]
@@ -391,7 +391,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
     const removeFromGallery = (pIdx: number, gIdx: number) => {
         const p = [...siteData.projects]
         p[pIdx].gallery = p[pIdx].gallery.filter(
-            (_: any, i: number) => i !== gIdx
+            (_: any, i: number) => i !== gIdx,
         )
         update('projects', p)
     }
@@ -401,7 +401,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
         idx: number,
         url: string,
         type: string,
-        name: string
+        name: string,
     ) => {
         const p = [...(siteData.projects || [])]
         p[idx].documents = [...(p[idx].documents || []), { url, type, name }]
@@ -410,7 +410,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
     const removeFromDocs = (pIdx: number, dIdx: number) => {
         const p = [...siteData.projects]
         p[pIdx].documents = p[pIdx].documents.filter(
-            (_: any, i: number) => i !== dIdx
+            (_: any, i: number) => i !== dIdx,
         )
         update('projects', p)
     }
@@ -435,7 +435,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
     const removeExp = (i: number) =>
         update(
             'experience',
-            siteData.experience.filter((_, idx) => idx !== i)
+            siteData.experience.filter((_, idx) => idx !== i),
         )
 
     const addEdu = () =>
@@ -456,7 +456,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
     const removeEdu = (i: number) =>
         update(
             'education',
-            siteData.education.filter((_, idx) => idx !== i)
+            siteData.education.filter((_, idx) => idx !== i),
         )
 
     const inputClass =
@@ -533,7 +533,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                 `${window.location.origin}/p/${
                                     siteData.slug || userId
                                 }`,
-                                '_blank'
+                                '_blank',
                             )
                         }
                     >
@@ -610,7 +610,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                                     'slug',
                                                     e.target.value
                                                         .replace(/\s+/g, '-')
-                                                        .toLowerCase()
+                                                        .toLowerCase(),
                                                 )
                                             }
                                             placeholder="tu-nombre"
@@ -678,7 +678,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                             onChange={(e) =>
                                                 update(
                                                     'whatsapp',
-                                                    e.target.value
+                                                    e.target.value,
                                                 )
                                             }
                                             placeholder="+58..."
@@ -699,7 +699,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                             onChange={(e) =>
                                                 update(
                                                     'linkedin',
-                                                    e.target.value
+                                                    e.target.value,
                                                 )
                                             }
                                             placeholder="LinkedIn URL"
@@ -710,7 +710,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                             onChange={(e) =>
                                                 update(
                                                     'instagram',
-                                                    e.target.value
+                                                    e.target.value,
                                                 )
                                             }
                                             placeholder="Instagram URL"
@@ -721,7 +721,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                             onChange={(e) =>
                                                 update(
                                                     'twitter',
-                                                    e.target.value
+                                                    e.target.value,
                                                 )
                                             }
                                             placeholder="Twitter/X URL"
@@ -740,7 +740,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                             onChange={(e) =>
                                                 update(
                                                     'behance',
-                                                    e.target.value
+                                                    e.target.value,
                                                 )
                                             }
                                             placeholder="Behance URL"
@@ -751,7 +751,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                             onChange={(e) =>
                                                 update(
                                                     'facebook',
-                                                    e.target.value
+                                                    e.target.value,
                                                 )
                                             }
                                             placeholder="Facebook URL"
@@ -762,7 +762,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                             onChange={(e) =>
                                                 update(
                                                     'youtube',
-                                                    e.target.value
+                                                    e.target.value,
                                                 )
                                             }
                                             placeholder="YouTube URL"
@@ -789,7 +789,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                             onChange={(e) =>
                                                 update(
                                                     'patreon',
-                                                    e.target.value
+                                                    e.target.value,
                                                 )
                                             }
                                             placeholder="Patreon URL"
@@ -813,7 +813,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                             onChange={(e) =>
                                                 update(
                                                     'freelancer',
-                                                    e.target.value
+                                                    e.target.value,
                                                 )
                                             }
                                             placeholder="Perfil Freelancer"
@@ -824,7 +824,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                             onChange={(e) =>
                                                 update(
                                                     'workana',
-                                                    e.target.value
+                                                    e.target.value,
                                                 )
                                             }
                                             placeholder="Perfil Workana"
@@ -865,7 +865,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                                 type="file"
                                                 onChange={(e) =>
                                                     handleFileUpload(e, (url) =>
-                                                        update('photo', url)
+                                                        update('photo', url),
                                                     )
                                                 }
                                                 className="hidden"
@@ -964,7 +964,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                                                     i,
                                                                     'title',
                                                                     e.target
-                                                                        .value
+                                                                        .value,
                                                                 )
                                                             }
                                                         />
@@ -985,7 +985,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                                                     i,
                                                                     'desc',
                                                                     e.target
-                                                                        .value
+                                                                        .value,
                                                                 )
                                                             }
                                                         />
@@ -1008,7 +1008,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                                                     i,
                                                                     'link',
                                                                     e.target
-                                                                        .value
+                                                                        .value,
                                                                 )
                                                             }
                                                         />
@@ -1031,7 +1031,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                                                     i,
                                                                     'tags',
                                                                     e.target
-                                                                        .value
+                                                                        .value,
                                                                 )
                                                             }
                                                         />
@@ -1057,8 +1057,8 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                                                             updateProject(
                                                                                 i,
                                                                                 'cover',
-                                                                                url
-                                                                            )
+                                                                                url,
+                                                                            ),
                                                                     )
                                                                 }
                                                                 className="hidden"
@@ -1094,14 +1094,14 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                                                         (
                                                                             url,
                                                                             type,
-                                                                            name
+                                                                            name,
                                                                         ) =>
                                                                             addToGallery(
                                                                                 i,
                                                                                 url,
                                                                                 type,
-                                                                                name
-                                                                            )
+                                                                                name,
+                                                                            ),
                                                                     )
                                                                 }
                                                                 className="hidden"
@@ -1114,7 +1114,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                                             {proj.gallery?.map(
                                                                 (
                                                                     item: any,
-                                                                    idx: number
+                                                                    idx: number,
                                                                 ) => (
                                                                     <div
                                                                         key={
@@ -1123,7 +1123,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                                                         className="relative group w-14 h-14 border dark:border-slate-600 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center overflow-hidden"
                                                                     >
                                                                         {item.type.includes(
-                                                                            'image'
+                                                                            'image',
                                                                         ) ? (
                                                                             <img
                                                                                 src={
@@ -1138,7 +1138,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                                                             onClick={() =>
                                                                                 removeFromGallery(
                                                                                     i,
-                                                                                    idx
+                                                                                    idx,
                                                                                 )
                                                                             }
                                                                             className="absolute inset-0 bg-red-500/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
@@ -1146,7 +1146,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                                                             <Trash2 className="w-4 h-4" />
                                                                         </button>
                                                                     </div>
-                                                                )
+                                                                ),
                                                             )}
                                                         </div>
                                                     </div>
@@ -1166,7 +1166,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                                                 onChange={(e) =>
                                                                     handleDocSelect(
                                                                         e,
-                                                                        i
+                                                                        i,
                                                                     )
                                                                 }
                                                                 className="hidden"
@@ -1179,7 +1179,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                                             {proj.documents?.map(
                                                                 (
                                                                     d: any,
-                                                                    idx: number
+                                                                    idx: number,
                                                                 ) => (
                                                                     <div
                                                                         key={
@@ -1196,7 +1196,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                                                             onClick={() =>
                                                                                 removeFromDocs(
                                                                                     i,
-                                                                                    idx
+                                                                                    idx,
                                                                                 )
                                                                             }
                                                                             className="text-red-500"
@@ -1204,7 +1204,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                                                             <Trash2 className="w-3 h-3" />
                                                                         </button>
                                                                     </div>
-                                                                )
+                                                                ),
                                                             )}
                                                         </div>
                                                     </div>
@@ -1262,7 +1262,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                                         updateExp(
                                                             i,
                                                             'role',
-                                                            e.target.value
+                                                            e.target.value,
                                                         )
                                                     }
                                                     placeholder="Cargo"
@@ -1274,7 +1274,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                                         updateExp(
                                                             i,
                                                             'company',
-                                                            e.target.value
+                                                            e.target.value,
                                                         )
                                                     }
                                                     placeholder="Empresa"
@@ -1286,7 +1286,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                                         updateExp(
                                                             i,
                                                             'year',
-                                                            e.target.value
+                                                            e.target.value,
                                                         )
                                                     }
                                                     placeholder="Año"
@@ -1299,7 +1299,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                                     updateExp(
                                                         i,
                                                         'desc',
-                                                        e.target.value
+                                                        e.target.value,
                                                     )
                                                 }
                                                 placeholder="Logros..."
@@ -1341,7 +1341,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                                             updateEdu(
                                                                 i,
                                                                 'degree',
-                                                                e.target.value
+                                                                e.target.value,
                                                             )
                                                         }
                                                         placeholder="Título"
@@ -1353,7 +1353,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                                             updateEdu(
                                                                 i,
                                                                 'school',
-                                                                e.target.value
+                                                                e.target.value,
                                                             )
                                                         }
                                                         placeholder="Institución"
@@ -1365,14 +1365,14 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                                             updateEdu(
                                                                 i,
                                                                 'year',
-                                                                e.target.value
+                                                                e.target.value,
                                                             )
                                                         }
                                                         placeholder="Año"
                                                     />
                                                 </div>
                                             </div>
-                                        )
+                                        ),
                                     )}
                                 </div>
                             </div>
