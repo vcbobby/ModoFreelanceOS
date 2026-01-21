@@ -1,18 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react'
-import {
-    Download,
-    Palette,
-    RefreshCw,
-    Image as ImageIcon,
-    AlertCircle,
-    Wand2,
-    PenLine,
-    Type,
-    Clock, // Icono para indicar espera
-} from 'lucide-react'
+import React, { useState } from 'react'
+import { Download, Palette, Wand2, PenLine, Loader2, Type } from 'lucide-react'
 import { Button, Card, ConfirmationModal } from '../components/ui'
-import { collection, addDoc } from 'firebase/firestore'
-import { db } from '../firebase'
 import { downloadFile } from '../utils/downloadUtils'
 
 interface LogoToolProps {
@@ -22,189 +10,117 @@ interface LogoToolProps {
 
 export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
     const [prompt, setPrompt] = useState('')
-    const [details, setDetails] = useState('')
     const [style, setStyle] = useState('Minimalista')
-    const [noText, setNoText] = useState(false)
 
+    // Ahora guardamos un historial local de la sesión
+    const [generatedLogos, setGeneratedLogos] = useState<string[]>([])
     const [isGenerating, setIsGenerating] = useState(false)
-    const [generatedImages, setGeneratedImages] = useState<
-        { url: string; id: string }[]
-    >([])
+
     const [modal, setModal] = useState({
         isOpen: false,
         title: '',
         message: '',
     })
-    const showError = (msg: string) =>
-        setModal({ isOpen: true, title: 'Error', message: msg })
+    const BACKEND_URL = import.meta.env.PROD
+        ? 'https://backend-freelanceos.onrender.com'
+        : 'http://localhost:8000'
 
     const styles = [
         'Minimalista',
         'Tech/Moderno',
-        'Vintage/Retro',
+        'Vintage',
         'Geométrico',
-        '3D Glossy',
+        '3D',
         'Abstracto',
-        'Elegante/Lujo',
+        'Lujo',
     ]
 
     const handleGenerate = async () => {
         if (!prompt) return
+
+        // Costo: 2 créditos por 1 logo de alta calidad
         const canProceed = await onUsage(2)
         if (!canProceed) return
+
         setIsGenerating(true)
-        setGeneratedImages([])
 
-        // Pequeño timeout para no bloquear la UI
-        setTimeout(() => {
-            try {
-                const newImages = []
-                const userDetails = details
-                    ? `, featuring elements: ${details}`
-                    : ''
-                let enhancedPrompt = ''
+        try {
+            const formData = new FormData()
+            formData.append('prompt', prompt)
+            formData.append('style', style)
+            formData.append('userId', userId || 'anon')
 
-                // Prompt Engineering mejorado para Flux
-                if (noText) {
-                    enhancedPrompt = `pictorial vector symbol representing the concept of "${prompt}"${userDetails}, style ${style}, NO TEXT, no letters, no typography, no words, visual icon only, standalone graphic, white background, high quality, centered, vector art`
-                } else {
-                    const textInstruction = `, with the text "${prompt}" written clearly, bold typography, perfect spelling, legible font`
-                    enhancedPrompt = `professional vector logo for brand "${prompt}"${userDetails}${textInstruction}, style ${style}, clean lines, minimalist, on white background, high quality, centered, no realistic photo details`
-                }
+            const res = await fetch(
+                `${BACKEND_URL}/api/generate-logo-backend`,
+                {
+                    method: 'POST',
+                    body: formData,
+                },
+            )
+            const data = await res.json()
 
-                const safePrompt = encodeURIComponent(enhancedPrompt)
-                const timestamp = Date.now()
-
-                for (let i = 0; i < 3; i++) {
-                    const seed = Math.floor(Math.random() * 9999999)
-                    // Añadimos width/height fijos y seed aleatoria
-                    const imageUrl = `https://image.pollinations.ai/prompt/${safePrompt}?seed=${seed}&width=1024&height=1024&nologo=true&model=flux&enhance=true&t=${timestamp}`
-                    newImages.push({
-                        url: imageUrl,
-                        id: `img-${timestamp}-${i}-${seed}`,
-                    })
-                }
-                setGeneratedImages(newImages)
-                setIsGenerating(false)
-            } catch (error) {
-                console.error(error)
-                setIsGenerating(false)
-                showError('Error al iniciar el generador. Intenta de nuevo.')
+            if (data.success) {
+                // Añadimos el nuevo logo al principio de la lista
+                setGeneratedLogos((prev) => [data.url, ...prev])
+            } else {
+                throw new Error('Error en el servidor')
             }
-        }, 100)
-    }
-
-    const downloadImage = async (url: string, index: number) => {
-        if (userId) {
-            try {
-                await addDoc(collection(db, 'users', userId, 'history'), {
-                    createdAt: new Date().toISOString(),
-                    category: 'logo',
-                    clientName: prompt,
-                    platform: 'Logo Creator',
-                    type: style,
-                    content: details || 'Sin detalles adicionales',
-                    imageUrl: url,
-                })
-            } catch (error: any) {
-                console.error(error)
-            }
+        } catch (error) {
+            console.error(error)
+            // Reembolso (opcional)
+            await onUsage(-2)
+            setModal({
+                isOpen: true,
+                title: 'Error',
+                message:
+                    'El servidor de IA está ocupado. Intenta de nuevo en unos segundos. (Créditos reembolsados)',
+            })
+        } finally {
+            setIsGenerating(false)
         }
-
-        const filename = `logo-${prompt
-            .replace(/\s+/g, '-')
-            .toLowerCase()}-${index}-${Date.now()}.jpg`
-        await downloadFile(url, filename)
     }
 
     return (
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto pb-20">
             <ConfirmationModal
                 isOpen={modal.isOpen}
                 onClose={() => setModal({ ...modal, isOpen: false })}
                 onConfirm={() => setModal({ ...modal, isOpen: false })}
                 title={modal.title}
                 message={modal.message}
-                confirmText="Ok"
-                cancelText=""
                 isDanger={true}
             />
-            <div className="mb-8">
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <Palette className="w-6 h-6 text-brand-600" />
-                    Generador de Logos IA (Beta)
+
+            <div className="mb-8 text-center">
+                <h2 className="text-3xl font-bold text-slate-900 dark:text-white flex items-center justify-center gap-2">
+                    <Palette className="w-8 h-8 text-brand-600" />
+                    Diseñador de Logos Pro
                 </h2>
-                <p className="text-slate-600 dark:text-slate-400 mt-1">
-                    Crea logotipos usando el modelo <strong>Flux</strong>.
-                    <span className="bg-brand-100 dark:bg-brand-900/30 text-brand-800 dark:text-brand-300 text-xs font-bold px-2 py-0.5 rounded ml-2">
-                        Costo: 2 Créditos
-                    </span>
+                <p className="text-slate-500 dark:text-slate-400 mt-2">
+                    IA Avanzada (SDXL) • Persistencia en Nube • Alta Resolución
                 </p>
-                <div className="mt-2 bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded text-xs text-yellow-800 dark:text-yellow-200 border border-yellow-200 dark:border-yellow-800 inline-block">
-                    ⚠️ Nota: Las imágenes se generan una por una para asegurar
-                    la calidad y evitar errores del servidor.
-                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Panel de Control (Izquierda) */}
+                {/* PANEL DE CONTROL */}
                 <div className="lg:col-span-1 space-y-6">
-                    <Card className="p-6 shadow-md sticky top-6">
-                        <div className="space-y-4">
+                    <Card className="p-6 shadow-xl border-t-4 border-t-brand-500">
+                        <div className="space-y-5">
                             <div>
-                                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 block">
-                                    Nombre de la Marca
+                                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 block">
+                                    Nombre / Concepto
                                 </label>
                                 <input
                                     type="text"
-                                    className="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none bg-white dark:bg-slate-900 dark:text-white"
-                                    placeholder="Ej: Aroma..."
+                                    className="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none"
+                                    placeholder="Ej: Cafetería Espacial..."
                                     value={prompt}
                                     onChange={(e) => setPrompt(e.target.value)}
                                 />
                             </div>
 
-                            <div
-                                className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-all ${
-                                    noText
-                                        ? 'bg-brand-50 dark:bg-brand-900/20 border-brand-200 dark:border-brand-800'
-                                        : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
-                                }`}
-                                onClick={() => setNoText(!noText)}
-                            >
-                                <div
-                                    className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
-                                        noText
-                                            ? 'bg-brand-600 border-brand-600'
-                                            : 'bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600'
-                                    }`}
-                                >
-                                    {noText && (
-                                        <Type className="w-3 h-3 text-white" />
-                                    )}
-                                </div>
-                                <div className="flex-1">
-                                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 select-none">
-                                        Solo Icono (Sin texto)
-                                    </span>
-                                </div>
-                            </div>
-
                             <div>
-                                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
-                                    <PenLine className="w-4 h-4" /> Detalles
-                                    (Opcional)
-                                </label>
-                                <textarea
-                                    className="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none h-24 text-sm resize-none bg-white dark:bg-slate-900 dark:text-white"
-                                    placeholder="Ej: Una taza de café humeante..."
-                                    value={details}
-                                    onChange={(e) => setDetails(e.target.value)}
-                                />
-                            </div>
-
-                            <div>
-                                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 block">
+                                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 block">
                                     Estilo Visual
                                 </label>
                                 <div className="grid grid-cols-2 gap-2">
@@ -214,7 +130,7 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
                                             onClick={() => setStyle(s)}
                                             className={`p-2 text-xs font-medium rounded-lg border transition-all ${
                                                 style === s
-                                                    ? 'bg-brand-50 dark:bg-brand-900/20 border-brand-500 text-brand-700 dark:text-brand-300'
+                                                    ? 'bg-brand-600 text-white border-brand-600 shadow-md'
                                                     : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                                             }`}
                                         >
@@ -228,183 +144,81 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
                                 onClick={handleGenerate}
                                 isLoading={isGenerating}
                                 disabled={!prompt}
-                                className="w-full mt-2"
+                                className="w-full h-12 text-lg font-bold shadow-lg shadow-brand-500/20"
                             >
                                 {isGenerating
-                                    ? 'Diseñando...'
-                                    : 'Generar 3 Variantes'}
+                                    ? 'Renderizando...'
+                                    : 'Generar Logo (2 Créditos)'}
                             </Button>
                         </div>
                     </Card>
                 </div>
 
-                {/* Galería de Resultados (Derecha) */}
+                {/* GALERÍA DE RESULTADOS */}
                 <div className="lg:col-span-2">
-                    {generatedImages.length === 0 && !isGenerating ? (
-                        <div className="h-64 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 text-center p-6">
-                            <ImageIcon className="w-12 h-12 mb-2 opacity-50" />
-                            <p className="font-medium">
-                                Tu marca comienza aquí
+                    {generatedLogos.length === 0 && !isGenerating ? (
+                        <div className="h-full min-h-[300px] border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl flex flex-col items-center justify-center text-slate-400 p-8 text-center bg-slate-50 dark:bg-slate-900/50">
+                            <Wand2 className="w-16 h-16 mb-4 text-slate-300 dark:text-slate-600" />
+                            <h3 className="text-lg font-medium text-slate-600 dark:text-slate-300">
+                                Tu lienzo está vacío
+                            </h3>
+                            <p className="text-sm">
+                                Define tu marca y deja que la IA haga la magia.
                             </p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {generatedImages.map((imgData, idx) => (
-                                <AutoRetryImage
-                                    key={imgData.id}
-                                    src={imgData.url}
-                                    idx={idx}
-                                    onDownload={() =>
-                                        downloadImage(imgData.url, idx)
-                                    }
-                                />
+                            {/* SKELETON LOADING */}
+                            {isGenerating && (
+                                <div className="aspect-square bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse flex flex-col items-center justify-center border border-slate-200 dark:border-slate-700">
+                                    <Loader2 className="w-10 h-10 text-brand-500 animate-spin mb-3" />
+                                    <span className="text-sm font-medium text-slate-500">
+                                        Creando Arte...
+                                    </span>
+                                </div>
+                            )}
+
+                            {/* LOGOS GENERADOS */}
+                            {generatedLogos.map((url, idx) => (
+                                <div
+                                    key={idx}
+                                    className="group relative bg-white dark:bg-slate-800 p-2 rounded-xl shadow-md border border-slate-200 dark:border-slate-700 animate-in zoom-in-50 duration-300"
+                                >
+                                    <div className="aspect-square rounded-lg overflow-hidden relative">
+                                        <img
+                                            src={url}
+                                            alt="Logo generado"
+                                            className="w-full h-full object-contain bg-slate-50 dark:bg-black/20"
+                                        />
+                                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                                            <button
+                                                onClick={() =>
+                                                    downloadFile(
+                                                        url,
+                                                        `logo-${idx}.jpg`,
+                                                    )
+                                                }
+                                                className="bg-white text-slate-900 px-6 py-3 rounded-full font-bold shadow-xl hover:scale-105 transition-transform flex items-center gap-2"
+                                            >
+                                                <Download className="w-5 h-5" />{' '}
+                                                Guardar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="p-3 flex justify-between items-center">
+                                        <span className="text-xs font-mono text-slate-400">
+                                            Variante #
+                                            {generatedLogos.length - idx}
+                                        </span>
+                                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-bold">
+                                            HD
+                                        </span>
+                                    </div>
+                                </div>
                             ))}
                         </div>
                     )}
                 </div>
-            </div>
-        </div>
-    )
-}
-
-// COMPONENTE INTELIGENTE: GESTIONA LA CARGA ESCALONADA
-const AutoRetryImage = ({
-    src,
-    idx,
-    onDownload,
-}: {
-    src: string
-    idx: number
-    onDownload: () => void
-}) => {
-    // Estado inicial vacío para no cargar nada aún
-    const [imgSrc, setImgSrc] = useState('')
-    const [status, setStatus] = useState<
-        'waiting' | 'loading' | 'loaded' | 'error'
-    >('waiting')
-    const [secondsLeft, setSecondsLeft] = useState(0)
-
-    const retryCount = useRef(0)
-    const MAX_RETRIES = 5
-
-    useEffect(() => {
-        // --- LA MAGIA: RETARDO BASADO EN EL ÍNDICE ---
-        // Imagen 0: 0 segundos
-        // Imagen 1: 3.5 segundos
-        // Imagen 2: 7 segundos
-        const delayMs = idx * 3500
-
-        setStatus('waiting')
-        setSecondsLeft(delayMs / 1000)
-
-        // Cuenta regresiva visual
-        const interval = setInterval(() => {
-            setSecondsLeft((prev) => Math.max(0, prev - 1))
-        }, 1000)
-
-        // Iniciar carga después del delay
-        const timer = setTimeout(() => {
-            setImgSrc(src)
-            setStatus('loading')
-            clearInterval(interval)
-        }, delayMs)
-
-        return () => {
-            clearTimeout(timer)
-            clearInterval(interval)
-        }
-    }, [src, idx])
-
-    const handleError = () => {
-        if (retryCount.current < MAX_RETRIES) {
-            retryCount.current += 1
-            setStatus('loading')
-
-            // Si falla, esperamos 3 segundos extras aleatorios antes de reintentar
-            const timeout = 3000 + Math.random() * 2000
-
-            setTimeout(() => {
-                setImgSrc((prev) => {
-                    const separator = prev.includes('?') ? '&' : '?'
-                    return `${src}${separator}retry=${Date.now()}`
-                })
-            }, timeout)
-        } else {
-            setStatus('error')
-        }
-    }
-
-    return (
-        <div className="group relative bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-lg transition-all">
-            <div className="aspect-square bg-slate-50 dark:bg-slate-900 rounded-lg overflow-hidden relative flex items-center justify-center">
-                {/* ESTADO DE ESPERA (COLA) */}
-                {status === 'waiting' && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 bg-slate-50 dark:bg-slate-900 z-10 p-4 text-center">
-                        <Clock className="w-8 h-8 mb-2 animate-pulse text-slate-300" />
-                        <span className="text-xs font-bold">En cola...</span>
-                        <span className="text-[10px] mt-1">
-                            Iniciando en {secondsLeft.toFixed(0)}s
-                        </span>
-                    </div>
-                )}
-
-                {/* ESTADO DE CARGA */}
-                {status === 'loading' && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 z-10 p-4 text-center">
-                        <RefreshCw className="w-8 h-8 animate-spin mb-3 text-brand-600" />
-                        <span className="text-xs font-bold animate-pulse">
-                            {retryCount.current > 0
-                                ? `Reintentando (${retryCount.current})...`
-                                : 'Diseñando Logo...'}
-                        </span>
-                    </div>
-                )}
-
-                {/* ESTADO DE ERROR */}
-                {status === 'error' && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center text-red-400 p-4 text-center bg-white dark:bg-slate-800 z-20">
-                        <AlertCircle className="w-8 h-8 mb-2" />
-                        <span className="text-xs font-medium mb-2">
-                            Límite de API alcanzado
-                        </span>
-                        <button
-                            onClick={() => {
-                                retryCount.current = 0
-                                setStatus('loading')
-                                // Forzar recarga url nueva
-                                setImgSrc(`${src}&manual_retry=${Date.now()}`)
-                            }}
-                            className="px-3 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 text-xs rounded-full transition-colors flex items-center gap-1"
-                        >
-                            <RefreshCw className="w-3 h-3" /> Intentar de nuevo
-                        </button>
-                    </div>
-                )}
-
-                {/* IMAGEN REAL */}
-                {imgSrc && (
-                    <img
-                        src={imgSrc}
-                        alt={`Logo ${idx}`}
-                        className={`w-full h-full object-contain p-2 transition-opacity duration-700 ${
-                            status === 'loaded' ? 'opacity-100' : 'opacity-0'
-                        }`}
-                        onLoad={() => setStatus('loaded')}
-                        onError={handleError}
-                    />
-                )}
-
-                {/* BOTÓN DESCARGA */}
-                {status === 'loaded' && (
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-30 backdrop-blur-[2px]">
-                        <button
-                            onClick={onDownload}
-                            className="bg-white text-slate-900 px-5 py-2.5 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-brand-50 shadow-lg transform hover:scale-105 transition-all"
-                        >
-                            <Download className="w-4 h-4" /> Descargar
-                        </button>
-                    </div>
-                )}
             </div>
         </div>
     )
