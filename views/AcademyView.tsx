@@ -37,43 +37,25 @@ export const AcademyView: React.FC<AcademyViewProps> = ({
         : 'http://localhost:8000'
 
     useEffect(() => {
-        // Si no hay userId prop, ni siquiera intentamos nada.
+        // Si no hay userId, no hacemos nada
         if (!userId) return
 
-        let unsubscribeAuth = () => {}
-
-        const fetchCourse = async (uid: string) => {
+        const loadSavedCourse = async () => {
             try {
-                // Referencia exacta al documento
-                const docRef = doc(db, 'users', uid, 'academy', 'current')
+                // Referencia directa al curso activo "current"
+                const docRef = doc(db, 'users', userId, 'academy', 'current')
                 const docSnap = await getDoc(docRef)
 
                 if (docSnap.exists()) {
-                    console.log('✅ Curso recuperado de la base de datos')
                     setCourse(docSnap.data())
-                } else {
-                    console.log('ℹ️ No hay curso guardado activo')
                 }
-            } catch (error: any) {
-                // Ignoramos errores de permisos si ocurren durante la carga inicial
-                if (error.code !== 'permission-denied') {
-                    console.error('Error al recuperar curso:', error)
-                }
+            } catch (error) {
+                console.error('Error cargando curso guardado:', error)
             }
         }
 
-        // Escuchamos a Firebase Auth directamente para estar seguros
-        unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-            if (user && user.uid === userId) {
-                // Solo ejecutamos si el usuario de Auth coincide con el userId del prop
-                fetchCourse(user.uid)
-            }
-        })
-
-        return () => {
-            unsubscribeAuth()
-        }
-    }, [userId])
+        loadSavedCourse()
+    }, [userId]) // Solo se ejecuta cuando cambia el userId (al login)
 
     const handleGenerate = async () => {
         if (!topic) return
