@@ -37,38 +37,41 @@ export const AcademyView: React.FC<AcademyViewProps> = ({
         : 'http://localhost:8000'
 
     useEffect(() => {
-        // Variable para evitar actualizaciones si el componente se desmonta
-        let isMounted = true
+        // Si no hay userId prop, ni siquiera intentamos nada.
+        if (!userId) return
 
-        // Escuchamos el estado real de Firebase Auth
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            // Solo procedemos si hay usuario autenticado Y coincide con el userId que recibimos
-            if (user && user.uid === userId && isMounted) {
-                try {
-                    const docRef = doc(
-                        db,
-                        'users',
-                        userId,
-                        'academy',
-                        'current',
-                    )
-                    const docSnap = await getDoc(docRef)
+        let unsubscribeAuth = () => {}
 
-                    if (docSnap.exists()) {
-                        console.log('Curso recuperado exitosamente')
-                        setCourse(docSnap.data())
-                    }
-                } catch (e) {
-                    // Ahora sí podemos ver si es un error real o de permisos
-                    console.error('Error cargando curso guardado:', e)
+        const fetchCourse = async (uid: string) => {
+            try {
+                // Referencia exacta al documento
+                const docRef = doc(db, 'users', uid, 'academy', 'current')
+                const docSnap = await getDoc(docRef)
+
+                if (docSnap.exists()) {
+                    console.log('✅ Curso recuperado de la base de datos')
+                    setCourse(docSnap.data())
+                } else {
+                    console.log('ℹ️ No hay curso guardado activo')
                 }
+            } catch (error: any) {
+                // Ignoramos errores de permisos si ocurren durante la carga inicial
+                if (error.code !== 'permission-denied') {
+                    console.error('Error al recuperar curso:', error)
+                }
+            }
+        }
+
+        // Escuchamos a Firebase Auth directamente para estar seguros
+        unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+            if (user && user.uid === userId) {
+                // Solo ejecutamos si el usuario de Auth coincide con el userId del prop
+                fetchCourse(user.uid)
             }
         })
 
-        // Limpieza al desmontar
         return () => {
-            isMounted = false
-            unsubscribe()
+            unsubscribeAuth()
         }
     }, [userId])
 

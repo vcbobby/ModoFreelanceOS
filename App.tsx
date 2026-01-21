@@ -149,7 +149,7 @@ const AppContent = () => {
     const notifications = useAgendaNotifications(firebaseUser?.uid)
     const agendaAlerts = notifications.filter((n) => n.type === 'agenda').length
     const financeAlerts = notifications.filter(
-        (n) => n.type === 'finance'
+        (n) => n.type === 'finance',
     ).length
     const [isNotifOpen, setIsNotifOpen] = useState(false)
     const [alertModal, setAlertModal] = useState({
@@ -173,7 +173,7 @@ const AppContent = () => {
         } catch (error) {
             // Esto es normal si el servidor está dormido (timeout) o si es localhost
             console.log(
-                'Ping complete or timed out (Normal behavior for cold start)'
+                'Ping complete or timed out (Normal behavior for cold start)',
             )
         }
     }
@@ -233,124 +233,127 @@ const AppContent = () => {
         }
     }
 
-    // const fetchUserData = async (uid: string) => {
-    //     try {
-    //         const docRef = doc(db, 'users', uid)
-    //         const docSnap = await getDoc(docRef)
-    //         const now = Date.now()
-    //         const oneWeekMs = 7 * 24 * 60 * 60 * 1000
-
-    //         if (docSnap.exists()) {
-    //             const data = docSnap.data()
-    //             const nameFromDb = data.displayName || data.email?.split('@')[0]
-    //             setDisplayName(nameFromDb)
-
-    //             let isSub = data.isSubscribed || false
-    //             let credits = data.credits !== undefined ? data.credits : 0
-    //             let subEnd = data.subscriptionEnd
-    //             let lastReset = data.lastReset
-
-    //             if (!lastReset) {
-    //                 const createdTime = data.createdAt
-    //                     ? new Date(data.createdAt).getTime()
-    //                     : now
-    //                 lastReset = createdTime
-    //                 await updateDoc(docRef, { lastReset: createdTime })
-    //             }
-
-    //             if (!isSub) {
-    //                 const timeDiff = now - lastReset
-    //                 if (timeDiff > oneWeekMs) {
-    //                     credits = 3
-    //                     lastReset = now
-    //                     await updateDoc(docRef, {
-    //                         credits: 3,
-    //                         lastReset: now,
-    //                     })
-    //                 }
-    //             }
-
-    //             if (isSub) {
-    //                 const expirationTime = subEnd || 0
-    //                 if (now > expirationTime) {
-    //                     isSub = false
-    //                     credits = 3
-    //                     lastReset = now
-    //                     await updateDoc(docRef, {
-    //                         isSubscribed: false,
-    //                         credits: 3,
-    //                         lastReset: now,
-    //                         subscriptionEnd: null,
-    //                     })
-    //                     showAlert(
-    //                         'Plan Vencido',
-    //                         'Tu plan PRO ha finalizado. Has vuelto al plan gratuito con 3 créditos semanales.'
-    //                     )
-    //                 }
-    //             }
-
-    //             const nextResetDate = lastReset + oneWeekMs
-    //             setUserState({
-    //                 isSubscribed: isSub,
-    //                 credits: credits,
-    //                 subscriptionEnd: subEnd,
-    //                 nextReset: nextResetDate,
-    //             })
-    //         } else {
-    //             const initialData = {
-    //                 email: auth.currentUser?.email,
-    //                 credits: 3,
-    //                 isSubscribed: false,
-    //                 createdAt: new Date().toISOString(),
-    //                 lastReset: now,
-    //                 displayName: auth.currentUser?.displayName || '',
-    //             }
-    //             await setDoc(docRef, initialData)
-    //             setUserState({
-    //                 isSubscribed: false,
-    //                 credits: 3,
-    //                 nextReset: now + oneWeekMs,
-    //             })
-    //         }
-    //     } catch (error) {
-    //         console.error('Error fetchUserData:', error)
-    //     }
-    // }
-    // 1. LÓGICA DE CARGA DE DATOS OPTIMIZADA
+    // FUSIÓN: Lógica robusta antigua + Sincronización en segundo plano
     const fetchUserData = async (uid: string) => {
-        // PASO A: Cargar datos locales de Firebase (INSTANTÁNEO)
-        // Esto permite quitar la pantalla de carga de inmediato
         try {
             const docRef = doc(db, 'users', uid)
             const docSnap = await getDoc(docRef)
+            const now = Date.now()
+            const oneWeekMs = 7 * 24 * 60 * 60 * 1000
+
+            // VARIABLES PARA EL ESTADO FINAL
+            let finalIsSubscribed = false
+            let finalCredits = 0
+            let finalSubEnd = null
+            let finalLastReset = now
 
             if (docSnap.exists()) {
+                // --- 1. USUARIO EXISTENTE ---
                 const data = docSnap.data()
+
+                // Recuperar nombre
                 const nameFromDb =
-                    data.displayName ||
-                    firebaseUser?.email?.split('@')[0] ||
-                    'Freelancer'
+                    data.displayName || firebaseUser?.email?.split('@')[0]
                 setDisplayName(nameFromDb)
 
-                // Mostramos lo que tenemos guardado en caché/db
-                setUserState({
-                    isSubscribed: data.isSubscribed || false,
-                    credits: data.credits !== undefined ? data.credits : 0,
-                    subscriptionEnd: data.subscriptionEnd,
-                    nextReset: (data.lastReset || Date.now()) + 604800000, // Calculo visual
-                })
+                // Datos base
+                let isSub = data.isSubscribed || false
+                let credits = data.credits !== undefined ? data.credits : 0
+                let subEnd = data.subscriptionEnd
+                let lastReset = data.lastReset
+
+                // Si por alguna razón no tiene lastReset, se lo ponemos hoy
+                if (!lastReset) {
+                    const createdTime = data.createdAt
+                        ? new Date(data.createdAt).getTime()
+                        : now
+                    lastReset = createdTime
+                    await updateDoc(docRef, { lastReset: createdTime })
+                }
+
+                // LÓGICA DE REINICIO SEMANAL (SOLO GRATUITOS)
+                if (!isSub) {
+                    const timeDiff = now - lastReset
+                    if (timeDiff > oneWeekMs) {
+                        credits = 3
+                        lastReset = now
+                        await updateDoc(docRef, {
+                            credits: 3,
+                            lastReset: now,
+                        })
+                    }
+                }
+
+                // LÓGICA DE VENCIMIENTO DE SUSCRIPCIÓN (SOLO PRO)
+                if (isSub) {
+                    const expirationTime = subEnd || 0
+                    if (now > expirationTime) {
+                        // ¡SE ACABÓ EL PRO!
+                        isSub = false
+                        credits = 3
+                        lastReset = now
+                        subEnd = null
+
+                        await updateDoc(docRef, {
+                            isSubscribed: false,
+                            credits: 3,
+                            lastReset: now,
+                            subscriptionEnd: null,
+                        })
+
+                        // Mostramos la alerta (Esta era la parte crítica que faltaba)
+                        showAlert(
+                            'Plan Vencido',
+                            'Tu plan PRO ha finalizado. Has vuelto al plan gratuito con 3 créditos semanales.',
+                        )
+                    }
+                }
+
+                // Asignamos valores finales
+                finalIsSubscribed = isSub
+                finalCredits = credits
+                finalSubEnd = subEnd
+                finalLastReset = lastReset
+            } else {
+                // --- 2. USUARIO NUEVO (CREACIÓN) ---
+                // Esta parte faltaba en el código nuevo y por eso fallaba con usuarios nuevos
+                const initialData = {
+                    email: auth.currentUser?.email,
+                    credits: 3,
+                    isSubscribed: false,
+                    createdAt: new Date().toISOString(),
+                    lastReset: now,
+                    displayName: auth.currentUser?.displayName || '',
+                    signupPlatform: Capacitor.isNativePlatform()
+                        ? 'Mobile'
+                        : 'Web',
+                }
+                await setDoc(docRef, initialData)
+
+                finalIsSubscribed = false
+                finalCredits = 3
+                finalLastReset = now
             }
-        } catch (e) {
-            console.error('Error leyendo Firebase local', e)
+
+            // ACTUALIZAMOS LA INTERFAZ DE INMEDIATO
+            setUserState({
+                isSubscribed: finalIsSubscribed,
+                credits: finalCredits,
+                subscriptionEnd: finalSubEnd,
+                nextReset: finalLastReset + oneWeekMs,
+            })
+
+            // Quitamos pantalla de carga
+            setLoadingAuth(false)
+
+            // --- 3. SINCRONIZACIÓN SILENCIOSA ---
+            // Llamamos al backend solo para analíticas y verificar integridad.
+            // Si el backend falla, no importa, porque ya hicimos la lógica crítica arriba.
+            syncWithBackend(uid)
+        } catch (error) {
+            console.error('Error fetchUserData:', error)
+            setLoadingAuth(false) // Asegurar que no se quede cargando infinito si hay error
         }
-
-        // PASO B: Quitar pantalla de carga AHORA MISMO
-        setLoadingAuth(false)
-
-        // PASO C: Llamar al Backend en SEGUNDO PLANO (LENTO)
-        // Esto corre "por detrás". Si el servidor está dormido, no bloquea al usuario.
-        // Cuando despierte, actualizará los créditos reales.
-        syncWithBackend(uid)
     }
 
     // Nueva función separada para hablar con el Backend
@@ -363,6 +366,7 @@ const AppContent = () => {
                 currentPlatform = 'Windows App'
             const formData = new FormData()
             formData.append('platform', currentPlatform)
+            formData.append('userId', uid)
 
             // Esta llamada puede tardar 40s si Render duerme, pero el usuario ya está usando la app
             const response = await fetch(`${BACKEND_URL}/api/check-status`, {
@@ -387,7 +391,7 @@ const AppContent = () => {
         } catch (error) {
             // Si falla el backend, no pasa nada grave, el usuario sigue usando los datos locales
             console.log(
-                'Backend todavía despertando o error de red (no crítico).'
+                'Backend todavía despertando o error de red (no crítico).',
             )
         }
     }
@@ -413,11 +417,11 @@ const AppContent = () => {
             window.history.replaceState(
                 {},
                 document.title,
-                window.location.pathname
+                window.location.pathname,
             )
             showAlert(
                 '¡Pago Exitoso!',
-                `Suscripción PRO activa. Tu plan es válido hasta el ${expirationDate.toLocaleDateString()}. ¡Disfruta!`
+                `Suscripción PRO activa. Tu plan es válido hasta el ${expirationDate.toLocaleDateString()}. ¡Disfruta!`,
             )
             setShowSuccessMsg(true)
             setTimeout(() => setShowSuccessMsg(false), 5000)
@@ -700,7 +704,7 @@ const AppContent = () => {
                                             <span className="font-bold text-slate-700 dark:text-slate-300 text-sm">
                                                 {userState.subscriptionEnd
                                                     ? new Date(
-                                                          userState.subscriptionEnd
+                                                          userState.subscriptionEnd,
                                                       ).toLocaleDateString()
                                                     : '30 Días desde activación'}
                                             </span>
@@ -711,7 +715,7 @@ const AppContent = () => {
                                             <span className="font-bold text-slate-600 dark:text-slate-300 text-sm">
                                                 {userState.nextReset
                                                     ? new Date(
-                                                          userState.nextReset
+                                                          userState.nextReset,
                                                       ).toLocaleDateString()
                                                     : 'Próximamente'}
                                             </span>
@@ -733,7 +737,7 @@ const AppContent = () => {
                                     setCurrentView(AppView.NOTES)
                                     setTimeout(
                                         () => setAutoOpenAgenda(false),
-                                        2000
+                                        2000,
                                     )
                                 }}
                             />
