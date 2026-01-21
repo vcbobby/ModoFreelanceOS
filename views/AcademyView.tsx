@@ -36,15 +36,21 @@ export const AcademyView: React.FC<AcademyViewProps> = ({
         : 'http://localhost:8000'
 
     useEffect(() => {
+        // --- CORRECCIÓN: Validación estricta ---
+        // Si no hay userId, no intentamos leer de Firebase.
+        // Esto evita el error "Missing or insufficient permissions".
         if (!userId) return
+
         const loadSavedCourse = async () => {
             try {
+                // Asegurar que la ruta no tenga undefined: 'users/undefined/...'
                 const docRef = doc(db, 'users', userId, 'academy', 'current')
                 const docSnap = await getDoc(docRef)
                 if (docSnap.exists()) {
                     setCourse(docSnap.data())
                 }
             } catch (e) {
+                // Opcional: Ignorar error de permisos si ocurre por logout rápido
                 console.error('Error cargando curso guardado', e)
             }
         }
@@ -79,7 +85,7 @@ export const AcademyView: React.FC<AcademyViewProps> = ({
                 if (userId) {
                     await setDoc(
                         doc(db, 'users', userId, 'academy', 'current'),
-                        newCourse
+                        newCourse,
                     )
                 }
             } else {
@@ -201,7 +207,7 @@ export const AcademyView: React.FC<AcademyViewProps> = ({
                                 <button
                                     onClick={() =>
                                         setExpandedModule(
-                                            expandedModule === i ? null : i
+                                            expandedModule === i ? null : i,
                                         )
                                     }
                                     className="w-full flex justify-between items-center p-5 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors text-left"
@@ -240,7 +246,7 @@ export const AcademyView: React.FC<AcademyViewProps> = ({
                                                     }) {
                                                         const match =
                                                             /language-(\w+)/.exec(
-                                                                className || ''
+                                                                className || '',
                                                             )
                                                         return (
                                                             <span className="block bg-slate-900 text-slate-50 p-4 rounded-lg my-4 overflow-x-auto border border-slate-700 shadow-sm font-mono text-xs">
