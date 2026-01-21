@@ -7,9 +7,16 @@ import {
     Loader2,
     Type,
     LayoutTemplate,
+    CheckCircle2,
+    AlertCircle,
 } from 'lucide-react'
 import { Button, Card, ConfirmationModal } from '../components/ui'
-import { downloadFile } from '../utils/downloadUtils'
+
+// Interfaz para el objeto de logo
+interface LogoItem {
+    id: string // ID único para React keys (importante para que no parpadee)
+    url: string
+}
 
 interface LogoToolProps {
     onUsage: (cost: number) => Promise<boolean>
@@ -17,11 +24,12 @@ interface LogoToolProps {
 }
 
 export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
-    const [name, setName] = useState('') // Nombre de la marca
-    const [details, setDetails] = useState('') // Concepto / Detalles
+    const [name, setName] = useState('')
+    const [details, setDetails] = useState('')
     const [style, setStyle] = useState('Minimalista')
 
-    const [generatedLogos, setGeneratedLogos] = useState<string[]>([])
+    // Cambiamos a array de objetos para mejor control en React
+    const [generatedLogos, setGeneratedLogos] = useState<LogoItem[]>([])
     const [isGenerating, setIsGenerating] = useState(false)
 
     const [modal, setModal] = useState({
@@ -30,7 +38,6 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
         message: '',
     })
 
-    // URL Backend dinámica
     const BACKEND_URL = import.meta.env.PROD
         ? 'https://backend-freelanceos.onrender.com'
         : 'http://localhost:8000'
@@ -48,7 +55,6 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
     const handleGenerate = async () => {
         if (!name) return
 
-        // 1. Cobrar créditos
         const canProceed = await onUsage(2)
         if (!canProceed) return
 
@@ -56,12 +62,11 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
 
         try {
             const formData = new FormData()
-            formData.append('name', name) // Enviamos Nombre
-            formData.append('details', details) // Enviamos Detalles
+            formData.append('name', name)
+            formData.append('details', details)
             formData.append('style', style)
             formData.append('userId', userId || 'anon')
 
-            // 2. Petición al Backend
             const res = await fetch(
                 `${BACKEND_URL}/api/generate-logo-backend`,
                 {
@@ -72,23 +77,24 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
 
             const data = await res.json()
 
-            if (!res.ok) {
-                throw new Error(data.detail || 'Error en el servidor')
-            }
+            if (!res.ok) throw new Error(data.detail || 'Error servidor')
 
             if (data.success) {
-                setGeneratedLogos((prev) => [data.url, ...prev])
+                // Creamos un objeto con ID único
+                const newLogo: LogoItem = {
+                    id: Date.now().toString(),
+                    url: data.url,
+                }
+                setGeneratedLogos((prev) => [newLogo, ...prev])
             }
         } catch (error: any) {
-            console.error('Error generando logo:', error)
-
-            // 3. Reembolso si falla
-            await onUsage(-2)
-
+            console.error(error)
+            await onUsage(-2) // Reembolso
             setModal({
                 isOpen: true,
-                title: 'Error de Generación',
-                message: `El servidor no pudo generar la imagen. Causa: ${error.message}. (Tus créditos han sido devueltos).`,
+                title: 'Error',
+                message:
+                    'No se pudo iniciar la generación. Créditos reembolsados.',
             })
         } finally {
             setIsGenerating(false)
@@ -112,7 +118,7 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
                     Diseñador de Logos Pro
                 </h2>
                 <p className="text-slate-500 dark:text-slate-400 mt-2">
-                    Potenciado por SDXL • Alta Resolución • Persistencia Cloud
+                    IA Avanzada (SDXL) • Persistencia en Nube • Alta Resolución
                 </p>
             </div>
 
@@ -121,7 +127,6 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
                 <div className="lg:col-span-1 space-y-6">
                     <Card className="p-6 shadow-xl border-t-4 border-t-brand-500">
                         <div className="space-y-5">
-                            {/* CAMPO 1: NOMBRE */}
                             <div>
                                 <label className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
                                     <Type className="w-4 h-4 text-brand-600" />
@@ -136,7 +141,6 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
                                 />
                             </div>
 
-                            {/* CAMPO 2: DETALLES (Agregado de nuevo) */}
                             <div>
                                 <label className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
                                     <PenLine className="w-4 h-4 text-brand-600" />
@@ -144,13 +148,12 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
                                 </label>
                                 <textarea
                                     className="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none h-24 text-sm resize-none"
-                                    placeholder="Ej: Un astronauta sosteniendo una taza de café, fondo minimalista, colores azul neón..."
+                                    placeholder="Ej: Minimalista, colores azules..."
                                     value={details}
                                     onChange={(e) => setDetails(e.target.value)}
                                 />
                             </div>
 
-                            {/* CAMPO 3: ESTILO */}
                             <div>
                                 <label className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
                                     <LayoutTemplate className="w-4 h-4 text-brand-600" />
@@ -180,7 +183,7 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
                                 className="w-full h-12 text-lg font-bold shadow-lg shadow-brand-500/20"
                             >
                                 {isGenerating
-                                    ? 'Renderizando...'
+                                    ? 'Iniciando...'
                                     : 'Generar Logo (2 Créditos)'}
                             </Button>
                         </div>
@@ -189,76 +192,167 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
 
                 {/* GALERÍA DE RESULTADOS */}
                 <div className="lg:col-span-2">
-                    {generatedLogos.length === 0 && !isGenerating ? (
+                    {generatedLogos.length === 0 ? (
                         <div className="h-full min-h-[400px] border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl flex flex-col items-center justify-center text-slate-400 p-8 text-center bg-slate-50 dark:bg-slate-900/50">
                             <Wand2 className="w-16 h-16 mb-4 text-slate-300 dark:text-slate-600" />
                             <h3 className="text-lg font-medium text-slate-600 dark:text-slate-300">
                                 Tu lienzo está vacío
                             </h3>
                             <p className="text-sm max-w-xs mt-2 opacity-70">
-                                Describe tu marca a la izquierda y deja que la
-                                Inteligencia Artificial cree algo único.
+                                Describe tu marca y deja que la IA haga la
+                                magia.
                             </p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in duration-500">
-                            {/* SKELETON LOADING */}
-                            {isGenerating && (
-                                <div className="aspect-square bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse flex flex-col items-center justify-center border border-slate-200 dark:border-slate-700 shadow-inner">
-                                    <div className="relative">
-                                        <Loader2 className="w-12 h-12 text-brand-500 animate-spin" />
-                                        <div className="absolute inset-0 flex items-center justify-center">
-                                            <Wand2 className="w-4 h-4 text-brand-600" />
-                                        </div>
-                                    </div>
-                                    <span className="text-sm font-bold text-slate-500 mt-4">
-                                        Creando Arte HD...
-                                    </span>
-                                </div>
-                            )}
-
-                            {/* LOGOS GENERADOS */}
-                            {generatedLogos.map((url, idx) => (
-                                <div
-                                    key={idx}
-                                    className="group relative bg-white dark:bg-slate-800 p-2 rounded-xl shadow-md border border-slate-200 dark:border-slate-700 animate-in zoom-in-50 duration-300 slide-in-from-bottom-4"
-                                >
-                                    <div className="aspect-square rounded-lg overflow-hidden relative bg-[url('https://res.cloudinary.com/dcmzo369v/image/upload/v1710000000/transparent-bg.png')] bg-repeat">
-                                        <img
-                                            src={url}
-                                            alt="Logo generado"
-                                            className="w-full h-full object-contain relative z-10"
-                                        />
-                                        {/* Overlay de descarga */}
-                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center z-20 backdrop-blur-[2px] gap-3">
-                                            <button
-                                                onClick={() =>
-                                                    downloadFile(
-                                                        url,
-                                                        `logo-${name}-${idx}.jpg`,
-                                                    )
-                                                }
-                                                className="bg-white text-slate-900 px-6 py-2.5 rounded-full font-bold shadow-xl hover:scale-105 transition-transform flex items-center gap-2"
-                                            >
-                                                <Download className="w-4 h-4" />{' '}
-                                                Guardar
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div className="p-3 flex justify-between items-center border-t border-slate-100 dark:border-slate-700 mt-1">
-                                        <span className="text-xs font-mono text-slate-400">
-                                            Variante #
-                                            {generatedLogos.length - idx}
-                                        </span>
-                                        <span className="text-[10px] uppercase tracking-wider bg-brand-100 dark:bg-brand-900 text-brand-700 dark:text-brand-300 px-2 py-0.5 rounded-full font-bold">
-                                            Flux/SDXL
-                                        </span>
-                                    </div>
-                                </div>
+                            {/* Renderizamos cada tarjeta con su propio estado */}
+                            {generatedLogos.map((item, idx) => (
+                                <LogoCard
+                                    key={item.id}
+                                    url={item.url}
+                                    index={generatedLogos.length - idx}
+                                    name={name}
+                                />
                             ))}
                         </div>
                     )}
                 </div>
+            </div>
+        </div>
+    )
+}
+
+// --- SUB-COMPONENTE INTELIGENTE: LogoCard ---
+// Maneja su propio estado de carga y descarga
+const LogoCard = ({
+    url,
+    index,
+    name,
+}: {
+    url: string
+    index: number
+    name: string
+}) => {
+    const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>(
+        'loading',
+    )
+    const [downloading, setDownloading] = useState(false)
+
+    // Función segura de descarga (Blob)
+    const handleDownload = async () => {
+        try {
+            setDownloading(true)
+            // 1. Fetch de la imagen como Blob (evita abrir pestaña)
+            const response = await fetch(url, { mode: 'cors' }) // Pollinations permite CORS
+            const blob = await response.blob()
+
+            // 2. Crear URL temporal
+            const blobUrl = window.URL.createObjectURL(blob)
+
+            // 3. Crear link invisible y clic
+            const link = document.createElement('a')
+            link.href = blobUrl
+            // Nombre de archivo limpio
+            const safeName = name.replace(/[^a-z0-9]/gi, '_').toLowerCase()
+            link.download = `logo-${safeName}-${index}.jpg`
+            document.body.appendChild(link)
+            link.click()
+
+            // 4. Limpieza
+            document.body.removeChild(link)
+            window.URL.revokeObjectURL(blobUrl)
+        } catch (error) {
+            console.error('Error descarga:', error)
+            // Fallback: abrir en nueva pestaña si falla el blob
+            window.open(url, '_blank')
+        } finally {
+            setDownloading(false)
+        }
+    }
+
+    return (
+        <div className="group relative bg-white dark:bg-slate-800 p-2 rounded-xl shadow-md border border-slate-200 dark:border-slate-700 animate-in zoom-in-50 duration-300 slide-in-from-bottom-4">
+            <div className="aspect-square rounded-lg overflow-hidden relative bg-slate-100 dark:bg-slate-900 flex items-center justify-center">
+                {/* ESTADO DE CARGA (SKELETON) */}
+                {status === 'loading' && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900 z-10 p-6 text-center">
+                        <Loader2 className="w-10 h-10 text-brand-500 animate-spin mb-3" />
+                        <span className="text-sm font-bold text-slate-700 dark:text-slate-300 animate-pulse">
+                            Renderizando Píxeles...
+                        </span>
+                        <span className="text-xs text-slate-400 mt-2">
+                            Esto puede tomar unos segundos.
+                        </span>
+                    </div>
+                )}
+
+                {/* ESTADO DE ERROR */}
+                {status === 'error' && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900 z-10 text-center p-4">
+                        <AlertCircle className="w-8 h-8 text-red-500 mb-2" />
+                        <span className="text-xs text-red-500">
+                            Error al cargar imagen
+                        </span>
+                        <button
+                            onClick={() => setStatus('loading')} // Reintento simple (recarga el src)
+                            className="mt-2 text-xs underline text-slate-500"
+                        >
+                            Reintentar
+                        </button>
+                    </div>
+                )}
+
+                {/* IMAGEN REAL */}
+                <img
+                    src={url}
+                    alt={`Logo generado ${index}`}
+                    className={`w-full h-full object-contain transition-opacity duration-500 ${
+                        status === 'loaded' ? 'opacity-100' : 'opacity-0'
+                    }`}
+                    onLoad={() => setStatus('loaded')}
+                    onError={() => {
+                        // A veces da error 404 momentáneo, reintentamos en 3 segs
+                        setTimeout(() => {
+                            const img = new Image()
+                            img.src = url
+                            img.onload = () => setStatus('loaded')
+                        }, 3000)
+                    }}
+                />
+
+                {/* OVERLAY DE DESCARGA (Solo visible al cargar) */}
+                {status === 'loaded' && (
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center z-20 backdrop-blur-[2px]">
+                        <button
+                            onClick={handleDownload}
+                            disabled={downloading}
+                            className="bg-white text-slate-900 px-6 py-2.5 rounded-full font-bold shadow-xl hover:scale-105 transition-transform flex items-center gap-2 disabled:opacity-70"
+                        >
+                            {downloading ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                                <Download className="w-4 h-4" />
+                            )}
+                            {downloading ? 'Guardando...' : 'Descargar'}
+                        </button>
+                    </div>
+                )}
+            </div>
+
+            {/* PIE DE TARJETA */}
+            <div className="p-3 flex justify-between items-center border-t border-slate-100 dark:border-slate-700 mt-1">
+                <span className="text-xs font-mono text-slate-400">
+                    Variante #{index}
+                </span>
+                {status === 'loaded' ? (
+                    <span className="text-[10px] uppercase tracking-wider bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" /> Listo
+                    </span>
+                ) : (
+                    <span className="text-[10px] uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-500 px-2 py-0.5 rounded-full font-bold">
+                        Procesando
+                    </span>
+                )}
             </div>
         </div>
     )
