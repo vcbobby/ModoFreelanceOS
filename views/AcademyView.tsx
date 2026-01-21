@@ -9,7 +9,8 @@ import {
 import { Button, Card, ConfirmationModal } from '../components/ui'
 import ReactMarkdown from 'react-markdown'
 import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore'
-import { db } from '../firebase'
+import { db, auth } from '../firebase'
+import { onAuthStateChanged } from 'firebase/auth'
 
 interface AcademyViewProps {
     onUsage: (cost: number) => Promise<boolean>
@@ -36,25 +37,39 @@ export const AcademyView: React.FC<AcademyViewProps> = ({
         : 'http://localhost:8000'
 
     useEffect(() => {
-        // --- CORRECCIÓN: Validación estricta ---
-        // Si no hay userId, no intentamos leer de Firebase.
-        // Esto evita el error "Missing or insufficient permissions".
-        if (!userId) return
+        // Variable para evitar actualizaciones si el componente se desmonta
+        let isMounted = true
 
-        const loadSavedCourse = async () => {
-            try {
-                // Asegurar que la ruta no tenga undefined: 'users/undefined/...'
-                const docRef = doc(db, 'users', userId, 'academy', 'current')
-                const docSnap = await getDoc(docRef)
-                if (docSnap.exists()) {
-                    setCourse(docSnap.data())
+        // Escuchamos el estado real de Firebase Auth
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            // Solo procedemos si hay usuario autenticado Y coincide con el userId que recibimos
+            if (user && user.uid === userId && isMounted) {
+                try {
+                    const docRef = doc(
+                        db,
+                        'users',
+                        userId,
+                        'academy',
+                        'current',
+                    )
+                    const docSnap = await getDoc(docRef)
+
+                    if (docSnap.exists()) {
+                        console.log('Curso recuperado exitosamente')
+                        setCourse(docSnap.data())
+                    }
+                } catch (e) {
+                    // Ahora sí podemos ver si es un error real o de permisos
+                    console.error('Error cargando curso guardado:', e)
                 }
-            } catch (e) {
-                // Opcional: Ignorar error de permisos si ocurre por logout rápido
-                console.error('Error cargando curso guardado', e)
             }
+        })
+
+        // Limpieza al desmontar
+        return () => {
+            isMounted = false
+            unsubscribe()
         }
-        loadSavedCourse()
     }, [userId])
 
     const handleGenerate = async () => {
