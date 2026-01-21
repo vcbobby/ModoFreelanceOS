@@ -60,19 +60,20 @@ export const AcademyView: React.FC<AcademyViewProps> = ({
     const handleGenerate = async () => {
         if (!topic) return
 
-        // --- AQUI ESTA EL CAMBIO: COBRAR 3 CREDITOS ---
+        // 1. Cobramos los créditos primero
         const canProceed = await onUsage(3)
         if (!canProceed) return
-        // ----------------------------------------------
 
         setLoading(true)
-        setCourse(null)
+        setCourse(null) // Limpiamos la vista anterior
+
         try {
             const formData = new FormData()
             formData.append('topic', topic)
             formData.append('level', level)
             formData.append('userId', userId || '')
 
+            // 2. Llamada a la IA
             const res = await fetch(`${BACKEND_URL}/api/generate-course`, {
                 method: 'POST',
                 body: formData,
@@ -81,21 +82,37 @@ export const AcademyView: React.FC<AcademyViewProps> = ({
 
             if (data.success) {
                 const newCourse = data.course
+
+                // 3. ¡EXITO! Mostramos el curso INMEDIATAMENTE al usuario
                 setCourse(newCourse)
+
+                // 4. Intentamos guardar en Firebase (Persistencia)
                 if (userId) {
-                    await setDoc(
-                        doc(db, 'users', userId, 'academy', 'current'),
-                        newCourse,
-                    )
+                    try {
+                        await setDoc(
+                            doc(db, 'users', userId, 'academy', 'current'),
+                            newCourse,
+                        )
+                        console.log('Curso autoguardado en Firebase')
+                    } catch (saveError) {
+                        // SI FALLA EL GUARDADO, SOLO LO LOGUEAMOS, NO MOLESTAMOS AL USUARIO
+                        // El usuario seguirá viendo su curso generado aunque no se guarde.
+                        console.error(
+                            'Error de permisos o red al guardar:',
+                            saveError,
+                        )
+                    }
                 }
             } else {
-                throw new Error('Error API')
+                throw new Error('La IA no devolvió un resultado exitoso')
             }
         } catch (e) {
+            console.error(e)
             setModal({
                 isOpen: true,
-                title: 'Error',
-                message: 'No se pudo crear el curso. Intenta otro tema.',
+                title: 'Error de Generación',
+                message:
+                    'La IA tardó demasiado o hubo un error de conexión. Por favor intenta un tema más sencillo.',
             })
         } finally {
             setLoading(false)
