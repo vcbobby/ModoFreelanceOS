@@ -304,7 +304,7 @@ export const LandingModern: React.FC = () => {
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                         </span>
-                        Nueva Versión 1.3.6
+                        Nueva Versión 1.3.7
                     </motion.div>
 
                     <h1 className="text-6xl md:text-8xl lg:text-9xl font-black mb-8 leading-[1] tracking-tighter text-slate-900 dark:text-white drop-shadow-sm">

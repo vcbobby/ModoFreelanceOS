@@ -178,28 +178,17 @@ const AppContent = () => {
         }
     }
     useEffect(() => {
-        // SAFETY TIMEOUT: Si Firebase tarda más de 2s, mostramos la app igual
-        const safetyTimer = setTimeout(() => {
-            setLoadingAuth(false)
-        }, 2000)
-
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-            // Cancelamos el timer de seguridad porque Firebase ya respondió
-            clearTimeout(safetyTimer)
-
+            // PASO 1: Si hay usuario, quitamos la pantalla de carga DE INMEDIATO.
+            // No esperamos a fetchUserData ni nada. Prioridad absoluta a la UI.
             if (currentUser) {
                 setFirebaseUser(currentUser)
+                setLoadingAuth(false) // <--- ESTO ES LO QUE ELIMINA LA PANTALLA BLANCA
 
-                // --- CORRECCIÓN CRÍTICA PARA PANTALLA BLANCA ---
-                // 1. Quitamos la pantalla de carga INMEDIATAMENTE.
-                // El usuario verá el dashboard con datos por defecto (0 créditos) por medio segundo.
-                setLoadingAuth(false)
+                // PASO 2: Cargamos los datos "en segundo plano" (sin await que bloquee)
+                fetchUserData(currentUser.uid)
 
-                // 2. Cargamos los datos reales en SEGUNDO PLANO (sin await bloqueante)
-                // fetchUserData actualizará el estado cuando termine.
-                fetchUserData(currentUser.uid).catch(console.error)
-
-                // 3. Backend Ping
+                // PASO 3: Despertamos al servidor "en segundo plano"
                 sendWakeUpPing()
                 syncWithBackend(currentUser.uid)
 
@@ -214,13 +203,10 @@ const AppContent = () => {
             } else {
                 setFirebaseUser(null)
                 setUserState({ isSubscribed: false, credits: 0 })
-                setLoadingAuth(false)
+                setLoadingAuth(false) // También quitamos loading si no hay usuario
             }
         })
-        return () => {
-            unsubscribe()
-            clearTimeout(safetyTimer)
-        }
+        return () => unsubscribe()
     }, [])
 
     const handleBellClick = () => {
