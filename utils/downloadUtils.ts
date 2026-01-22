@@ -3,74 +3,74 @@ import { Filesystem, Directory } from '@capacitor/filesystem'
 import { Toast } from '@capacitor/toast'
 
 /**
- * Descarga un archivo en Web (PC) o Android/iOS.
- * @param source - Puede ser una URL (https://...) o un DataURI (data:image/png;base64,...)
- * @param filename - Nombre del archivo con extensión (ej: archivo.pdf)
+ * Descarga un archivo de forma universal (Web, Android, iOS, Windows)
+ * @param url La URL de la imagen o archivo
+ * @param filename El nombre con el que se guardará (ej: logo.jpg)
  */
-export const downloadFile = async (source: string, filename: string) => {
-    // --- 1. MODO WEB (PC/Browser) ---
-    if (!Capacitor.isNativePlatform()) {
-        try {
+export const downloadFile = async (url: string, filename: string) => {
+    try {
+        // 1. LÓGICA PARA ANDROID / IOS (Nativo)
+        if (Capacitor.isNativePlatform()) {
+            // Convertir la imagen a Base64 porque Filesystem no acepta Blobs directos fácilmente
+            const response = await fetch(url)
+            const blob = await response.blob()
+            const base64Data = (await convertBlobToBase64(blob)) as string
+
+            // Guardar en la carpeta de Documentos del teléfono
+            const savedFile = await Filesystem.writeFile({
+                path: filename,
+                data: base64Data,
+                directory: Directory.Documents,
+                recursive: true,
+            })
+
+            // Mostrar mensaje nativo de éxito
+            await Toast.show({
+                text: `Guardado en Documentos: ${filename}`,
+                duration: 'long',
+            })
+
+            return savedFile.uri
+        }
+
+        // 2. LÓGICA PARA WEB / WINDOWS (Electron)
+        else {
+            const response = await fetch(url)
+            const blob = await response.blob()
+            const blobUrl = window.URL.createObjectURL(blob)
+
             const link = document.createElement('a')
-            link.href = source
+            link.href = blobUrl
             link.download = filename
             document.body.appendChild(link)
             link.click()
             document.body.removeChild(link)
-        } catch (error) {
-            // LANZAMOS EL ERROR PARA QUE LO MANEJE EL MODAL DEL COMPONENTE
-            throw new Error('No se pudo iniciar la descarga en el navegador.')
+            window.URL.revokeObjectURL(blobUrl)
+
+            return true
         }
-        return
-    }
-
-    // --- 2. MODO NATIVO (Android) ---
-    try {
-        let base64Data = ''
-
-        if (source.startsWith('data:')) {
-            // Caso A: Es un archivo generado localmente (PDF, QR, Imagen Optimizada)
-            // Quitamos el prefijo "data:image/png;base64," para guardar solo los datos
-            base64Data = source.split(',')[1]
-        } else {
-            // Caso B: Es una URL de internet (Cloudinary, etc)
-            const response = await fetch(source)
-            const blob = await response.blob()
-            base64Data = (await convertBlobToBase64(blob)) as string
-        }
-
-        // Guardar en la carpeta de Descargas pública
-        await Filesystem.writeFile({
-            path: `Download/${filename}`,
-            data: base64Data,
-            directory: Directory.ExternalStorage, // En Android guarda en /storage/emulated/0/Download/
-            recursive: true,
-        })
-
-        await Toast.show({
-            text: `Guardado en Descargas: ${filename}`,
-            duration: 'long',
-        })
     } catch (error) {
-        console.error('Error descargando:', error)
-        throw new Error(error.message || 'Error al guardar en el dispositivo.')
-        await Toast.show({
-            text: 'Error al guardar. Verifica permisos de almacenamiento.',
-            duration: 'long',
-        })
+        console.error('Error en descarga:', error)
+        if (Capacitor.isNativePlatform()) {
+            await Toast.show({
+                text: 'Error al guardar. Verifica los permisos.',
+                duration: 'long',
+            })
+        }
+        throw error
     }
 }
 
-// Helper interno
+// Función auxiliar para convertir Blob a Base64 (Necesario para Capacitor)
 const convertBlobToBase64 = (blob: Blob) =>
     new Promise((resolve, reject) => {
         const reader = new FileReader()
         reader.onerror = reject
         reader.onload = () => {
+            // removemos el prefijo "data:image/jpeg;base64," para guardar el archivo puro
             const result = reader.result as string
-            // Filesystem necesita el string sin el prefijo "data:..."
-            const base64Raw = result.split(',')[1]
-            resolve(base64Raw)
+            const base64 = result.split(',')[1]
+            resolve(base64)
         }
         reader.readAsDataURL(blob)
     })

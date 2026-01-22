@@ -11,6 +11,7 @@ import {
     AlertCircle,
 } from 'lucide-react'
 import { Button, Card, ConfirmationModal } from '../components/ui'
+import { downloadFile } from '../utils/downloadUtils'
 
 // Interfaz para el objeto de logo
 interface LogoItem {
@@ -242,29 +243,15 @@ const LogoCard = ({
     const handleDownload = async () => {
         try {
             setDownloading(true)
-            // 1. Fetch de la imagen como Blob (evita abrir pestaña)
-            const response = await fetch(url, { mode: 'cors' }) // Pollinations permite CORS
-            const blob = await response.blob()
 
-            // 2. Crear URL temporal
-            const blobUrl = window.URL.createObjectURL(blob)
-
-            // 3. Crear link invisible y clic
-            const link = document.createElement('a')
-            link.href = blobUrl
             // Nombre de archivo limpio
             const safeName = name.replace(/[^a-z0-9]/gi, '_').toLowerCase()
-            link.download = `logo-${safeName}-${index}.jpg`
-            document.body.appendChild(link)
-            link.click()
+            const filename = `logo-${safeName}-${index}.jpg`
 
-            // 4. Limpieza
-            document.body.removeChild(link)
-            window.URL.revokeObjectURL(blobUrl)
+            // Usamos la utilidad universal
+            await downloadFile(url, filename)
         } catch (error) {
             console.error('Error descarga:', error)
-            // Fallback: abrir en nueva pestaña si falla el blob
-            window.open(url, '_blank')
         } finally {
             setDownloading(false)
         }
