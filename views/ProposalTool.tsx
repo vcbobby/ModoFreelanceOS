@@ -11,7 +11,14 @@ import {
     Trash2,
 } from 'lucide-react'
 import { Button, Card, ConfirmationModal } from '../components/ui'
-import { doc, getDoc, setDoc, collection, addDoc } from 'firebase/firestore'
+import {
+    doc,
+    getDoc,
+    setDoc,
+    collection,
+    addDoc,
+    updateDoc,
+} from 'firebase/firestore'
 import { db } from '../firebase'
 import ReactMarkdown from 'react-markdown'
 
@@ -64,7 +71,7 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
         isDanger = false,
         action = () => {},
         confirmText = 'Confirmar',
-        cancelText = 'Cancelar'
+        cancelText = 'Cancelar',
     ) => {
         setModal({
             isOpen: true,
@@ -82,11 +89,25 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
         const loadProfile = async () => {
             if (!userId) return
             try {
-                const docRef = doc(db, 'user_profiles', userId)
+                // Cambiamos 'user_profiles' por 'users'
+                const docRef = doc(db, 'users', userId)
                 const docSnap = await getDoc(docRef)
+
                 if (docSnap.exists()) {
-                    setUserProfile(docSnap.data().profile || '')
+                    const data = docSnap.data()
+                    // Buscamos el campo 'savedProfile' dentro del usuario
+                    // (O 'profile' si prefieres mantener el nombre, pero savedProfile es más claro)
+                    if (data.savedProfile) {
+                        setUserProfile(data.savedProfile)
+                    } else if (data.profile) {
+                        // Retro-compatibilidad por si acaso
+                        setUserProfile(data.profile)
+                    }
                 }
+
+                // INTENTO DE RECUPERACIÓN (Opcional):
+                // Si no hay nada en 'users', intentamos leer una última vez de 'user_profiles'
+                // Solo funcionará si arreglas las reglas momentáneamente, pero mejor migrar ya.
             } catch (e) {
                 console.error('Error cargando perfil', e)
             }
@@ -94,17 +115,29 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
         loadProfile()
     }, [userId])
 
-    // Guardar perfil al salir del campo
+    // ---------------------------------------------------------
+    // CORRECCIÓN 2: GUARDAR EN LA COLECCIÓN 'users'
+    // ---------------------------------------------------------
     const saveProfile = async () => {
-        if (!userId || !userProfile) return
+        if (!userId) return // No guardamos si no hay usuario o texto vacío (opcional)
+
         try {
+            // Usamos updateDoc para no borrar otros campos (créditos, plan, etc)
+            // Guardamos en el campo 'savedProfile' dentro del documento principal del usuario
+            const docRef = doc(db, 'users', userId)
+
+            // Usamos setDoc con merge por si el documento 'users' no existiera (raro, pero seguro)
             await setDoc(
-                doc(db, 'user_profiles', userId),
-                { profile: userProfile },
-                { merge: true }
+                docRef,
+                {
+                    savedProfile: userProfile,
+                },
+                { merge: true },
             )
+
+            console.log('Perfil guardado en users/' + userId)
         } catch (e) {
-            console.error(e)
+            console.error('Error guardando perfil:', e)
         }
     }
 
@@ -119,7 +152,7 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
                 setModal((prev) => ({ ...prev, isOpen: false }))
             },
             'Sí, limpiar',
-            'Cancelar'
+            'Cancelar',
         )
     }
 
@@ -175,8 +208,8 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
                             platform: platform,
                             type: prop.type,
                             content: prop.content,
-                        })
-                    )
+                        }),
+                    ),
                 )
             }
         } catch (e: any) {
@@ -187,7 +220,7 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
                 true,
                 () => setModal((prev) => ({ ...prev, isOpen: false })),
                 'Entendido',
-                ''
+                '',
             )
         } finally {
             setIsGenerating(false)
@@ -414,7 +447,7 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
                                 onClick={() =>
                                     copyToClipboard(
                                         proposals[activeTab].content,
-                                        activeTab
+                                        activeTab,
                                     )
                                 }
                             >
