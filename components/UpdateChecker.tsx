@@ -5,7 +5,7 @@ import { ConfirmationModal } from './ui'
 
 // ESTA ES LA VERSIÓN DE TU CÓDIGO ACTUAL
 // Cuando subes a Vercel, esto se actualiza automáticamente en todas las apps
-const CURRENT_APP_VERSION = '1.3.5'
+const CURRENT_APP_VERSION = '1.3.6'
 
 export const UpdateChecker = () => {
     const [showUpdate, setShowUpdate] = useState(false)
@@ -38,7 +38,7 @@ export const UpdateChecker = () => {
                 // la versión instalada se "actualiza" lógicamente sola.
 
                 console.log(
-                    `Versión Detectada: ${installedVersion} | Nueva: ${serverData.version}`
+                    `Versión Detectada: ${installedVersion} | Nueva: ${serverData.version}`,
                 )
 
                 // 3. Comparar
