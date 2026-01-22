@@ -178,34 +178,42 @@ const AppContent = () => {
         }
     }
     useEffect(() => {
+        // Escuchamos a Firebase
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-            // PASO 1: Si hay usuario, quitamos la pantalla de carga DE INMEDIATO.
-            // No esperamos a fetchUserData ni nada. Prioridad absoluta a la UI.
+            // 1. LÓGICA DE USUARIO
             if (currentUser) {
                 setFirebaseUser(currentUser)
-                setLoadingAuth(false) // <--- ESTO ES LO QUE ELIMINA LA PANTALLA BLANCA
 
-                // PASO 2: Cargamos los datos "en segundo plano" (sin await que bloquee)
+                // 2. ¡AQUI ESTÁ EL CAMBIO!
+                // Quitamos el loading INMEDIATAMENTE. No esperamos a fetchUserData.
+                // La interfaz cargará, y si el nombre/créditos tardan 0.5s en llegar,
+                // el usuario verá los valores por defecto un instante, pero NO una pantalla blanca.
+                setLoadingAuth(false)
+
+                // 3. Carga de datos en segundo plano (Fire and Forget)
                 fetchUserData(currentUser.uid)
 
-                // PASO 3: Despertamos al servidor "en segundo plano"
+                // 4. Ping al servidor (Silencioso)
                 sendWakeUpPing()
                 syncWithBackend(currentUser.uid)
 
-                // Lógica de pagos
+                // Lógica de pagos (si aplica)
                 const urlParams = new URLSearchParams(window.location.search)
                 if (urlParams.get('payment_success') === 'true') {
                     activateProPlan(currentUser.uid)
                 }
 
-                if (currentView === AppView.LANDING)
+                if (currentView === AppView.LANDING) {
                     setCurrentView(AppView.DASHBOARD)
+                }
             } else {
+                // Si no hay usuario, también quitamos el loading de inmediato
                 setFirebaseUser(null)
                 setUserState({ isSubscribed: false, credits: 0 })
-                setLoadingAuth(false) // También quitamos loading si no hay usuario
+                setLoadingAuth(false)
             }
         })
+
         return () => unsubscribe()
     }, [])
 
