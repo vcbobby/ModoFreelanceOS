@@ -178,22 +178,35 @@ const AppContent = () => {
         }
     }
     useEffect(() => {
+        // SAFETY TIMEOUT: Si Firebase tarda más de 2s, mostramos la app igual
+        const safetyTimer = setTimeout(() => {
+            setLoadingAuth(false)
+        }, 2000)
+
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+            // Cancelamos el timer de seguridad porque Firebase ya respondió
+            clearTimeout(safetyTimer)
+
             if (currentUser) {
                 setFirebaseUser(currentUser)
 
-                // 1. Cargar datos visuales RÁPIDO (Solo Firebase)
-                await fetchUserData(currentUser.uid)
+                // --- CORRECCIÓN CRÍTICA PARA PANTALLA BLANCA ---
+                // 1. Quitamos la pantalla de carga INMEDIATAMENTE.
+                // El usuario verá el dashboard con datos por defecto (0 créditos) por medio segundo.
+                setLoadingAuth(false)
 
-                // 2. Despertar al servidor y Sincronizar en SEGUNDO PLANO (Sin await)
-                // Esto permite que la interfaz cargue sin esperar al servidor
+                // 2. Cargamos los datos reales en SEGUNDO PLANO (sin await bloqueante)
+                // fetchUserData actualizará el estado cuando termine.
+                fetchUserData(currentUser.uid).catch(console.error)
+
+                // 3. Backend Ping
                 sendWakeUpPing()
                 syncWithBackend(currentUser.uid)
 
-                // Chequeo de pagos (url params)
+                // Lógica de pagos
                 const urlParams = new URLSearchParams(window.location.search)
                 if (urlParams.get('payment_success') === 'true') {
-                    activateProPlan(currentUser.uid) // Esto no bloquea la carga inicial
+                    activateProPlan(currentUser.uid)
                 }
 
                 if (currentView === AppView.LANDING)
@@ -204,7 +217,10 @@ const AppContent = () => {
                 setLoadingAuth(false)
             }
         })
-        return () => unsubscribe()
+        return () => {
+            unsubscribe()
+            clearTimeout(safetyTimer)
+        }
     }, [])
 
     const handleBellClick = () => {

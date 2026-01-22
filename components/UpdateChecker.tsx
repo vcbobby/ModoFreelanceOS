@@ -2,62 +2,62 @@ import React, { useEffect, useState } from 'react'
 import { Capacitor } from '@capacitor/core'
 import { App } from '@capacitor/app'
 import { ConfirmationModal } from './ui'
-
-// ESTA ES LA VERSIÓN DE TU CÓDIGO ACTUAL
-// Cuando subes a Vercel, esto se actualiza automáticamente en todas las apps
-const CURRENT_APP_VERSION = '1.3.6'
+import packageJson from '../package.json'
 
 export const UpdateChecker = () => {
     const [showUpdate, setShowUpdate] = useState(false)
     const [updateData, setUpdateData] = useState<any>(null)
 
-    // Detectar Electron (Windows)
+    // Detectar plataformas
+    const isAndroid = Capacitor.getPlatform() === 'android'
     const isElectron = navigator.userAgent.toLowerCase().includes(' electron/')
 
+    // --- CAMBIO 1: PON TU DOMINIO REAL AQUÍ ---
+    // Si usas Vercel o Render, pon esa URL exacta (sin barra al final)
+    const APP_DOMAIN = 'https://app.modofreelanceos.com'
+
     useEffect(() => {
+        // --- CAMBIO 2: SI ES WEB NORMAL, NO HACEMOS NADA ---
+        if (!isAndroid && !isElectron) return
+
         const checkVersion = async () => {
             try {
-                // 1. Consultar la versión más reciente en la nube
-                const res = await fetch(`/version.json?t=${Date.now()}`)
+                // Consultamos el JSON al dominio remoto, no local
+                const res = await fetch(
+                    `${APP_DOMAIN}/version.json?t=${Date.now()}`,
+                )
                 const serverData = await res.json()
 
-                let installedVersion = CURRENT_APP_VERSION // Por defecto usamos la del código (Web/Windows)
+                let installedVersion = packageJson.version
 
-                // 2. Si es Android, preguntamos al sistema operativo la versión real del APK
-                if (Capacitor.isNativePlatform()) {
+                if (isAndroid) {
                     const info = await App.getInfo()
                     installedVersion = info.version
-
-                    // Fix para formatos tipo "1.3" vs "1.3.0"
+                    // Normalizar versiones tipo "1.3" a "1.3.0" si es necesario
                     if (installedVersion.split('.').length === 2) {
                         installedVersion += '.0'
                     }
                 }
-                // En Windows (isElectron), nos quedamos con CURRENT_APP_VERSION.
-                // Como la app de Windows carga el código de Vercel, al hacer git push
-                // la versión instalada se "actualiza" lógicamente sola.
 
                 console.log(
-                    `Versión Detectada: ${installedVersion} | Nueva: ${serverData.version}`,
+                    `Instalada: ${installedVersion} | Nueva: ${serverData.version}`,
                 )
 
-                // 3. Comparar
                 if (isNewerVersion(installedVersion, serverData.version)) {
                     setUpdateData(serverData)
                     setShowUpdate(true)
                 }
             } catch (e) {
-                console.error('Error updates', e)
+                console.error('Error verificando actualizaciones:', e)
             }
         }
 
         checkVersion()
-    }, [isElectron])
+    }, [isAndroid, isElectron])
 
     const isNewerVersion = (oldVer: string, newVer: string) => {
         const oldParts = oldVer.split('.').map(Number)
         const newParts = newVer.split('.').map(Number)
-
         for (let i = 0; i < Math.max(oldParts.length, newParts.length); i++) {
             const v1 = oldParts[i] || 0
             const v2 = newParts[i] || 0
@@ -70,12 +70,12 @@ export const UpdateChecker = () => {
     const handleUpdate = () => {
         if (!updateData) return
 
-        if (Capacitor.isNativePlatform()) {
-            // Android: Descargar APK
-            window.open(updateData.apkUrl, '_system')
-        } else if (isElectron) {
-            // Windows: Descargar EXE
-            window.open(updateData.exeUrl, '_blank')
+        const url = isAndroid ? updateData.apkUrl : updateData.exeUrl
+
+        if (url) {
+            // --- CAMBIO 3: SIEMPRE USAR _SYSTEM PARA DESCARGAS ---
+            // Esto obliga a Android y Windows a abrir Chrome/Edge para descargar
+            window.open(url, '_system')
         }
     }
 
@@ -88,7 +88,7 @@ export const UpdateChecker = () => {
             onConfirm={handleUpdate}
             title="¡Actualización Disponible! 🚀"
             message={updateData?.message || 'Hay una nueva versión de la app.'}
-            confirmText="Descargar e Instalar"
+            confirmText="Descargar Ahora"
             cancelText={updateData?.critical ? '' : 'Más tarde'}
             isDanger={false}
         />
