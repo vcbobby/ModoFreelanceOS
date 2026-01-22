@@ -179,27 +179,30 @@ const AppContent = () => {
     }
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-            setFirebaseUser(currentUser)
-
             if (currentUser) {
-                // Aquí llamamos a la nueva función optimizada
+                setFirebaseUser(currentUser)
+
+                // 1. Cargar datos visuales RÁPIDO (Solo Firebase)
                 await fetchUserData(currentUser.uid)
 
-                // El ping sigue siendo útil para despertar el servidor si no se ha llamado aún
+                // 2. Despertar al servidor y Sincronizar en SEGUNDO PLANO (Sin await)
+                // Esto permite que la interfaz cargue sin esperar al servidor
                 sendWakeUpPing()
+                syncWithBackend(currentUser.uid)
 
+                // Chequeo de pagos (url params)
                 const urlParams = new URLSearchParams(window.location.search)
                 if (urlParams.get('payment_success') === 'true') {
-                    await activateProPlan(currentUser.uid)
+                    activateProPlan(currentUser.uid) // Esto no bloquea la carga inicial
                 }
 
                 if (currentView === AppView.LANDING)
                     setCurrentView(AppView.DASHBOARD)
             } else {
+                setFirebaseUser(null)
                 setUserState({ isSubscribed: false, credits: 0 })
-                setLoadingAuth(false) // Importante cerrar loading si no hay user
+                setLoadingAuth(false)
             }
-            // Nota: setLoadingAuth(false) ya se llama dentro de fetchUserData para usuarios logueados
         })
         return () => unsubscribe()
     }, [])
@@ -237,122 +240,76 @@ const AppContent = () => {
     const fetchUserData = async (uid: string) => {
         try {
             const docRef = doc(db, 'users', uid)
-            const docSnap = await getDoc(docRef)
+            const docSnap = await getDoc(docRef) // Esto tarda milisegundos
             const now = Date.now()
             const oneWeekMs = 7 * 24 * 60 * 60 * 1000
 
-            // VARIABLES PARA EL ESTADO FINAL
+            // Valores por defecto
             let finalIsSubscribed = false
-            let finalCredits = 0
+            let finalCredits = 3
             let finalSubEnd = null
             let finalLastReset = now
 
             if (docSnap.exists()) {
-                // --- 1. USUARIO EXISTENTE ---
                 const data = docSnap.data()
+                setDisplayName(
+                    data.displayName ||
+                        firebaseUser?.email?.split('@')[0] ||
+                        'Usuario',
+                )
 
-                // Recuperar nombre
-                const nameFromDb =
-                    data.displayName || firebaseUser?.email?.split('@')[0]
-                setDisplayName(nameFromDb)
-
-                // Datos base
+                // Lógica local rápida
                 let isSub = data.isSubscribed || false
                 let credits = data.credits !== undefined ? data.credits : 0
                 let subEnd = data.subscriptionEnd
-                let lastReset = data.lastReset
+                let lastReset = data.lastReset || now
 
-                // Si por alguna razón no tiene lastReset, se lo ponemos hoy
-                if (!lastReset) {
-                    const createdTime = data.createdAt
-                        ? new Date(data.createdAt).getTime()
-                        : now
-                    lastReset = createdTime
-                    await updateDoc(docRef, { lastReset: createdTime })
+                // Verificar caducidad localmente
+                if (isSub && subEnd && now > subEnd) {
+                    isSub = false
+                    credits = 3
+                    lastReset = now
+                    subEnd = null
+                    // Actualizamos Firebase sin bloquear
+                    updateDoc(docRef, {
+                        isSubscribed: false,
+                        credits: 3,
+                        lastReset: now,
+                        subscriptionEnd: null,
+                    })
+                    showAlert('Plan Vencido', 'Tu plan PRO ha finalizado.')
                 }
 
-                // LÓGICA DE REINICIO SEMANAL (SOLO GRATUITOS)
-                if (!isSub) {
-                    const timeDiff = now - lastReset
-                    if (timeDiff > oneWeekMs) {
-                        credits = 3
-                        lastReset = now
-                        await updateDoc(docRef, {
-                            credits: 3,
-                            lastReset: now,
-                        })
-                    }
-                }
-
-                // LÓGICA DE VENCIMIENTO DE SUSCRIPCIÓN (SOLO PRO)
-                if (isSub) {
-                    const expirationTime = subEnd || 0
-                    if (now > expirationTime) {
-                        // ¡SE ACABÓ EL PRO!
-                        isSub = false
-                        credits = 3
-                        lastReset = now
-                        subEnd = null
-
-                        await updateDoc(docRef, {
-                            isSubscribed: false,
-                            credits: 3,
-                            lastReset: now,
-                            subscriptionEnd: null,
-                        })
-
-                        // Mostramos la alerta (Esta era la parte crítica que faltaba)
-                        showAlert(
-                            'Plan Vencido',
-                            'Tu plan PRO ha finalizado. Has vuelto al plan gratuito con 3 créditos semanales.',
-                        )
-                    }
-                }
-
-                // Asignamos valores finales
                 finalIsSubscribed = isSub
                 finalCredits = credits
                 finalSubEnd = subEnd
                 finalLastReset = lastReset
             } else {
-                // --- 2. USUARIO NUEVO (CREACIÓN) ---
-                // Esta parte faltaba en el código nuevo y por eso fallaba con usuarios nuevos
-                const initialData = {
+                // Crear usuario si no existe (rápido)
+                await setDoc(docRef, {
                     email: auth.currentUser?.email,
                     credits: 3,
                     isSubscribed: false,
                     createdAt: new Date().toISOString(),
                     lastReset: now,
-                    displayName: auth.currentUser?.displayName || '',
                     signupPlatform: Capacitor.isNativePlatform()
                         ? 'Mobile'
                         : 'Web',
-                }
-                await setDoc(docRef, initialData)
-
-                finalIsSubscribed = false
-                finalCredits = 3
-                finalLastReset = now
+                })
             }
 
-            // ACTUALIZAMOS LA INTERFAZ DE INMEDIATO
+            // ACTUALIZAR ESTADO VISUAL DE INMEDIATO
             setUserState({
                 isSubscribed: finalIsSubscribed,
                 credits: finalCredits,
                 subscriptionEnd: finalSubEnd,
                 nextReset: finalLastReset + oneWeekMs,
             })
-
-            // Quitamos pantalla de carga
-            setLoadingAuth(false)
-
-            // --- 3. SINCRONIZACIÓN SILENCIOSA ---
-            // Llamamos al backend solo para analíticas y verificar integridad.
-            // Si el backend falla, no importa, porque ya hicimos la lógica crítica arriba.
-            syncWithBackend(uid)
         } catch (error) {
             console.error('Error fetchUserData:', error)
-            setLoadingAuth(false) // Asegurar que no se quede cargando infinito si hay error
+        } finally {
+            // IMPORTANTE: Quitamos el loading AQUÍ, pase lo que pase
+            setLoadingAuth(false)
         }
     }
 
