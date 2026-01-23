@@ -28,7 +28,7 @@ const sanitizeWorkanaContent = (text: string): string => {
     })
     clean = clean.replace(
         /[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}/g,
-        '[Contacto externo eliminado]'
+        '[Contacto externo eliminado]',
     )
     clean = clean.replace(/@\w+/g, '')
     clean = clean.replace(/\b[\w-]+\.(com|es|net|js|org|io|co|ar|mx)\b/gi, '')
@@ -41,7 +41,7 @@ export const generateProposals = async (
     jobDescription: string,
     userProfile: string,
     platform: string,
-    clientName?: string
+    clientName?: string,
 ): Promise<Proposal[]> => {
     try {
         const model = genAI.getGenerativeModel({
@@ -166,7 +166,7 @@ export const generateProposals = async (
 // --- FUNCIÓN 2: ANALIZAR DOCUMENTOS ---
 export const analyzeDocument = async (
     text: string,
-    mode: 'resumen' | 'riesgos' | 'accion' | 'mejora'
+    mode: 'resumen' | 'riesgos' | 'accion' | 'mejora',
 ): Promise<string> => {
     try {
         const model = genAI.getGenerativeModel({ model: MODEL_NAME })
@@ -187,7 +187,7 @@ export const analyzeDocument = async (
 export const analyzeFinancialHealth = async (
     transactions: any[],
     summary: { income: number; expense: number; balance: number },
-    pending: { toCollect: number; toPay: number }
+    pending: { toCollect: number; toPay: number },
 ): Promise<string> => {
     try {
         const model = genAI.getGenerativeModel({ model: MODEL_NAME })
@@ -207,7 +207,7 @@ export const analyzeFinancialHealth = async (
                 estado: t.status === 'pending' ? 'PENDIENTE' : 'REAL',
                 monto: t.amount,
                 descripcion: t.description,
-            }))
+            })),
         )
 
         const prompt = `
@@ -240,7 +240,7 @@ export const chatWithAssistant = async (
         history: string
         currentTime: string
         currentDate: string
-    }
+    },
 ): Promise<string> => {
     try {
         // 1. Inicializamos el modelo SIN systemInstruction en la config
@@ -269,7 +269,7 @@ export const chatWithAssistant = async (
 
         // 2. Creamos el contexto como un mensaje de usuario inicial "Falso"
         const systemContext = `
-            Eres "FreelanceBot", el asistente OPERATIVO de ModoFreelanceOS.
+            Eres "Freency", el asistente OPERATIVO de ModoFreelanceOS.
             
             🔴 FECHA/HORA ACTUAL: ${contextData.currentDate} ${contextData.currentTime}
 
@@ -290,6 +290,11 @@ export const chatWithAssistant = async (
             INSTRUCCIONES:
             - Responde brevemente.
             - Usa los datos provistos.
+            Si el usuario pide crear un logo, responde SOLO con este JSON: { "action": "generate_logo", "name": "Nombre", "style": "Estilo", "details": "Detalles" }"
+>
+> "Si el usuario pide buscar trabajo, responde SOLO con: { "action": "search_jobs", "query": "terminos de busqueda" }"
+>
+> "Si el usuario pide crear un curso o aprender algo, responde SOLO con: { "action": "create_course", "topic": "Tema", "level": "Nivel" }
         `
 
         // 3. Construimos el historial formateado para el SDK
