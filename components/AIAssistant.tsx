@@ -593,15 +593,26 @@ WEB DEL USUARIO:
                 </div>
 
                 {/* BOTÓN FLOTANTE */}
+                {/* BOTÓN FLOTANTE */}
                 <button
                     onClick={() => setIsOpen(!isOpen)}
-                    className={`pointer-events-auto p-4 rounded-full shadow-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white transition-all duration-300 group hover:shadow-indigo-500/30 ${
+                    className={`pointer-events-auto shadow-2xl transition-all duration-300 group hover:shadow-indigo-500/40 hover:-translate-y-1 relative ${
                         isOpen
                             ? 'rotate-90 scale-0 opacity-0'
                             : 'scale-100 opacity-100'
                     }`}
                 >
-                    <Bot className="w-7 h-7 group-hover:animate-pulse" />
+                    {/* Contenedor de la imagen redonda */}
+                    <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 bg-indigo-600">
+                        <img
+                            src={FREENCY_AVATAR}
+                            alt="Chat"
+                            className="w-full h-full object-cover"
+                        />
+                    </div>
+
+                    {/* Indicador de estado (punto verde) */}
+                    <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></span>
                 </button>
                 {isOpen && (
                     <button

@@ -269,7 +269,7 @@ export const chatWithAssistant = async (
 
         // 2. Creamos el contexto como un mensaje de usuario inicial "Falso"
         const systemContext = `
-            Eres "Freency", el asistente OPERATIVO de ModoFreelanceOS.
+            Tu nombre es **Freency**. Eres la asistente virtual avanzada de ModoFreelanceOS. Tienes personalidad: eres entusiasta, profesional, eficiente y un poco divertida (usas emojis). Tu misión es ayudar al freelancer a gestionar su negocio.
             
             🔴 FECHA/HORA ACTUAL: ${contextData.currentDate} ${contextData.currentTime}
 
