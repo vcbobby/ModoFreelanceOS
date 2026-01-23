@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react'
 import {
     LayoutDashboard,
     PenTool,
@@ -160,6 +160,15 @@ const AppContent = () => {
     const showAlert = (title: string, message: string) => {
         setAlertModal({ isOpen: true, title, message })
     }
+    const sidebarRef = useRef<HTMLElement>(null) // Referencia al elemento <nav>
+    const sidebarScrollPosition = useRef(0) // Memoria para guardar la posición
+
+    // Se usa useLayoutEffect para que el ojo humano no note el salto
+    useLayoutEffect(() => {
+        if (sidebarRef.current) {
+            sidebarRef.current.scrollTop = sidebarScrollPosition.current
+        }
+    }, [currentView])
     const { theme, toggleTheme } = useTheme()
     const sendWakeUpPing = async () => {
         try {
@@ -810,7 +819,15 @@ const AppContent = () => {
                     </h1>
                 </div>
 
-                <nav className="flex-1 px-4 space-y-2 overflow-y-auto custom-scrollbar min-h-0">
+                <nav
+                    ref={sidebarRef} // 1. Conectamos la referencia
+                    onScroll={(e) => {
+                        // 2. Guardamos la posición cada vez que el usuario hace scroll
+                        sidebarScrollPosition.current =
+                            e.currentTarget.scrollTop
+                    }}
+                    className="flex-1 px-4 space-y-2 overflow-y-auto custom-scrollbar min-h-0"
+                >
                     <NavItem
                         icon={<LayoutDashboard />}
                         label="Inicio"
