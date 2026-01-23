@@ -238,13 +238,12 @@ export const chatWithAssistant = async (
         agenda: string
         notes: string
         history: string
+        portfolio: string // Asegúrate de incluir esto si lo usas
         currentTime: string
         currentDate: string
     },
 ): Promise<string> => {
     try {
-        // 1. Inicializamos el modelo SIN systemInstruction en la config
-        // (Esto evita el error de tipos si la librería es vieja)
         const model = genAI.getGenerativeModel({
             model: MODEL_NAME,
             safetySettings: [
@@ -267,48 +266,49 @@ export const chatWithAssistant = async (
             ],
         })
 
-        // 2. Creamos el contexto como un mensaje de usuario inicial "Falso"
+        // --- PROMPT DE SISTEMA LIMPIO ---
         const systemContext = `
-            Tu nombre es **Freency**. Eres la asistente virtual avanzada de ModoFreelanceOS. Tienes personalidad: eres entusiasta, profesional, eficiente y un poco divertida (usas emojis). Tu misión es ayudar al freelancer a gestionar su negocio.
-            
-            🔴 FECHA/HORA ACTUAL: ${contextData.currentDate} ${contextData.currentTime}
+        IDENTIDAD:
+        Tu nombre es **Freency**. Eres la asistente virtual avanzada de ModoFreelanceOS.
+        Personalidad: Entusiasta, profesional, eficiente y usas emojis.
+        
+        🔴 FECHA/HORA ACTUAL: ${contextData.currentDate} ${
+            contextData.currentTime
+        }
 
-            TUS FUENTES DE INFORMACIÓN:
-            
-            1. 📜 HISTORIAL DE TRABAJO (IMPORTANTE):
-            ${contextData.history}
-            *Instrucción:* Si preguntan por trabajos pasados (logos, facturas, propuestas), BUSCA AQUÍ.
+        TUS FUENTES DE DATOS (CONTEXTO):
+        1. 📜 HISTORIAL: ${contextData.history}
+        2. 💰 FINANZAS: ${contextData.finances}
+        3. 📅 AGENDA: ${contextData.agenda}
+        4. 📌 NOTAS: ${contextData.notes}
+        5. 🌐 PORTAFOLIO: ${contextData.portfolio || 'No disponible'}
 
-            2. 💰 FINANZAS: ${contextData.finances}
-            3. 📅 AGENDA: ${contextData.agenda}
-            4. 📌 NOTAS: ${contextData.notes}
+        🛑 REGLAS DE SEGURIDAD (SCOPE STRICTO):
+        1. **SOLO** respondes sobre: Datos del usuario, funciones de la App y Negocios Freelance.
+        2. **PROHIBIDO** responder sobre: Cultura general, Política, Religión, Recetas, Deportes, etc.
+        3. SI PREGUNTAN ALGO FUERA DE CONTEXTO: Responde: "Lo siento, mi sistema está diseñado exclusivamente para ayudarte con tu negocio freelance y las herramientas de esta app. 🚀"
 
-            HERRAMIENTAS (Responde SOLO con JSON si piden acción):
-            - Agendar: { "action": "create_event", "title": "...", "date": "YYYY-MM-DD", "time": "HH:MM", "desc": "..." }
-            - Nota: { "action": "create_note", "title": "...", "content": "..." }
-            
-            INSTRUCCIONES:
-            - Responde brevemente.
-            - Usa los datos provistos.
-            Si el usuario pide crear un logo, responde SOLO con este JSON: { "action": "generate_logo", "name": "Nombre", "style": "Estilo", "details": "Detalles" }"
->
-> "Si el usuario pide buscar trabajo, responde SOLO con: { "action": "search_jobs", "query": "terminos de busqueda" }"
->
-> "Si el usuario pide crear un curso o aprender algo, responde SOLO con: { "action": "create_course", "topic": "Tema", "level": "Nivel" }
+        🛠️ HERRAMIENTAS (JSON):
+        Si el usuario pide una acción, NO respondas texto. Responde SOLO con el JSON exacto:
+
+        - Crear Evento: { "action": "create_event", "title": "...", "date": "YYYY-MM-DD", "time": "HH:MM", "desc": "..." }
+        - Crear Nota: { "action": "create_note", "title": "...", "content": "..." }
+        - Generar Logo: { "action": "generate_logo", "name": "Marca", "style": "Estilo", "details": "Detalles" }
+        - Buscar Trabajo: { "action": "search_jobs", "query": "termino" }
+        - Crear Curso: { "action": "create_course", "topic": "Tema", "level": "Nivel" }
         `
 
-        // 3. Construimos el historial formateado para el SDK
-        // Convertimos tu historial simple ({role, text}) al formato de Google ({role, parts: [{text}]})
+        // Construcción del historial para Gemini
         const chatHistory = [
             {
                 role: 'user',
-                parts: [{ text: systemContext }], // Inyectamos el sistema aquí
+                parts: [{ text: systemContext }],
             },
             {
                 role: 'model',
                 parts: [
                     {
-                        text: 'Entendido. Tengo acceso a tus datos e historial. ¿En qué te ayudo?',
+                        text: 'Entendido. Soy Freency, tengo acceso a tus datos y me limitaré a temas de negocio.',
                     },
                 ],
             },
@@ -318,21 +318,15 @@ export const chatWithAssistant = async (
             })),
         ]
 
-        // 4. Iniciamos el chat con el historial ya construido
         const chat = model.startChat({
             history: chatHistory,
-            generationConfig: { maxOutputTokens: 600 },
+            generationConfig: { maxOutputTokens: 800 },
         })
 
-        // 5. Enviamos el mensaje nuevo
         const result = await chat.sendMessage(message)
         const responseText = result.response.text()
 
-        if (!responseText || responseText.trim() === '') {
-            return 'No pude generar una respuesta. Por favor intenta de nuevo.'
-        }
-
-        return responseText
+        return responseText || 'No pude generar una respuesta.'
     } catch (error) {
         console.error('Error en chat asistente:', error)
         return 'Tuve un problema de conexión. Intenta de nuevo.'
