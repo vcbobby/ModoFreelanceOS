@@ -68,7 +68,7 @@ export const PortfolioSearch = () => {
                 <Search className="absolute left-3 w-5 h-5 text-slate-400" />
                 <input
                     type="text"
-                    placeholder="Ej: victor-castillo"
+                    placeholder="Ej: user-name"
                     className="w-full pl-10 pr-12 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 transition-all dark:text-white"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
@@ -412,7 +412,7 @@ export const LandingModern: React.FC = () => {
             </header>
             {/* Social Proof */}
 
-            <section className="relative mt-12 pb-32 px-6 text-center flex flex-col justify-center">
+            <section className="relative mt-32 pb-32 px-6 text-center flex flex-col justify-center">
                 {/* CORRECCIÓN AQUI: Agregado 'left-0' y 'z-20' */}
                 <div className="absolute bottom-0 left-0 w-full border-t border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-black/20 py-8 backdrop-blur-sm flex flex-col items-center justify-center text-center px-4 z-20">
                     {/* Agregado 'mx-auto' para asegurar centrado del bloque */}
