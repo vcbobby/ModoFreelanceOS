@@ -412,10 +412,13 @@ export const LandingModern: React.FC = () => {
             </header>
             {/* Social Proof */}
 
-            <section className="relative pt-40 pb-32 px-6 text-center overflow-hidden min-h-screen flex flex-col justify-center">
-                <div className="absolute bottom-0 w-full border-t border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-black/20 py-8 backdrop-blur-sm flex flex-col items-center text-center px-4">
-                    {/* Envolvemos el buscador para asegurar que no se estire de más y esté centrado */}
-                    <div className="w-full max-w-md mb-8">
+            <section className="relative pb-32 px-6 text-center overflow-hidden min-h-screen flex flex-col justify-center">
+                {/* ... resto de tu contenido de la sección ... */}
+
+                {/* CORRECCIÓN AQUI: Agregado 'left-0' y 'z-20' */}
+                <div className="absolute bottom-0 left-0 w-full border-t border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-black/20 py-8 backdrop-blur-sm flex flex-col items-center justify-center text-center px-4 z-20">
+                    {/* Agregado 'mx-auto' para asegurar centrado del bloque */}
+                    <div className="w-full max-w-md mb-8 mx-auto">
                         <PortfolioSearch />
                     </div>
 
