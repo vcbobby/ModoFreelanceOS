@@ -33,10 +33,56 @@ import {
     MessageCircle,
     Briefcase,
     BarChart,
+    Search,
 } from 'lucide-react'
 import { Button, ConfirmationModal } from '../components/ui'
 import { TERMS_AND_CONDITIONS2, PRIVACY_POLICY2 } from '../data/legalTexts' // Asegúrate de tener este archivo (te lo doy abajo)
 
+export const PortfolioSearch = () => {
+    const [username, setUsername] = useState('')
+
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!username.trim()) return
+
+        // Limpiamos el input para evitar caracteres raros
+        const cleanSlug = username.trim().toLowerCase().replace(/\s+/g, '-')
+
+        // Redirigimos al perfil público
+        // Esto abrirá: app.modofreelanceos.com/p/nombre-usuario
+        window.location.href = `/p/${cleanSlug}`
+    }
+    return (
+        <div className="w-full max-w-md mx-auto mt-8 p-6 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700">
+            <h3 className="text-center text-lg font-bold text-slate-800 dark:text-white mb-2">
+                ¿Buscas el portafolio de un freelancer?
+            </h3>
+            <p className="text-center text-sm text-slate-500 mb-4">
+                Ingresa su nombre de usuario o ID para ver su trabajo.
+            </p>
+
+            <form
+                onSubmit={handleSearch}
+                className="relative flex items-center"
+            >
+                <Search className="absolute left-3 w-5 h-5 text-slate-400" />
+                <input
+                    type="text"
+                    placeholder="Ej: victor-castillo"
+                    className="w-full pl-10 pr-12 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 transition-all dark:text-white"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                />
+                <button
+                    type="submit"
+                    className="absolute right-2 p-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg transition-colors"
+                >
+                    <ArrowRight className="w-4 h-4" />
+                </button>
+            </form>
+        </div>
+    )
+}
 // --- FONDO DINÁMICO (EFECTO MOUSE + SCROLL) ---
 const HeroBackground = () => {
     const mouseX = useMotionValue(0)
@@ -365,22 +411,31 @@ export const LandingModern: React.FC = () => {
                 </motion.div>
 
                 {/* Social Proof */}
-                <div className="absolute bottom-0 w-full border-t border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-black/20 py-8 backdrop-blur-sm">
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">
+                <div className="absolute bottom-0 w-full border-t border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-black/20 py-8 backdrop-blur-sm flex flex-col items-center text-center px-4">
+                    {/* Envolvemos el buscador para asegurar que no se estire de más y esté centrado */}
+                    <div className="w-full max-w-md mb-8">
+                        <PortfolioSearch />
+                    </div>
+
+                    <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">
                         Funciona para plataformas como
                     </p>
-                    <div className="flex flex-wrap justify-center gap-8 md:gap-16 opacity-60 dark:opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500">
-                        <div className="flex items-center gap-2 text-xl font-bold">
-                            <Globe className="w-6 h-6" /> Fiverr
+
+                    <div className="flex flex-wrap justify-center gap-6 md:gap-16 opacity-60 dark:opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500">
+                        <div className="flex items-center gap-2 text-lg md:text-xl font-bold">
+                            <Globe className="w-5 h-5 md:w-6 md:h-6" /> Fiverr
                         </div>
-                        <div className="flex items-center gap-2 text-xl font-bold">
-                            <Briefcase className="w-6 h-6" /> Upwork
+                        <div className="flex items-center gap-2 text-lg md:text-xl font-bold">
+                            <Briefcase className="w-5 h-5 md:w-6 md:h-6" />{' '}
+                            Upwork
                         </div>
-                        <div className="flex items-center gap-2 text-xl font-bold">
-                            <Monitor className="w-6 h-6" /> Freelancer
+                        <div className="flex items-center gap-2 text-lg md:text-xl font-bold">
+                            <Monitor className="w-5 h-5 md:w-6 md:h-6" />{' '}
+                            Freelancer
                         </div>
-                        <div className="flex items-center gap-2 text-xl font-bold">
-                            <LayoutDashboard className="w-6 h-6" /> Workana
+                        <div className="flex items-center gap-2 text-lg md:text-xl font-bold">
+                            <LayoutDashboard className="w-5 h-5 md:w-6 md:h-6" />{' '}
+                            Workana
                         </div>
                     </div>
                 </div>
