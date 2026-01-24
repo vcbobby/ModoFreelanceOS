@@ -474,7 +474,7 @@ export const LandingModern: React.FC = () => {
             </section>
 
             {/* FEATURES */}
-            <section id="features" className="py-24 px-6">
+            <section id="features" className="py-24 px-6 transform-gpu">
                 <div className="container mx-auto max-w-6xl">
                     <div className="text-center mb-20 max-w-3xl mx-auto">
                         <span className="text-brand-600 font-bold uppercase tracking-widest text-xs">
@@ -536,8 +536,11 @@ export const LandingModern: React.FC = () => {
                         ].map((f, i) => (
                             <motion.div
                                 key={i}
+                                whileInView={{ opacity: 1, y: 0 }} // Se hace visible al entrar
+                                viewport={{ once: true, margin: '-50px' }} // ¡IMPORTANTE! once: true evita que se repita/borre
+                                transition={{ duration: 0.5, delay: i * 0.1 }} // Pequeño delay escalonado
                                 whileHover={{ y: -5 }}
-                                className="p-8 rounded-3xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:shadow-lg transition-all"
+                                className="p-8 rounded-3xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:shadow-lg transition-all will-change-transform"
                             >
                                 <div
                                     className={`w-12 h-12 rounded-xl flex items-center justify-center mb-6 ${f.bg} ${f.color}`}
@@ -559,7 +562,7 @@ export const LandingModern: React.FC = () => {
             {/* PRICING */}
             <section
                 id="pricing"
-                className="py-24 px-6 bg-slate-50 dark:bg-black/50"
+                className="py-24 px-6 bg-slate-50 dark:bg-black/50 transform-gpu"
             >
                 <div className="container mx-auto max-w-5xl">
                     <div className="text-center mb-16">
@@ -573,77 +576,92 @@ export const LandingModern: React.FC = () => {
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-8 items-center max-w-4xl mx-auto">
-                        <div className="p-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:shadow-xl transition-shadow">
-                            <h3 className="text-xl font-bold mb-2">
-                                Freelancer Starter
-                            </h3>
-                            <div className="text-4xl font-black mb-6">
-                                $0{' '}
-                                <span className="text-lg font-normal text-slate-500">
-                                    /mes
-                                </span>
+                        <motion.div
+                            initial={{ opacity: 0, x: -20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }} // <--- ESTO EVITA EL PARPADEO
+                            transition={{ duration: 0.5 }}
+                            className="p-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:shadow-xl transition-shadow"
+                        >
+                            <div className="p-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:shadow-xl transition-shadow">
+                                <h3 className="text-xl font-bold mb-2">
+                                    Freelancer Starter
+                                </h3>
+                                <div className="text-4xl font-black mb-6">
+                                    $0{' '}
+                                    <span className="text-lg font-normal text-slate-500">
+                                        /mes
+                                    </span>
+                                </div>
+                                <ul className="space-y-4 mb-8 text-sm text-slate-600 dark:text-slate-300">
+                                    <li className="flex gap-2">
+                                        <Check className="w-5 h-5 text-green-500" />{' '}
+                                        3 Créditos IA Semanales
+                                    </li>
+                                    <li className="flex gap-2">
+                                        <Check className="w-5 h-5 text-green-500" />{' '}
+                                        Buscador de Trabajo (Retraso 24h)
+                                    </li>
+                                    <li className="flex gap-2">
+                                        <Check className="w-5 h-5 text-green-500" />{' '}
+                                        Generador de CV Básico
+                                    </li>
+                                </ul>
+                                <Button
+                                    onClick={handleLogin}
+                                    variant="outline"
+                                    className="w-full border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
+                                >
+                                    Crear Cuenta Gratis
+                                </Button>
                             </div>
-                            <ul className="space-y-4 mb-8 text-sm text-slate-600 dark:text-slate-300">
-                                <li className="flex gap-2">
-                                    <Check className="w-5 h-5 text-green-500" />{' '}
-                                    3 Créditos IA Semanales
-                                </li>
-                                <li className="flex gap-2">
-                                    <Check className="w-5 h-5 text-green-500" />{' '}
-                                    Buscador de Trabajo (Retraso 24h)
-                                </li>
-                                <li className="flex gap-2">
-                                    <Check className="w-5 h-5 text-green-500" />{' '}
-                                    Generador de CV Básico
-                                </li>
-                            </ul>
-                            <Button
-                                onClick={handleLogin}
-                                variant="outline"
-                                className="w-full border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
-                            >
-                                Crear Cuenta Gratis
-                            </Button>
-                        </div>
-
-                        <div className="p-8 rounded-3xl border-2 border-brand-500 bg-white dark:bg-slate-900 relative shadow-2xl transform md:scale-105">
-                            <div className="absolute top-0 right-0 bg-brand-500 text-white text-xs font-bold px-3 py-1 rounded-bl-xl">
-                                MÁS POPULAR
+                        </motion.div>
+                        <motion.div
+                            initial={{ opacity: 0, x: 20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }} // <--- ESTO EVITA EL PARPADEO
+                            transition={{ duration: 0.5, delay: 0.2 }}
+                            className="p-8 rounded-3xl border-2 border-brand-500 bg-white dark:bg-slate-900 relative shadow-2xl transform md:scale-105"
+                        >
+                            <div className="p-8 rounded-3xl border-2 border-brand-500 bg-white dark:bg-slate-900 relative shadow-2xl transform md:scale-105">
+                                <div className="absolute top-0 right-0 bg-brand-500 text-white text-xs font-bold px-3 py-1 rounded-bl-xl">
+                                    MÁS POPULAR
+                                </div>
+                                <h3 className="text-xl font-bold mb-2">
+                                    Freelancer PRO
+                                </h3>
+                                <div className="text-4xl font-black mb-6">
+                                    $10{' '}
+                                    <span className="text-lg font-normal text-slate-500">
+                                        /mes
+                                    </span>
+                                </div>
+                                <ul className="space-y-4 mb-8 text-sm font-medium">
+                                    <li className="flex gap-2">
+                                        <CheckCircle className="w-5 h-5 text-brand-500" />{' '}
+                                        <strong>Créditos IA ILIMITADOS</strong>
+                                    </li>
+                                    <li className="flex gap-2">
+                                        <CheckCircle className="w-5 h-5 text-brand-500" />{' '}
+                                        Ofertas de Trabajo en Tiempo Real
+                                    </li>
+                                    <li className="flex gap-2">
+                                        <CheckCircle className="w-5 h-5 text-brand-500" />{' '}
+                                        Web Builder (Portafolio Online)
+                                    </li>
+                                    <li className="flex gap-2">
+                                        <CheckCircle className="w-5 h-5 text-brand-500" />{' '}
+                                        Asistente Personal 24/7
+                                    </li>
+                                </ul>
+                                <Button
+                                    onClick={handleLogin}
+                                    className="w-full bg-brand-600 hover:bg-brand-500 text-white font-bold h-12 shadow-lg shadow-brand-500/20"
+                                >
+                                    Comenzar Prueba
+                                </Button>
                             </div>
-                            <h3 className="text-xl font-bold mb-2">
-                                Freelancer PRO
-                            </h3>
-                            <div className="text-4xl font-black mb-6">
-                                $10{' '}
-                                <span className="text-lg font-normal text-slate-500">
-                                    /mes
-                                </span>
-                            </div>
-                            <ul className="space-y-4 mb-8 text-sm font-medium">
-                                <li className="flex gap-2">
-                                    <CheckCircle className="w-5 h-5 text-brand-500" />{' '}
-                                    <strong>Créditos IA ILIMITADOS</strong>
-                                </li>
-                                <li className="flex gap-2">
-                                    <CheckCircle className="w-5 h-5 text-brand-500" />{' '}
-                                    Ofertas de Trabajo en Tiempo Real
-                                </li>
-                                <li className="flex gap-2">
-                                    <CheckCircle className="w-5 h-5 text-brand-500" />{' '}
-                                    Web Builder (Portafolio Online)
-                                </li>
-                                <li className="flex gap-2">
-                                    <CheckCircle className="w-5 h-5 text-brand-500" />{' '}
-                                    Asistente Personal 24/7
-                                </li>
-                            </ul>
-                            <Button
-                                onClick={handleLogin}
-                                className="w-full bg-brand-600 hover:bg-brand-500 text-white font-bold h-12 shadow-lg shadow-brand-500/20"
-                            >
-                                Comenzar Prueba
-                            </Button>
-                        </div>
+                        </motion.div>
                     </div>
                 </div>
             </section>

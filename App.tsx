@@ -1097,7 +1097,7 @@ const AppContent = () => {
                 </div>
             </aside>
 
-            <main className="flex-1 overflow-auto pt-16 md:pt-0">
+            <main className="flex-1 overflow-auto pt-16 md:pt-0 overscroll-none transform-gpu">
                 <div className="max-w-6xl mx-auto p-6 md:p-12">
                     {renderContent()}
                 </div>
