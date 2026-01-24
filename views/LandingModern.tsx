@@ -412,9 +412,7 @@ export const LandingModern: React.FC = () => {
             </header>
             {/* Social Proof */}
 
-            <section className="relative pb-32 px-6 text-center overflow-hidden min-h-screen flex flex-col justify-center">
-                {/* ... resto de tu contenido de la sección ... */}
-
+            <section className="relative pb-32 px-6 text-center flex flex-col justify-center">
                 {/* CORRECCIÓN AQUI: Agregado 'left-0' y 'z-20' */}
                 <div className="absolute bottom-0 left-0 w-full border-t border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-black/20 py-8 backdrop-blur-sm flex flex-col items-center justify-center text-center px-4 z-20">
                     {/* Agregado 'mx-auto' para asegurar centrado del bloque */}
