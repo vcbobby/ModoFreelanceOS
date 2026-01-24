@@ -583,38 +583,36 @@ export const LandingModern: React.FC = () => {
                             transition={{ duration: 0.5 }}
                             className="p-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:shadow-xl transition-shadow"
                         >
-                            <div className="p-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:shadow-xl transition-shadow">
-                                <h3 className="text-xl font-bold mb-2">
-                                    Freelancer Starter
-                                </h3>
-                                <div className="text-4xl font-black mb-6">
-                                    $0{' '}
-                                    <span className="text-lg font-normal text-slate-500">
-                                        /mes
-                                    </span>
-                                </div>
-                                <ul className="space-y-4 mb-8 text-sm text-slate-600 dark:text-slate-300">
-                                    <li className="flex gap-2">
-                                        <Check className="w-5 h-5 text-green-500" />{' '}
-                                        3 Créditos IA Semanales
-                                    </li>
-                                    <li className="flex gap-2">
-                                        <Check className="w-5 h-5 text-green-500" />{' '}
-                                        Buscador de Trabajo (Retraso 24h)
-                                    </li>
-                                    <li className="flex gap-2">
-                                        <Check className="w-5 h-5 text-green-500" />{' '}
-                                        Generador de CV Básico
-                                    </li>
-                                </ul>
-                                <Button
-                                    onClick={handleLogin}
-                                    variant="outline"
-                                    className="w-full border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
-                                >
-                                    Crear Cuenta Gratis
-                                </Button>
+                            <h3 className="text-xl font-bold mb-2">
+                                Freelancer Starter
+                            </h3>
+                            <div className="text-4xl font-black mb-6">
+                                $0{' '}
+                                <span className="text-lg font-normal text-slate-500">
+                                    /mes
+                                </span>
                             </div>
+                            <ul className="space-y-4 mb-8 text-sm text-slate-600 dark:text-slate-300">
+                                <li className="flex gap-2">
+                                    <Check className="w-5 h-5 text-green-500" />{' '}
+                                    3 Créditos IA Semanales
+                                </li>
+                                <li className="flex gap-2">
+                                    <Check className="w-5 h-5 text-green-500" />{' '}
+                                    Buscador de Trabajo (Retraso 24h)
+                                </li>
+                                <li className="flex gap-2">
+                                    <Check className="w-5 h-5 text-green-500" />{' '}
+                                    Generador de CV Básico
+                                </li>
+                            </ul>
+                            <Button
+                                onClick={handleLogin}
+                                variant="outline"
+                                className="w-full border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
+                            >
+                                Crear Cuenta Gratis
+                            </Button>
                         </motion.div>
                         <motion.div
                             initial={{ opacity: 0, x: 20 }}
@@ -623,44 +621,42 @@ export const LandingModern: React.FC = () => {
                             transition={{ duration: 0.5, delay: 0.2 }}
                             className="p-8 rounded-3xl border-2 border-brand-500 bg-white dark:bg-slate-900 relative shadow-2xl transform md:scale-105"
                         >
-                            <div className="p-8 rounded-3xl border-2 border-brand-500 bg-white dark:bg-slate-900 relative shadow-2xl transform md:scale-105">
-                                <div className="absolute top-0 right-0 bg-brand-500 text-white text-xs font-bold px-3 py-1 rounded-bl-xl">
-                                    MÁS POPULAR
-                                </div>
-                                <h3 className="text-xl font-bold mb-2">
-                                    Freelancer PRO
-                                </h3>
-                                <div className="text-4xl font-black mb-6">
-                                    $10{' '}
-                                    <span className="text-lg font-normal text-slate-500">
-                                        /mes
-                                    </span>
-                                </div>
-                                <ul className="space-y-4 mb-8 text-sm font-medium">
-                                    <li className="flex gap-2">
-                                        <CheckCircle className="w-5 h-5 text-brand-500" />{' '}
-                                        <strong>Créditos IA ILIMITADOS</strong>
-                                    </li>
-                                    <li className="flex gap-2">
-                                        <CheckCircle className="w-5 h-5 text-brand-500" />{' '}
-                                        Ofertas de Trabajo en Tiempo Real
-                                    </li>
-                                    <li className="flex gap-2">
-                                        <CheckCircle className="w-5 h-5 text-brand-500" />{' '}
-                                        Web Builder (Portafolio Online)
-                                    </li>
-                                    <li className="flex gap-2">
-                                        <CheckCircle className="w-5 h-5 text-brand-500" />{' '}
-                                        Asistente Personal 24/7
-                                    </li>
-                                </ul>
-                                <Button
-                                    onClick={handleLogin}
-                                    className="w-full bg-brand-600 hover:bg-brand-500 text-white font-bold h-12 shadow-lg shadow-brand-500/20"
-                                >
-                                    Comenzar Prueba
-                                </Button>
+                            <div className="absolute top-0 right-0 bg-brand-500 text-white text-xs font-bold px-3 py-1 rounded-bl-xl">
+                                MÁS POPULAR
                             </div>
+                            <h3 className="text-xl font-bold mb-2">
+                                Freelancer PRO
+                            </h3>
+                            <div className="text-4xl font-black mb-6">
+                                $10{' '}
+                                <span className="text-lg font-normal text-slate-500">
+                                    /mes
+                                </span>
+                            </div>
+                            <ul className="space-y-4 mb-8 text-sm font-medium">
+                                <li className="flex gap-2">
+                                    <CheckCircle className="w-5 h-5 text-brand-500" />{' '}
+                                    <strong>Créditos IA ILIMITADOS</strong>
+                                </li>
+                                <li className="flex gap-2">
+                                    <CheckCircle className="w-5 h-5 text-brand-500" />{' '}
+                                    Ofertas de Trabajo en Tiempo Real
+                                </li>
+                                <li className="flex gap-2">
+                                    <CheckCircle className="w-5 h-5 text-brand-500" />{' '}
+                                    Web Builder (Portafolio Online)
+                                </li>
+                                <li className="flex gap-2">
+                                    <CheckCircle className="w-5 h-5 text-brand-500" />{' '}
+                                    Asistente Personal 24/7
+                                </li>
+                            </ul>
+                            <Button
+                                onClick={handleLogin}
+                                className="w-full bg-brand-600 hover:bg-brand-500 text-white font-bold h-12 shadow-lg shadow-brand-500/20"
+                            >
+                                Comenzar Prueba
+                            </Button>
                         </motion.div>
                     </div>
                 </div>
