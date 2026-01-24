@@ -88,15 +88,22 @@ const HeroBackground = () => {
     const mouseX = useMotionValue(0)
     const mouseY = useMotionValue(0)
 
-    // Suavizar el movimiento del mouse
-    const springX = useSpring(mouseX, { stiffness: 50, damping: 20 })
-    const springY = useSpring(mouseY, { stiffness: 50, damping: 20 })
+    // Reducimos un poco el damping para que la respuesta sea más rápida y menos "arrastrada"
+    const springConfig = { stiffness: 50, damping: 30 }
+    const springX = useSpring(mouseX, springConfig)
+    const springY = useSpring(mouseY, springConfig)
 
     useEffect(() => {
+        // Optimización: Solo agregar el listener si es una pantalla grande (Desktop)
+        // En móviles, el cálculo matemático al hacer scroll táctil causa los saltos.
+        if (window.innerWidth < 768) return
+
         const handleMouseMove = (e: MouseEvent) => {
-            // Movemos las esferas en dirección opuesta al mouse para efecto parallax
-            mouseX.set(e.clientX / -50)
-            mouseY.set(e.clientY / -50)
+            // Usamos requestAnimationFrame para no sobrecargar el hilo principal
+            requestAnimationFrame(() => {
+                mouseX.set(e.clientX / -50)
+                mouseY.set(e.clientY / -50)
+            })
         }
         window.addEventListener('mousemove', handleMouseMove)
         return () => window.removeEventListener('mousemove', handleMouseMove)
@@ -107,28 +114,29 @@ const HeroBackground = () => {
             {/* Esfera 1: Verde Marca */}
             <motion.div
                 style={{ x: springX, y: springY }}
-                animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+                animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.4, 0.3] }} // Reduje la escala para menos repintado
                 transition={{
-                    duration: 8,
+                    duration: 10,
                     repeat: Infinity,
-                    ease: 'easeInOut',
+                    ease: 'linear', // 'linear' es más barato de calcular que 'easeInOut'
                 }}
-                className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-brand-600/30 rounded-full blur-[100px]"
+                // CLASES CLAVE: will-change-transform y transform-gpu
+                className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-brand-600/30 rounded-full blur-[80px] will-change-transform transform-gpu"
             />
             {/* Esfera 2: Azul Contraste */}
             <motion.div
                 style={{
-                    x: useTransform(springX, (v) => v * -1.5),
-                    y: useTransform(springY, (v) => v * -1.5),
+                    x: useTransform(springX, (v) => v * -1.2), // Reduje el factor de movimiento
+                    y: useTransform(springY, (v) => v * -1.2),
                 }}
-                animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.4, 0.2] }}
+                animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.3, 0.2] }}
                 transition={{
-                    duration: 10,
+                    duration: 12,
                     repeat: Infinity,
-                    ease: 'easeInOut',
+                    ease: 'linear',
                     delay: 1,
                 }}
-                className="absolute top-[20%] right-[-10%] w-[600px] h-[600px] bg-blue-600/20 rounded-full blur-[120px]"
+                className="absolute top-[20%] right-[-10%] w-[600px] h-[600px] bg-blue-600/20 rounded-full blur-[100px] will-change-transform transform-gpu"
             />
             {/* Esfera 3: Centro (Sutil) */}
             <motion.div
@@ -136,11 +144,11 @@ const HeroBackground = () => {
                     x: useTransform(springX, (v) => v * 0.5),
                     y: useTransform(springY, (v) => v * 0.5),
                 }}
-                className="absolute bottom-[-20%] left-[30%] w-[800px] h-[600px] bg-emerald-500/10 rounded-full blur-[150px]"
+                className="absolute bottom-[-20%] left-[30%] w-[800px] h-[600px] bg-emerald-500/10 rounded-full blur-[120px] will-change-transform transform-gpu"
             />
 
-            {/* Grid Overlay */}
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03]"></div>
+            {/* Grid Overlay - Optimizado con translateZ(0) */}
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03] transform-gpu"></div>
         </div>
     )
 }
@@ -414,7 +422,7 @@ export const LandingModern: React.FC = () => {
 
             <section className="relative mt-32 pb-32 px-6 text-center flex flex-col justify-center">
                 {/* CORRECCIÓN AQUI: Agregado 'left-0' y 'z-20' */}
-                <div className="absolute bottom-0 left-0 w-full border-t border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-black/20 py-8 backdrop-blur-sm flex flex-col items-center justify-center text-center px-4 z-20">
+                <div className="absolute bottom-0 left-0 w-full border-t border-slate-200 dark:border-white/5 bg-slate-50/80 dark:bg-black/40 py-8 backdrop-blur-[2px] flex flex-col items-center justify-center text-center px-4 z-20 transform-gpu">
                     {/* Agregado 'mx-auto' para asegurar centrado del bloque */}
                     <div className="w-full max-w-md mb-8 mx-auto">
                         <PortfolioSearch />
