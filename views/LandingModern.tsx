@@ -411,32 +411,37 @@ export const LandingModern: React.FC = () => {
                 </motion.div>
             </header>
             {/* Social Proof */}
-            <div className="absolute bottom-0 w-full border-t border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-black/20 py-8 backdrop-blur-sm flex flex-col items-center text-center px-4">
-                {/* Envolvemos el buscador para asegurar que no se estire de más y esté centrado */}
-                <div className="w-full max-w-md mb-8">
-                    <PortfolioSearch />
-                </div>
 
-                <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">
-                    Funciona para plataformas como
-                </p>
+            <section className="relative pt-40 pb-32 px-6 text-center overflow-hidden min-h-screen flex flex-col justify-center">
+                <div className="absolute bottom-0 w-full border-t border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-black/20 py-8 backdrop-blur-sm flex flex-col items-center text-center px-4">
+                    {/* Envolvemos el buscador para asegurar que no se estire de más y esté centrado */}
+                    <div className="w-full max-w-md mb-8">
+                        <PortfolioSearch />
+                    </div>
 
-                <div className="flex flex-wrap justify-center gap-6 md:gap-16 opacity-60 dark:opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500">
-                    <div className="flex items-center gap-2 text-lg md:text-xl font-bold">
-                        <Globe className="w-5 h-5 md:w-6 md:h-6" /> Fiverr
-                    </div>
-                    <div className="flex items-center gap-2 text-lg md:text-xl font-bold">
-                        <Briefcase className="w-5 h-5 md:w-6 md:h-6" /> Upwork
-                    </div>
-                    <div className="flex items-center gap-2 text-lg md:text-xl font-bold">
-                        <Monitor className="w-5 h-5 md:w-6 md:h-6" /> Freelancer
-                    </div>
-                    <div className="flex items-center gap-2 text-lg md:text-xl font-bold">
-                        <LayoutDashboard className="w-5 h-5 md:w-6 md:h-6" />{' '}
-                        Workana
+                    <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">
+                        Funciona para plataformas como
+                    </p>
+
+                    <div className="flex flex-wrap justify-center gap-6 md:gap-16 opacity-60 dark:opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500">
+                        <div className="flex items-center gap-2 text-lg md:text-xl font-bold">
+                            <Globe className="w-5 h-5 md:w-6 md:h-6" /> Fiverr
+                        </div>
+                        <div className="flex items-center gap-2 text-lg md:text-xl font-bold">
+                            <Briefcase className="w-5 h-5 md:w-6 md:h-6" />{' '}
+                            Upwork
+                        </div>
+                        <div className="flex items-center gap-2 text-lg md:text-xl font-bold">
+                            <Monitor className="w-5 h-5 md:w-6 md:h-6" />{' '}
+                            Freelancer
+                        </div>
+                        <div className="flex items-center gap-2 text-lg md:text-xl font-bold">
+                            <LayoutDashboard className="w-5 h-5 md:w-6 md:h-6" />{' '}
+                            Workana
+                        </div>
                     </div>
                 </div>
-            </div>
+            </section>
             {/* VIDEO */}
             <section
                 id="video"
