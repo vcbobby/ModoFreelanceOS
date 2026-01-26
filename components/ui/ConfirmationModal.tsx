@@ -1,5 +1,5 @@
 import React from 'react'
-import { AlertTriangle, X } from 'lucide-react'
+import { AlertTriangle, X, CheckCircle2 } from 'lucide-react'
 
 interface ConfirmationModalProps {
     isOpen: boolean
@@ -25,9 +25,9 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     if (!isOpen) return null
 
     return (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
             <div
-                className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden scale-100 animate-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-700"
+                className="absolute inset-0 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden scale-100 animate-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-700"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="p-6">
