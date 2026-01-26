@@ -1,4 +1,5 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom' // <--- 1. IMPORTAR ESTO
 import { AlertTriangle, X } from 'lucide-react'
 
 interface ConfirmationModalProps {
@@ -22,12 +23,29 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     cancelText = 'Cancelar',
     isDanger = false,
 }) => {
-    if (!isOpen) return null
+    // Estado para asegurar que el componente esté montado antes de usar el portal
+    const [mounted, setMounted] = useState(false)
 
-    return (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+    useEffect(() => {
+        setMounted(true)
+        return () => setMounted(false)
+    }, [])
+
+    if (!isOpen || !mounted) return null
+
+    // 2. ENVOLVER TODO EL RETORNO EN createPortal(..., document.body)
+    return createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            {/* BACKDROP (FONDO OSCURO) */}
             <div
-                className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden scale-100 animate-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-700"
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+                onClick={onClose}
+                aria-hidden="true"
+            />
+
+            {/* CONTENIDO DEL MODAL */}
+            <div
+                className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden scale-100 animate-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-700"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="p-6">
@@ -77,6 +95,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                     </button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body, // <--- ESTO TELETRANSPORTA EL MODAL AL FINAL DEL HTML
     )
 }

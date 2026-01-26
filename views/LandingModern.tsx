@@ -37,6 +37,7 @@ import {
 } from 'lucide-react'
 import { Button, ConfirmationModal } from '../components/ui'
 import { TERMS_AND_CONDITIONS2, PRIVACY_POLICY2 } from '../data/legalTexts' // Asegúrate de tener este archivo (te lo doy abajo)
+import { createPortal } from 'react-dom'
 
 export const PortfolioSearch = () => {
     const [username, setUsername] = useState('')
@@ -234,30 +235,42 @@ export const LandingModern: React.FC = () => {
     return (
         <div className="min-h-screen bg-white dark:bg-[#05050A] text-slate-900 dark:text-white font-sans selection:bg-brand-500 selection:text-white overflow-x-hidden transition-colors">
             {/* Modal Legal (Reutilizando ConfirmationModal para simplificar o creando uno simple) */}
-            {legalModal.isOpen && (
-                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex justify-center items-center p-4">
-                    <div className="bg-white dark:bg-slate-900 w-full max-w-3xl max-h-[80vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-                        <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-950">
-                            <h3 className="font-bold text-lg">
-                                {legalModal.title}
-                            </h3>
-                            <button
-                                onClick={() =>
-                                    setLegalModal({
-                                        ...legalModal,
-                                        isOpen: false,
-                                    })
-                                }
-                            >
-                                <X className="w-6 h-6" />
-                            </button>
+            {legalModal.isOpen &&
+                createPortal(
+                    <div className="fixed inset-0 z-[9999] flex justify-center items-center p-4">
+                        {/* Backdrop */}
+                        <div
+                            className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-in fade-in"
+                            onClick={() =>
+                                setLegalModal({ ...legalModal, isOpen: false })
+                            }
+                        />
+
+                        {/* Contenido */}
+                        <div className="relative bg-white dark:bg-slate-900 w-full max-w-3xl max-h-[80vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-800">
+                            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-950">
+                                <h3 className="font-bold text-lg text-slate-900 dark:text-white">
+                                    {legalModal.title}
+                                </h3>
+                                <button
+                                    onClick={() =>
+                                        setLegalModal({
+                                            ...legalModal,
+                                            isOpen: false,
+                                        })
+                                    }
+                                    className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors"
+                                >
+                                    <X className="w-6 h-6 text-slate-500" />
+                                </button>
+                            </div>
+                            <div className="p-6 overflow-y-auto custom-scrollbar text-sm leading-relaxed whitespace-pre-wrap text-slate-600 dark:text-slate-300">
+                                {legalModal.content}
+                            </div>
                         </div>
-                        <div className="p-6 overflow-y-auto custom-scrollbar text-sm leading-relaxed whitespace-pre-wrap text-slate-600 dark:text-slate-300">
-                            {legalModal.content}
-                        </div>
-                    </div>
-                </div>
-            )}
+                    </div>,
+                    document.body, // <--- Aquí va al body
+                )}
 
             {/* NAVBAR */}
             <nav className="fixed top-0 w-full z-50 bg-white/80 dark:bg-[#05050A]/80 backdrop-blur-xl border-b border-slate-200 dark:border-white/5 transition-all">
