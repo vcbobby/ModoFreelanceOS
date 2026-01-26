@@ -15,9 +15,9 @@ import {
     doc,
     getDoc,
     setDoc,
+    updateDoc,
     collection,
     addDoc,
-    updateDoc,
 } from 'firebase/firestore'
 import { db } from '../firebase'
 import ReactMarkdown from 'react-markdown'
@@ -29,7 +29,7 @@ interface Proposal {
 }
 
 interface ProposalToolProps {
-    onUsage: () => Promise<boolean>
+    onUsage: (cost?: number) => Promise<boolean>
     userId?: string
 }
 
@@ -49,65 +49,30 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
     const [activeTab, setActiveTab] = useState<number>(0)
     const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
 
-    // --- DEFINICIÓN DE BACKEND URL ---
+    // Estados de Modales (Separados para mayor estabilidad en Windows/Android)
+    const [showResetModal, setShowResetModal] = useState(false)
+    const [errorModal, setErrorModal] = useState({ isOpen: false, message: '' })
+
     const BACKEND_URL = import.meta.env.PROD
         ? 'https://backend-freelanceos.onrender.com'
         : 'http://localhost:8000'
 
-    // --- CONFIGURACIÓN DEL MODAL (UNIFICADA) ---
-    const [modal, setModal] = useState({
-        isOpen: false,
-        title: '',
-        message: '',
-        isDanger: false,
-        action: () => {},
-        confirmText: 'Confirmar', // Añadido para flexibilidad
-        cancelText: 'Cancelar',
-    })
-
-    const showModal = (
-        title: string,
-        message: string,
-        isDanger = false,
-        action = () => {},
-        confirmText = 'Confirmar',
-        cancelText = 'Cancelar',
-    ) => {
-        setModal({
-            isOpen: true,
-            title,
-            message,
-            isDanger,
-            action,
-            confirmText,
-            cancelText,
-        })
-    }
-
-    // Cargar perfil guardado
+    // --- CARGAR PERFIL ---
     useEffect(() => {
         const loadProfile = async () => {
             if (!userId) return
             try {
-                // Cambiamos 'user_profiles' por 'users'
                 const docRef = doc(db, 'users', userId)
                 const docSnap = await getDoc(docRef)
 
                 if (docSnap.exists()) {
                     const data = docSnap.data()
-                    // Buscamos el campo 'savedProfile' dentro del usuario
-                    // (O 'profile' si prefieres mantener el nombre, pero savedProfile es más claro)
                     if (data.savedProfile) {
                         setUserProfile(data.savedProfile)
                     } else if (data.profile) {
-                        // Retro-compatibilidad por si acaso
                         setUserProfile(data.profile)
                     }
                 }
-
-                // INTENTO DE RECUPERACIÓN (Opcional):
-                // Si no hay nada en 'users', intentamos leer una última vez de 'user_profiles'
-                // Solo funcionará si arreglas las reglas momentáneamente, pero mejor migrar ya.
             } catch (e) {
                 console.error('Error cargando perfil', e)
             }
@@ -115,52 +80,30 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
         loadProfile()
     }, [userId])
 
-    // ---------------------------------------------------------
-    // CORRECCIÓN 2: GUARDAR EN LA COLECCIÓN 'users'
-    // ---------------------------------------------------------
+    // --- GUARDAR PERFIL ---
     const saveProfile = async () => {
-        if (!userId) return // No guardamos si no hay usuario o texto vacío (opcional)
-
+        if (!userId) return
         try {
-            // Usamos updateDoc para no borrar otros campos (créditos, plan, etc)
-            // Guardamos en el campo 'savedProfile' dentro del documento principal del usuario
             const docRef = doc(db, 'users', userId)
-
-            // Usamos setDoc con merge por si el documento 'users' no existiera (raro, pero seguro)
-            await setDoc(
-                docRef,
-                {
-                    savedProfile: userProfile,
-                },
-                { merge: true },
-            )
-
-            console.log('Perfil guardado en users/' + userId)
+            await setDoc(docRef, { savedProfile: userProfile }, { merge: true })
         } catch (e) {
             console.error('Error guardando perfil:', e)
         }
     }
 
-    const handleClear = () => {
-        showModal(
-            '¿Limpiar campos?',
-            'Esto borrará la descripción del trabajo y el nombre del cliente actual. Tu perfil se mantendrá intacto.',
-            true, // isDanger
-            () => {
-                setJobDescription('')
-                setClientName('')
-                setModal((prev) => ({ ...prev, isOpen: false }))
-            },
-            'Sí, limpiar',
-            'Cancelar',
-        )
+    // --- FUNCIÓN DE LIMPIEZA TOTAL ---
+    const handleConfirmReset = () => {
+        setJobDescription('')
+        setClientName('')
+        setProposals(null) // <--- IMPORTANTE: Limpiamos también los resultados
+        setActiveTab(0)
+        setShowResetModal(false)
     }
 
-    // --- FUNCIÓN PRINCIPAL CONECTADA AL BACKEND ---
+    // --- GENERAR PROPUESTAS ---
     const handleGenerate = async () => {
         if (!jobDescription || !userProfile) return
 
-        // Cobro de créditos
         const canProceed = await onUsage()
         if (!canProceed) return
 
@@ -175,7 +118,6 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
             formData.append('platform', platform)
             formData.append('clientName', clientName)
 
-            // Llamada al Backend
             const res = await fetch(`${BACKEND_URL}/api/generate-proposal`, {
                 method: 'POST',
                 body: formData,
@@ -196,39 +138,34 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
             setProposals(newProposals)
             setActiveTab(0)
 
-            // Guardado en Historial (Firebase)
+            // Guardar Historial
             if (userId) {
                 const historyRef = collection(db, 'users', userId, 'history')
-                await Promise.all(
-                    newProposals.map((prop: Proposal) =>
-                        addDoc(historyRef, {
-                            createdAt: new Date().toISOString(),
-                            category: 'proposal',
-                            clientName: clientName || 'Cliente Desconocido',
-                            platform: platform,
-                            type: prop.type,
-                            content: prop.content,
-                        }),
-                    ),
-                )
+                // Guardamos solo una entrada agrupada o la primera para no saturar
+                // Opcional: Guardar todas
+                newProposals.forEach((prop: Proposal) => {
+                    addDoc(historyRef, {
+                        createdAt: new Date().toISOString(),
+                        category: 'proposal',
+                        clientName: clientName || 'Cliente Desconocido',
+                        platform: platform,
+                        type: prop.type,
+                        content: prop.content,
+                    }).catch(console.error)
+                })
             }
         } catch (e: any) {
             console.error(e)
-            showModal(
-                'Error',
-                `No se pudo generar la propuesta. ${e.message}`,
-                true,
-                () => setModal((prev) => ({ ...prev, isOpen: false })),
-                'Entendido',
-                '',
-            )
+            setErrorModal({
+                isOpen: true,
+                message: `No se pudo generar la propuesta. ${e.message}`,
+            })
         } finally {
             setIsGenerating(false)
         }
     }
 
     const copyToClipboard = (text: string, index: number) => {
-        // Limpieza de markdown para copiar texto plano
         const cleanText = text
             .replace(/\*\*/g, '')
             .replace(/(\*|_)(.*?)\1/g, '$2')
@@ -240,18 +177,36 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
         setTimeout(() => setCopiedIndex(null), 2000)
     }
 
+    // Lógica para habilitar el botón de limpiar:
+    // Si hay texto escrito O si hay propuestas visibles, se puede limpiar.
+    const canClear =
+        (!!jobDescription || !!clientName || !!proposals) && !isGenerating
+
     return (
-        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 h-full items-start">
-            {/* COMPONENTE MODAL RENDERIZADO */}
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 h-full items-start pb-20">
+            {/* --- MODAL DE LIMPIEZA --- */}
             <ConfirmationModal
-                isOpen={modal.isOpen}
-                onClose={() => setModal({ ...modal, isOpen: false })}
-                onConfirm={modal.action}
-                title={modal.title}
-                message={modal.message}
-                confirmText={modal.confirmText}
-                cancelText={modal.cancelText}
-                isDanger={modal.isDanger}
+                isOpen={showResetModal}
+                onClose={() => setShowResetModal(false)}
+                onConfirm={handleConfirmReset}
+                title="¿Nueva Propuesta?"
+                message="Esto borrará la descripción del trabajo, el cliente y las propuestas generadas para empezar de cero."
+                confirmText="Sí, limpiar todo"
+                cancelText="Cancelar"
+                isDanger={true}
+            />
+
+            {/* --- MODAL DE ERROR --- */}
+            <ConfirmationModal
+                isOpen={errorModal.isOpen}
+                onClose={() => setErrorModal({ ...errorModal, isOpen: false })}
+                onConfirm={() =>
+                    setErrorModal({ ...errorModal, isOpen: false })
+                }
+                title="Ocurrió un error"
+                message={errorModal.message}
+                confirmText="Entendido"
+                isDanger={false}
             />
 
             {/* COLUMNA IZQUIERDA: INPUTS */}
@@ -261,19 +216,20 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
                         <Wand2 className="w-6 h-6 text-brand-600" /> Generador
                         de Propuestas
                     </h2>
-                    <p className="text-slate-600 dark:text-slate-400 mt-1">
-                        Personaliza tu propuesta según la plataforma.
+                    <p className="text-slate-600 dark:text-slate-400 mt-1 text-sm">
+                        Crea propuestas persuasivas optimizadas para cada
+                        plataforma.
                     </p>
                 </div>
 
-                <Card className="p-6 flex-1 flex flex-col gap-4 shadow-md bg-white dark:bg-slate-800 border dark:border-slate-700">
+                <Card className="p-6 flex-1 flex flex-col gap-4 shadow-xl border-t-4 border-t-brand-500 bg-white dark:bg-slate-800 border-x-0 border-b-0">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                                <Globe className="w-4 h-4" /> Plataforma
+                            <label className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                                <Globe className="w-3 h-3" /> Plataforma
                             </label>
                             <select
-                                className="w-full p-2.5 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none text-sm bg-white dark:bg-slate-900 dark:text-white"
+                                className="w-full p-3 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none text-sm bg-slate-50 dark:bg-slate-900 dark:text-white font-medium transition-all"
                                 value={platform}
                                 onChange={(e) => setPlatform(e.target.value)}
                             >
@@ -285,12 +241,12 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                                <Hash className="w-4 h-4" /> Cliente (Opcional)
+                            <label className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                                <Hash className="w-3 h-3" /> Cliente
                             </label>
                             <input
                                 type="text"
-                                className="w-full p-2.5 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none text-sm bg-white dark:bg-slate-900 dark:text-white"
+                                className="w-full p-3 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none text-sm bg-slate-50 dark:bg-slate-900 dark:text-white transition-all"
                                 placeholder="Nombre o Empresa"
                                 value={clientName}
                                 onChange={(e) => setClientName(e.target.value)}
@@ -299,25 +255,26 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                            <Briefcase className="w-4 h-4" /> Descripción del
-                            trabajo
+                        <label className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                            <Briefcase className="w-3 h-3" /> Lo que pide el
+                            cliente
                         </label>
                         <textarea
-                            className="w-full h-32 p-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none resize-none text-sm bg-white dark:bg-slate-900 dark:text-white"
-                            placeholder="Pega aquí lo que escribió el cliente... (Ej: Busco diseñador para logo de tienda de café...)"
+                            className="w-full h-32 p-3 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none resize-none text-sm bg-slate-50 dark:bg-slate-900 dark:text-white transition-all placeholder:text-slate-400"
+                            placeholder="Pega aquí la descripción del proyecto..."
                             value={jobDescription}
                             onChange={(e) => setJobDescription(e.target.value)}
                         />
                     </div>
 
                     <div className="space-y-2 flex-1">
-                        <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                            <User className="w-4 h-4" /> Tu Perfil / Habilidades
+                        <label className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                            <User className="w-3 h-3" /> Tu Experiencia (Se
+                            guarda auto.)
                         </label>
                         <textarea
-                            className="w-full h-24 p-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none resize-none text-sm bg-white dark:bg-slate-900 dark:text-white"
-                            placeholder="Resumen de tu experiencia... (Ej: Soy experto en Branding, 5 años de exp...)"
+                            className="w-full h-24 p-3 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none resize-none text-sm bg-slate-50 dark:bg-slate-900 dark:text-white transition-all placeholder:text-slate-400"
+                            placeholder="Resumen de tus habilidades..."
                             value={userProfile}
                             onChange={(e) => setUserProfile(e.target.value)}
                             onBlur={saveProfile}
@@ -326,9 +283,10 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
 
                     <div className="flex gap-3 mt-2">
                         <button
-                            onClick={handleClear}
-                            disabled={!jobDescription && !clientName}
-                            className="px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-red-600 transition-colors flex items-center gap-2 disabled:opacity-50"
+                            onClick={() => setShowResetModal(true)}
+                            disabled={!canClear}
+                            className="px-4 py-3 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 hover:border-red-200 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Limpiar todo para un nuevo trabajo"
                         >
                             <Trash2 className="w-5 h-5" />
                         </button>
@@ -337,53 +295,65 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
                             onClick={handleGenerate}
                             isLoading={isGenerating}
                             disabled={!jobDescription || !userProfile}
-                            className="flex-1 bg-brand-600 hover:bg-brand-700 text-white"
+                            className="flex-1 bg-brand-600 hover:bg-brand-700 text-white h-auto py-3 font-bold shadow-lg shadow-brand-500/20"
                         >
                             {isGenerating
-                                ? 'Analizando con IA...'
+                                ? 'Analizando...'
                                 : 'Generar Propuestas'}
                         </Button>
                     </div>
                 </Card>
             </div>
 
-            {/* Output Section */}
-            <div className="bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 flex flex-col h-[600px] lg:h-auto">
+            {/* COLUMNA DERECHA: RESULTADOS */}
+            <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 flex flex-col min-h-[500px] lg:h-[calc(100vh-140px)] lg:sticky lg:top-6">
                 {!proposals ? (
                     <div className="flex-1 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 text-center p-8">
-                        <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+                        <div
+                            className={`w-20 h-20 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center mb-6 shadow-sm ${
+                                isGenerating ? 'animate-pulse' : ''
+                            }`}
+                        >
                             <RefreshCw
-                                className={`w-8 h-8 ${
+                                className={`w-10 h-10 ${
                                     isGenerating
                                         ? 'animate-spin text-brand-500'
-                                        : ''
+                                        : 'text-slate-300 dark:text-slate-600'
                                 }`}
                             />
                         </div>
                         {isGenerating ? (
-                            <p className="font-medium text-slate-600 dark:text-slate-300">
-                                Redactando propuestas ganadoras...
-                                <br />
-                                <span className="text-xs text-slate-400 font-normal">
-                                    Usando rotación de llaves para evitar
-                                    errores.
-                                </span>
-                            </p>
+                            <div>
+                                <p className="font-bold text-slate-700 dark:text-slate-200 text-lg mb-2">
+                                    Creando la estrategia perfecta...
+                                </p>
+                                <p className="text-sm text-slate-500">
+                                    Analizando keywords y estructura persuasiva.
+                                </p>
+                            </div>
                         ) : (
-                            <p>Tus propuestas aparecerán aquí.</p>
+                            <div>
+                                <p className="font-medium mb-1">
+                                    Tu lienzo está vacío
+                                </p>
+                                <p className="text-sm opacity-70">
+                                    Completa los datos a la izquierda para
+                                    comenzar.
+                                </p>
+                            </div>
                         )}
                     </div>
                 ) : (
-                    <div className="flex flex-col h-full">
-                        <div className="flex space-x-2 bg-slate-200 dark:bg-slate-700 p-1 rounded-lg mb-4">
+                    <div className="flex flex-col h-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="flex p-1 bg-slate-200 dark:bg-slate-800 rounded-xl mb-4 shrink-0">
                             {proposals.map((p, idx) => (
                                 <button
                                     key={idx}
                                     onClick={() => setActiveTab(idx)}
-                                    className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
+                                    className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${
                                         activeTab === idx
-                                            ? 'bg-white dark:bg-slate-800 text-brand-700 dark:text-brand-400 shadow-sm'
-                                            : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                                            ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-white shadow-sm ring-1 ring-black/5 dark:ring-white/10'
+                                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                                     }`}
                                 >
                                     {p.type}
@@ -391,39 +361,30 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
                             ))}
                         </div>
 
-                        <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-6 shadow-sm">
-                                <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-4">
+                        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 -mr-2">
+                            <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl p-6 shadow-sm">
+                                <h3 className="font-bold text-xl text-slate-900 dark:text-white mb-6 pb-4 border-b border-slate-100 dark:border-slate-700">
                                     {proposals[activeTab].title}
                                 </h3>
 
-                                <div className="prose prose-slate dark:prose-invert prose-sm max-w-none text-slate-700 dark:text-slate-300">
+                                <div className="prose prose-slate dark:prose-invert prose-sm max-w-none text-slate-600 dark:text-slate-300 leading-relaxed">
                                     <ReactMarkdown
                                         components={{
-                                            // 1. Reducimos el margen a mb-2 (antes era 4)
-                                            // 2. Agregamos leading-relaxed para que las líneas de un mismo párrafo respiren bien
-                                            // 3. Quitamos whitespace-pre-wrap del padre para que Markdown controle el flujo
                                             p: ({ node, ...props }) => (
                                                 <p
-                                                    className="mb-2 text-slate-700 dark:text-slate-300 leading-relaxed last:mb-0"
+                                                    className="mb-4 last:mb-0"
                                                     {...props}
                                                 />
                                             ),
                                             ul: ({ node, ...props }) => (
                                                 <ul
-                                                    className="list-disc pl-4 mb-2 space-y-1"
-                                                    {...props}
-                                                />
-                                            ),
-                                            ol: ({ node, ...props }) => (
-                                                <ol
-                                                    className="list-decimal pl-4 mb-2 space-y-1"
+                                                    className="list-disc pl-4 mb-4 space-y-2 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl"
                                                     {...props}
                                                 />
                                             ),
                                             li: ({ node, ...props }) => (
                                                 <li
-                                                    className="pl-1 marker:text-slate-400"
+                                                    className="pl-1"
                                                     {...props}
                                                 />
                                             ),
@@ -441,7 +402,7 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
                             </div>
                         </div>
 
-                        <div className="mt-4 flex justify-end">
+                        <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-end shrink-0">
                             <Button
                                 variant="outline"
                                 onClick={() =>
@@ -450,16 +411,17 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
                                         activeTab,
                                     )
                                 }
+                                className="w-full sm:w-auto"
                             >
                                 {copiedIndex === activeTab ? (
                                     <>
                                         <CheckCircle2 className="w-4 h-4 mr-2 text-green-600" />
-                                        Copiado
+                                        ¡Copiado!
                                     </>
                                 ) : (
                                     <>
                                         <Copy className="w-4 h-4 mr-2" />
-                                        Copiar
+                                        Copiar Texto
                                     </>
                                 )}
                             </Button>
