@@ -430,23 +430,30 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                     </div>
                 </div>
 
-                {/* VISTA PREVIA ESCALABLE Y SCROLLEABLE (Derecha) */}
-                <div className="relative bg-slate-200 dark:bg-slate-900 rounded-xl border border-slate-300 dark:border-slate-700 overflow-hidden flex flex-col h-[600px] md:h-[850px]">
-                    {/* Contenedor con scroll para ver páginas largas */}
-                    <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8 flex justify-center bg-slate-100 dark:bg-slate-950/50">
-                        {/* Escala visual para que quepa en pantalla, pero manteniendo proporciones A4 */}
-                        <div className="origin-top scale-[0.5] sm:scale-[0.6] md:scale-[0.65] lg:scale-[0.7] xl:scale-[0.8] mb-8">
+                {/* VISTA PREVIA ESCALABLE (Derecha) */}
+                <div className="relative bg-slate-200 dark:bg-slate-900 rounded-xl border border-slate-300 dark:border-slate-700 overflow-hidden flex flex-col h-[500px] md:h-[850px]">
+                    {/* Header visual de la vista previa */}
+                    <div className="bg-slate-300 dark:bg-slate-800 p-2 text-center text-xs font-bold text-slate-500 uppercase tracking-widest border-b border-slate-300 dark:border-slate-700">
+                        Vista Previa (A4)
+                    </div>
+
+                    {/* Contenedor con SCROLL EN AMBAS DIRECCIONES (overflow-auto) */}
+                    {/* Esto evita el recorte si la hoja es más ancha que la pantalla */}
+                    <div className="flex-1 overflow-auto custom-scrollbar p-4 md:p-8 flex justify-center items-start bg-slate-100 dark:bg-slate-950/50">
+                        {/* ESCALADO RESPONSIVO AJUSTADO */}
+                        {/* Bajamos la escala base a 0.35 para móviles pequeños */}
+                        {/* En escritorio (xl) ajustamos a 0.65 para que quepa en la columna */}
+                        <div className="origin-top scale-[0.35] sm:scale-[0.5] md:scale-[0.55] lg:scale-[0.6] xl:scale-[0.7] mb-8 shrink-0">
                             <div
                                 id="cv-preview"
-                                // CORRECCIÓN 2: Padding interno para simular márgenes de hoja y min-height
+                                // A4 Fijo con padding simulando márgenes de impresión
                                 className="bg-white text-slate-800 w-[210mm] min-h-[297mm] p-[15mm] box-border shadow-2xl mx-auto"
                                 style={{
                                     fontFamily: 'Inter, sans-serif',
-                                    // Sutil borde para ver donde termina la hoja
                                     border: '1px solid #e2e8f0',
                                 }}
                             >
-                                {/* Header */}
+                                {/* Header del CV */}
                                 <div className="border-b-2 border-slate-800 pb-6 mb-8 flex gap-8 items-center page-break-inside-avoid">
                                     {cvData.photo && (
                                         <img
