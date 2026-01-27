@@ -91,7 +91,7 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
         setCvData((prev) => ({
             ...prev,
             experience: prev.experience.map((e) =>
-                e.id === id ? { ...e, [field]: value } : e
+                e.id === id ? { ...e, [field]: value } : e,
             ),
         }))
 
@@ -112,7 +112,7 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
         setCvData((prev) => ({
             ...prev,
             education: prev.education.map((e) =>
-                e.id === id ? { ...e, [field]: value } : e
+                e.id === id ? { ...e, [field]: value } : e,
             ),
         }))
 
@@ -129,11 +129,18 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
         await saveCV()
         const element = document.getElementById('cv-preview')
         const opt = {
-            margin: 0,
+            margin: [10, 10, 10, 10], // Margen [top, left, bottom, right] en mm
             filename: `CV-${cvData.fullName.replace(/\s+/g, '-')}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, windowWidth: 1200 },
+            html2canvas: {
+                scale: 2,
+                useCORS: true,
+                windowWidth: 1200,
+                scrollY: 0, // Importante para que no corte si hay scroll
+            },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            // Evita cortes feos en medio de textos
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
         }
 
         try {
@@ -282,7 +289,7 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                                             updateExp(
                                                 exp.id,
                                                 'role',
-                                                e.target.value
+                                                e.target.value,
                                             )
                                         }
                                     />
@@ -294,7 +301,7 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                                             updateExp(
                                                 exp.id,
                                                 'company',
-                                                e.target.value
+                                                e.target.value,
                                             )
                                         }
                                     />
@@ -307,7 +314,7 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                                         updateExp(
                                             exp.id,
                                             'dates',
-                                            e.target.value
+                                            e.target.value,
                                         )
                                     }
                                 />
@@ -319,7 +326,7 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                                         updateExp(
                                             exp.id,
                                             'desc',
-                                            e.target.value
+                                            e.target.value,
                                         )
                                     }
                                 />
@@ -360,7 +367,7 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                                             updateEdu(
                                                 edu.id,
                                                 'degree',
-                                                e.target.value
+                                                e.target.value,
                                             )
                                         }
                                     />
@@ -372,7 +379,7 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                                             updateEdu(
                                                 edu.id,
                                                 'school',
-                                                e.target.value
+                                                e.target.value,
                                             )
                                         }
                                     />
@@ -385,7 +392,7 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                                         updateEdu(
                                             edu.id,
                                             'dates',
-                                            e.target.value
+                                            e.target.value,
                                         )
                                     }
                                 />
@@ -423,128 +430,141 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                     </div>
                 </div>
 
-                {/* VISTA PREVIA ESCALABLE (Derecha) */}
-                <div className="relative bg-slate-200 dark:bg-slate-900 rounded-xl border border-slate-300 dark:border-slate-700 overflow-hidden flex justify-center h-[550px] md:h-[850px]">
-                    <div className="mt-8 origin-top scale-[0.42] sm:scale-[0.5] md:scale-[0.45] lg:scale-[0.45] xl:scale-[0.6] shadow-[0_0_50px_-12px_rgba(0,0,0,0.3)]">
-                        <div
-                            id="cv-preview"
-                            className="bg-white text-slate-800 w-[210mm] min-h-[297mm] px-16 py-12 box-border"
-                            style={{ fontFamily: 'Inter, sans-serif' }}
-                        >
-                            {/* Header */}
-                            <div className="border-b-2 border-slate-800 pb-6 mb-8 flex gap-8 items-center">
-                                {cvData.photo && (
-                                    <img
-                                        src={cvData.photo}
-                                        alt="Profile"
-                                        className="w-36 h-36 rounded-full object-cover border-4 border-slate-100 shadow-sm shrink-0"
-                                    />
-                                )}
-                                <div className="flex-1 min-w-0">
-                                    <h1 className="text-4xl font-extrabold uppercase tracking-tight break-words text-slate-900 leading-tight">
-                                        {cvData.fullName || 'Tu Nombre'}
-                                    </h1>
-                                    <p className="text-xl text-slate-600 font-medium mt-2 mb-4">
-                                        {cvData.title || 'Título Profesional'}
-                                    </p>
-                                    <div className="flex flex-wrap gap-y-2 gap-x-6 text-sm text-slate-500">
-                                        {cvData.email && (
-                                            <span className="flex items-center gap-1.5">
-                                                <Mail className="w-4 h-4 text-brand-600" />{' '}
-                                                {cvData.email}
-                                            </span>
-                                        )}
-                                        {cvData.phone && (
-                                            <span className="flex items-center gap-1.5">
-                                                Tel: {cvData.phone}
-                                            </span>
-                                        )}
-                                        {cvData.address && (
-                                            <span className="flex items-center gap-1.5">
-                                                <MapPin className="w-4 h-4 text-brand-600" />{' '}
-                                                {cvData.address}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Resumen */}
-                            {cvData.summary && (
-                                <div className="mb-10">
-                                    <h3 className="font-bold uppercase text-slate-900 border-b-2 border-slate-100 mb-3 pb-1 text-sm tracking-widest">
-                                        Perfil
-                                    </h3>
-                                    <p className="text-justify text-base leading-relaxed whitespace-pre-wrap text-slate-700">
-                                        {cvData.summary}
-                                    </p>
-                                </div>
-                            )}
-
-                            {/* Experiencia */}
-                            <div className="mb-10">
-                                <h3 className="font-bold uppercase text-slate-900 border-b-2 border-slate-100 mb-4 pb-1 text-sm tracking-widest">
-                                    Experiencia Profesional
-                                </h3>
-                                {cvData.experience.map((exp) => (
-                                    <div
-                                        key={exp.id}
-                                        className="mb-6 last:mb-0"
-                                    >
-                                        <div className="flex justify-between items-baseline mb-1">
-                                            <h4 className="font-bold text-lg text-slate-800">
-                                                {exp.role}
-                                            </h4>
-                                            <span className="text-sm text-slate-500 font-medium italic shrink-0 ml-4">
-                                                {exp.dates}
-                                            </span>
+                {/* VISTA PREVIA ESCALABLE Y SCROLLEABLE (Derecha) */}
+                <div className="relative bg-slate-200 dark:bg-slate-900 rounded-xl border border-slate-300 dark:border-slate-700 overflow-hidden flex flex-col h-[600px] md:h-[850px]">
+                    {/* Contenedor con scroll para ver páginas largas */}
+                    <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8 flex justify-center bg-slate-100 dark:bg-slate-950/50">
+                        {/* Escala visual para que quepa en pantalla, pero manteniendo proporciones A4 */}
+                        <div className="origin-top scale-[0.5] sm:scale-[0.6] md:scale-[0.65] lg:scale-[0.7] xl:scale-[0.8] mb-8">
+                            <div
+                                id="cv-preview"
+                                // CORRECCIÓN 2: Padding interno para simular márgenes de hoja y min-height
+                                className="bg-white text-slate-800 w-[210mm] min-h-[297mm] p-[15mm] box-border shadow-2xl mx-auto"
+                                style={{
+                                    fontFamily: 'Inter, sans-serif',
+                                    // Sutil borde para ver donde termina la hoja
+                                    border: '1px solid #e2e8f0',
+                                }}
+                            >
+                                {/* Header */}
+                                <div className="border-b-2 border-slate-800 pb-6 mb-8 flex gap-8 items-center page-break-inside-avoid">
+                                    {cvData.photo && (
+                                        <img
+                                            src={cvData.photo}
+                                            alt="Profile"
+                                            className="w-36 h-36 rounded-full object-cover border-4 border-slate-100 shadow-sm shrink-0"
+                                        />
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                        <h1 className="text-4xl font-extrabold uppercase tracking-tight break-words text-slate-900 leading-tight">
+                                            {cvData.fullName || 'Tu Nombre'}
+                                        </h1>
+                                        <p className="text-xl text-slate-600 font-medium mt-2 mb-4">
+                                            {cvData.title ||
+                                                'Título Profesional'}
+                                        </p>
+                                        <div className="flex flex-wrap gap-y-2 gap-x-6 text-sm text-slate-500">
+                                            {cvData.email && (
+                                                <span className="flex items-center gap-1.5">
+                                                    <Mail className="w-4 h-4 text-brand-600" />{' '}
+                                                    {cvData.email}
+                                                </span>
+                                            )}
+                                            {cvData.phone && (
+                                                <span className="flex items-center gap-1.5">
+                                                    Tel: {cvData.phone}
+                                                </span>
+                                            )}
+                                            {cvData.address && (
+                                                <span className="flex items-center gap-1.5">
+                                                    <MapPin className="w-4 h-4 text-brand-600" />{' '}
+                                                    {cvData.address}
+                                                </span>
+                                            )}
                                         </div>
-                                        <p className="text-brand-700 font-semibold text-base mb-2">
-                                            {exp.company}
-                                        </p>
-                                        <p className="text-sm whitespace-pre-wrap text-slate-600 leading-relaxed">
-                                            {exp.desc}
-                                        </p>
                                     </div>
-                                ))}
-                            </div>
+                                </div>
 
-                            {/* Educación */}
-                            {cvData.education.length > 0 &&
-                                cvData.education[0].degree && (
-                                    <div className="mb-10">
-                                        <h3 className="font-bold uppercase text-slate-900 border-b-2 border-slate-100 mb-4 pb-1 text-sm tracking-widest">
-                                            Formación
+                                {/* Resumen */}
+                                {cvData.summary && (
+                                    <div className="mb-10 page-break-inside-avoid">
+                                        <h3 className="font-bold uppercase text-slate-900 border-b-2 border-slate-100 mb-3 pb-1 text-sm tracking-widest">
+                                            Perfil
                                         </h3>
-                                        {cvData.education.map((edu) => (
-                                            <div key={edu.id} className="mb-3">
-                                                <div className="flex justify-between items-baseline">
-                                                    <h4 className="font-bold text-base text-slate-800">
-                                                        {edu.degree}
-                                                    </h4>
-                                                    <span className="text-sm text-slate-500 italic shrink-0 ml-4">
-                                                        {edu.dates}
-                                                    </span>
-                                                </div>
-                                                <p className="text-slate-600 text-sm">
-                                                    {edu.school}
-                                                </p>
-                                            </div>
-                                        ))}
+                                        <p className="text-justify text-base leading-relaxed whitespace-pre-wrap text-slate-700">
+                                            {cvData.summary}
+                                        </p>
                                     </div>
                                 )}
 
-                            {/* Habilidades */}
-                            {cvData.skills && (
-                                <div>
-                                    <h3 className="font-bold uppercase text-slate-900 border-b-2 border-slate-100 mb-3 pb-1 text-sm tracking-widest">
-                                        Habilidades
+                                {/* Experiencia */}
+                                <div className="mb-10">
+                                    <h3 className="font-bold uppercase text-slate-900 border-b-2 border-slate-100 mb-4 pb-1 text-sm tracking-widest page-break-after-avoid">
+                                        Experiencia Profesional
                                     </h3>
-                                    <p className="text-base leading-relaxed text-slate-700">
-                                        {cvData.skills}
-                                    </p>
+                                    {cvData.experience.map((exp) => (
+                                        <div
+                                            key={exp.id}
+                                            className="mb-6 last:mb-0 page-break-inside-avoid"
+                                        >
+                                            <div className="flex justify-between items-baseline mb-1">
+                                                <h4 className="font-bold text-lg text-slate-800">
+                                                    {exp.role}
+                                                </h4>
+                                                <span className="text-sm text-slate-500 font-medium italic shrink-0 ml-4">
+                                                    {exp.dates}
+                                                </span>
+                                            </div>
+                                            <p className="text-brand-700 font-semibold text-base mb-2">
+                                                {exp.company}
+                                            </p>
+                                            <p className="text-sm whitespace-pre-wrap text-slate-600 leading-relaxed">
+                                                {exp.desc}
+                                            </p>
+                                        </div>
+                                    ))}
                                 </div>
-                            )}
+
+                                {/* Educación */}
+                                {cvData.education.length > 0 &&
+                                    cvData.education[0].degree && (
+                                        <div className="mb-10 page-break-inside-avoid">
+                                            <h3 className="font-bold uppercase text-slate-900 border-b-2 border-slate-100 mb-4 pb-1 text-sm tracking-widest">
+                                                Formación
+                                            </h3>
+                                            {cvData.education.map((edu) => (
+                                                <div
+                                                    key={edu.id}
+                                                    className="mb-3"
+                                                >
+                                                    <div className="flex justify-between items-baseline">
+                                                        <h4 className="font-bold text-base text-slate-800">
+                                                            {edu.degree}
+                                                        </h4>
+                                                        <span className="text-sm text-slate-500 italic shrink-0 ml-4">
+                                                            {edu.dates}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-slate-600 text-sm">
+                                                        {edu.school}
+                                                    </p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                {/* Habilidades */}
+                                {cvData.skills && (
+                                    <div className="page-break-inside-avoid">
+                                        <h3 className="font-bold uppercase text-slate-900 border-b-2 border-slate-100 mb-3 pb-1 text-sm tracking-widest">
+                                            Habilidades
+                                        </h3>
+                                        <p className="text-base leading-relaxed text-slate-700">
+                                            {cvData.skills}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
