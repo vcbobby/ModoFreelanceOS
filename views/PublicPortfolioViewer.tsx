@@ -1212,24 +1212,24 @@ export const PublicPortfolioViewer = ({ userId }: { userId: string }) => {
                     openProject={setSelectedProject}
                 />
 
-                {/* MODAL PROYECTO OPTIMIZADO */}
+                {/* MODAL PROYECTO FIXED */}
                 <AnimatePresence>
                     {selectedProject && (
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            // 1. Z-Index alto y fixed para cubrir todo
                             className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-xl flex justify-center items-center p-0 md:p-8"
                             onClick={() => setSelectedProject(null)}
                         >
                             <div
-                                // 2. En móviles: h-full w-full (Pantalla completa real)
-                                // En escritorio: max-h-[90vh] rounded-3xl
-                                className="relative w-full h-full md:h-auto md:max-h-[90vh] max-w-6xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white md:rounded-3xl overflow-hidden shadow-2xl border-0 md:border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row"
+                                // CAMBIO CLAVE AQUÍ:
+                                // Mobile: h-full (Pantalla completa)
+                                // Desktop: md:h-[85vh] (Altura fija para forzar scroll interno)
+                                className="relative w-full h-full md:h-[85vh] max-w-6xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white md:rounded-3xl overflow-hidden shadow-2xl border-0 md:border border-slate-200 dark:border-slate-800 flex flex-col"
                                 onClick={(e) => e.stopPropagation()}
                             >
-                                {/* Botón Cerrar (Flotante y visible siempre) */}
+                                {/* Botón Cerrar */}
                                 <button
                                     onClick={() => setSelectedProject(null)}
                                     className="absolute top-4 right-4 z-50 bg-slate-100 dark:bg-black/50 p-2 rounded-full hover:bg-red-500 hover:text-white transition-colors border border-slate-200 dark:border-white/20 shadow-lg"
@@ -1237,14 +1237,14 @@ export const PublicPortfolioViewer = ({ userId }: { userId: string }) => {
                                     <X className="w-6 h-6" />
                                 </button>
 
-                                {/* CONTENEDOR CON SCROLL GLOBAL PARA MÓVIL */}
-                                {/* En móvil, hacemos que todo el contenido sea scrolleable en una sola columna */}
+                                {/* WRAPPER DE CONTENIDO */}
+                                {/* Mobile: overflow-y-auto (scroll global) */}
+                                {/* Desktop: overflow-hidden (para que scrollean los hijos) */}
                                 <div className="flex flex-col md:flex-row w-full h-full overflow-y-auto md:overflow-hidden">
                                     {/* COLUMNA IZQUIERDA (IMÁGENES) */}
-                                    <div className="w-full md:w-7/12 bg-slate-50 dark:bg-black md:overflow-y-auto no-scrollbar shrink-0">
-                                        <div className="p-4 space-y-4 pt-16 md:pt-4">
-                                            {' '}
-                                            {/* Padding top extra en móvil para el botón cerrar */}
+                                    {/* Desktop: h-full + overflow-y-auto (Scroll independiente) */}
+                                    <div className="w-full md:w-7/12 bg-slate-50 dark:bg-black md:h-full md:overflow-y-auto no-scrollbar shrink-0">
+                                        <div className="p-4 space-y-4 pt-16 md:pt-6">
                                             {selectedProject.cover && (
                                                 <img
                                                     src={selectedProject.cover}
@@ -1293,12 +1293,16 @@ export const PublicPortfolioViewer = ({ userId }: { userId: string }) => {
                                                     return null
                                                 },
                                             )}
+                                            {/* Espacio extra abajo para no cortar la última imagen */}
+                                            <div className="h-10 md:h-0"></div>
                                         </div>
                                     </div>
 
                                     {/* COLUMNA DERECHA (TEXTO) */}
+                                    {/* Desktop: h-full (ocupa toda la altura disponible) */}
                                     <div className="w-full md:w-5/12 bg-white dark:bg-slate-900 border-t md:border-t-0 md:border-l border-slate-200 dark:border-slate-800 flex flex-col md:h-full">
-                                        <div className="p-8 md:p-10 md:overflow-y-auto no-scrollbar flex-1">
+                                        {/* Desktop: flex-1 + overflow-y-auto (Scroll independiente del texto) */}
+                                        <div className="p-8 md:p-10 flex-1 md:overflow-y-auto no-scrollbar">
                                             <h2 className="text-3xl md:text-4xl font-bold mb-6 leading-tight">
                                                 {selectedProject.title}
                                             </h2>
@@ -1323,7 +1327,6 @@ export const PublicPortfolioViewer = ({ userId }: { userId: string }) => {
                                                 {selectedProject.desc}
                                             </div>
 
-                                            {/* DOCUMENTOS */}
                                             {selectedProject.documents &&
                                                 selectedProject.documents
                                                     .length > 0 && (
@@ -1371,7 +1374,7 @@ export const PublicPortfolioViewer = ({ userId }: { userId: string }) => {
                                                 )}
                                         </div>
 
-                                        {/* BOTÓN VISITAR */}
+                                        {/* Botón Visitar (Sticky en Móvil, Fijo abajo en Desktop) */}
                                         {selectedProject.link && (
                                             <div className="p-6 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 z-10 sticky bottom-0 md:relative">
                                                 <a
