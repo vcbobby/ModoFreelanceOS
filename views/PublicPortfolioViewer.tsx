@@ -248,7 +248,7 @@ const ContactActions = ({ data, accent, style = 'default' }: any) => {
 // --- FOOTER ---
 const Footer = ({ name, isDark }: any) => (
     <footer
-        className={`py-12 text-center text-sm border-t mt-auto w-full relative z-10 ${
+        className={`py-12 text-center text-sm border-t mt-8 w-full relative z-10 ${
             isDark
                 ? 'border-white/10 text-slate-400'
                 : 'border-black/10 text-slate-500 dark:border-white/10 dark:text-slate-400'
