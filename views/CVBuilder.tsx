@@ -424,30 +424,40 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                     </div>
                 </div>
 
-                {/* VISTA PREVIA (DERECHA) - CORREGIDA */}
+                {/* VISTA PREVIA (DERECHA) - RE-CORREGIDA */}
                 <div className="relative bg-slate-200 dark:bg-slate-900 rounded-xl border border-slate-300 dark:border-slate-700 overflow-hidden flex flex-col h-[600px] md:h-[850px] shadow-inner">
                     <div className="bg-slate-300 dark:bg-slate-800 p-2 text-center text-xs font-bold text-slate-500 uppercase tracking-widest border-b border-slate-300 dark:border-slate-700 z-10 relative">
-                        Vista Previa
+                        Vista Previa (A4)
                     </div>
 
-                    {/* CONTENEDOR DE SCROLL RESPONSIVO */}
-                    <div className="flex-1 overflow-auto bg-slate-100 dark:bg-slate-950/50 p-4 md:p-8 flex justify-center items-start">
-                        {/* WRAPPER DE ESCALA */}
-                        {/* Usamos un ancho fijo para el wrapper para que el zoom no lo mueva raro */}
-                        <div
-                            className="origin-top transform-gpu transition-transform duration-300"
-                            style={{ transform: 'scale(0.55)', width: '210mm' }}
-                        >
+                    {/* CONTENEDOR CON SCROLL ESTILIZADO */}
+                    {/* Agregamos clases [&::-webkit-scrollbar] para estilizar las barras */}
+                    <div
+                        className="flex-1 overflow-auto bg-slate-100 dark:bg-slate-950/50 p-2 md:p-8 flex justify-center items-start
+                        scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600 scrollbar-track-transparent scrollbar-thumb-rounded-full
+                        [&::-webkit-scrollbar]:w-2 
+                        [&::-webkit-scrollbar]:h-2
+                        [&::-webkit-scrollbar-track]:bg-transparent
+                        [&::-webkit-scrollbar-thumb]:bg-slate-300 
+                        [&::-webkit-scrollbar-thumb]:rounded-full
+                        dark:[&::-webkit-scrollbar-thumb]:bg-slate-600"
+                    >
+                        {/* WRAPPER DE ESCALA RESPONSIVA */}
+                        {/* Quitamos el 'transform' inline para que las clases 'scale' funcionen */}
+                        {/* scale-[0.4] en móvil arregla el corte izquierdo */}
+                        <div className="origin-top transform-gpu transition-transform duration-300 scale-[0.4] sm:scale-[0.55] md:scale-[0.6] lg:scale-[0.65] xl:scale-[0.75]">
                             <div
                                 id="cv-preview"
                                 className="bg-white text-slate-800 shadow-2xl mx-auto box-border"
                                 style={{
-                                    width: '210mm', // Ancho A4 exacto
-                                    minHeight: '297mm', // Alto A4 mínimo
-                                    padding: '15mm', // Márgenes internos seguros (padding)
+                                    width: '210mm', // Ancho A4
+                                    minHeight: '297mm', // Alto A4
+                                    // AUMENTADO padding-top a 20mm (antes 15mm) para más margen superior
+                                    padding: '20mm 15mm 15mm 15mm',
                                     fontFamily: 'Inter, sans-serif',
-                                    fontSize: '11pt', // Tamaño base legible
+                                    fontSize: '11pt',
                                     lineHeight: '1.5',
+                                    border: '1px solid #e2e8f0',
                                 }}
                             >
                                 {/* Header */}
@@ -521,7 +531,7 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                                             <p className="text-brand-700 font-semibold text-sm mb-2">
                                                 {exp.company}
                                             </p>
-                                            <p className="text-sm text-slate-600 whitespace-pre-wrap">
+                                            <p className="text-sm text-slate-600 whitespace-pre-wrap text-justify">
                                                 {exp.desc}
                                             </p>
                                         </div>
