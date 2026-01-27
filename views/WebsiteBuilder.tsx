@@ -594,16 +594,19 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                         {/* 1. GENERAL */}
                         {activeSection === 'general' && (
                             <div className="space-y-6 animate-in fade-in">
-                                <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-xl border border-blue-100 dark:border-blue-800">
+                                {/* CORRECCIÓN RESPONSIVE PARA EL SLUG */}
+                                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 md:p-6 rounded-xl border border-blue-100 dark:border-blue-800">
                                     <label className="text-xs font-bold text-blue-800 dark:text-blue-300 uppercase mb-2 block">
                                         Tu Enlace Personalizado
                                     </label>
-                                    <div className="flex items-center">
-                                        <span className="text-slate-400 dark:text-slate-500 text-sm mr-2 font-mono">
+
+                                    {/* CAMBIO AQUI: flex-col en móvil, flex-row en sm/md */}
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                                        <span className="text-slate-400 dark:text-slate-500 text-sm font-mono break-all sm:break-normal">
                                             app.modofreelanceos.com/p/
                                         </span>
                                         <input
-                                            className="flex-1 bg-transparent border-b-2 border-blue-300 focus:border-blue-600 outline-none text-blue-900 dark:text-white font-bold text-lg p-1"
+                                            className="w-full flex-1 bg-transparent border-b-2 border-blue-300 focus:border-blue-600 outline-none text-blue-900 dark:text-white font-bold text-lg p-1 min-w-0"
                                             value={siteData.slug}
                                             onChange={(e) =>
                                                 update(
