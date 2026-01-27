@@ -460,7 +460,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
         )
 
     const inputClass =
-        'w-full p-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-brand-500 transition-all placeholder:text-slate-400'
+        'w-full max-w-full min-w-0 p-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-brand-500 transition-all placeholder:text-slate-400'
     const labelClass =
         'text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1.5 block tracking-wide'
 
@@ -618,12 +618,14 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
+                                    {/* Agregado 'w-full' y 'min-w-0' para evitar desbordamiento */}
+                                    <div className="w-full min-w-0">
                                         <label className={labelClass}>
                                             Nombre Visible
                                         </label>
                                         <input
-                                            className={inputClass}
+                                            // Aseguramos max-w-full por si acaso
+                                            className={`${inputClass} max-w-full`}
                                             value={siteData.name}
                                             onChange={(e) =>
                                                 update('name', e.target.value)
