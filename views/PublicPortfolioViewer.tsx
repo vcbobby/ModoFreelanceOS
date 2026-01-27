@@ -255,8 +255,8 @@ const Footer = ({ name, isDark }: any) => (
         }`}
     >
         <p className="font-medium">
-            &copy; {new Date().getFullYear()} {name}. Todos los derechos
-            reservados.
+            &copy; {new Date().getFullYear()} ModoFreelanceOS. Todos los
+            derechos reservados.
         </p>
         <a
             href="https://modofreelanceos.com"
