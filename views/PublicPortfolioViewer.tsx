@@ -1212,167 +1212,186 @@ export const PublicPortfolioViewer = ({ userId }: { userId: string }) => {
                     openProject={setSelectedProject}
                 />
 
-                {/* MODAL PROYECTO */}
+                {/* MODAL PROYECTO OPTIMIZADO */}
                 <AnimatePresence>
                     {selectedProject && (
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex justify-center items-center p-4 md:p-8"
+                            // 1. Z-Index alto y fixed para cubrir todo
+                            className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-xl flex justify-center items-center p-0 md:p-8"
                             onClick={() => setSelectedProject(null)}
                         >
                             <div
-                                className="relative w-full max-w-6xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-3xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row max-h-[90vh]"
+                                // 2. En móviles: h-full w-full (Pantalla completa real)
+                                // En escritorio: max-h-[90vh] rounded-3xl
+                                className="relative w-full h-full md:h-auto md:max-h-[90vh] max-w-6xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white md:rounded-3xl overflow-hidden shadow-2xl border-0 md:border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row"
                                 onClick={(e) => e.stopPropagation()}
                             >
+                                {/* Botón Cerrar (Flotante y visible siempre) */}
                                 <button
                                     onClick={() => setSelectedProject(null)}
-                                    className="absolute top-4 right-4 z-50 bg-slate-100 dark:bg-black/50 p-2 rounded-full hover:bg-red-500 hover:text-white transition-colors border border-slate-200 dark:border-white/20"
+                                    className="absolute top-4 right-4 z-50 bg-slate-100 dark:bg-black/50 p-2 rounded-full hover:bg-red-500 hover:text-white transition-colors border border-slate-200 dark:border-white/20 shadow-lg"
                                 >
-                                    <X className="w-5 h-5" />
+                                    <X className="w-6 h-6" />
                                 </button>
 
-                                <div className="md:w-7/12 bg-slate-50 dark:bg-black overflow-y-auto no-scrollbar">
-                                    <div className="p-4 space-y-4">
-                                        {selectedProject.cover && (
-                                            <img
-                                                src={selectedProject.cover}
-                                                className="w-full rounded-xl shadow-lg border border-slate-200 dark:border-slate-800"
-                                                alt="Portada"
-                                            />
-                                        )}
-                                        {selectedProject.gallery?.map(
-                                            (item: any, i: number) => {
-                                                if (
-                                                    item.type?.includes('video')
-                                                ) {
-                                                    return (
-                                                        <div
-                                                            key={i}
-                                                            className="relative rounded-xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800"
-                                                        >
-                                                            <video
+                                {/* CONTENEDOR CON SCROLL GLOBAL PARA MÓVIL */}
+                                {/* En móvil, hacemos que todo el contenido sea scrolleable en una sola columna */}
+                                <div className="flex flex-col md:flex-row w-full h-full overflow-y-auto md:overflow-hidden">
+                                    {/* COLUMNA IZQUIERDA (IMÁGENES) */}
+                                    <div className="w-full md:w-7/12 bg-slate-50 dark:bg-black md:overflow-y-auto no-scrollbar shrink-0">
+                                        <div className="p-4 space-y-4 pt-16 md:pt-4">
+                                            {' '}
+                                            {/* Padding top extra en móvil para el botón cerrar */}
+                                            {selectedProject.cover && (
+                                                <img
+                                                    src={selectedProject.cover}
+                                                    className="w-full rounded-xl shadow-lg border border-slate-200 dark:border-slate-800"
+                                                    alt="Portada"
+                                                />
+                                            )}
+                                            {selectedProject.gallery?.map(
+                                                (item: any, i: number) => {
+                                                    if (
+                                                        item.type?.includes(
+                                                            'video',
+                                                        )
+                                                    ) {
+                                                        return (
+                                                            <div
+                                                                key={i}
+                                                                className="relative rounded-xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800"
+                                                            >
+                                                                <video
+                                                                    src={
+                                                                        item.url
+                                                                    }
+                                                                    controls
+                                                                    className="w-full"
+                                                                />
+                                                            </div>
+                                                        )
+                                                    } else if (
+                                                        !item.type?.includes(
+                                                            'pdf',
+                                                        ) &&
+                                                        !item.type?.includes(
+                                                            'application',
+                                                        )
+                                                    ) {
+                                                        return (
+                                                            <img
+                                                                key={i}
                                                                 src={item.url}
-                                                                controls
-                                                                className="w-full"
+                                                                className="w-full rounded-xl object-cover"
+                                                                alt="Galería"
                                                             />
-                                                        </div>
-                                                    )
-                                                } else if (
-                                                    !item.type?.includes(
-                                                        'pdf',
-                                                    ) &&
-                                                    !item.type?.includes(
-                                                        'application',
-                                                    )
-                                                ) {
-                                                    return (
-                                                        <img
-                                                            key={i}
-                                                            src={item.url}
-                                                            className="w-full rounded-xl object-cover"
-                                                            alt="Galería"
-                                                        />
-                                                    )
-                                                }
-                                                return null
-                                            },
-                                        )}
+                                                        )
+                                                    }
+                                                    return null
+                                                },
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div className="md:w-5/12 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 flex flex-col">
-                                    <div className="p-8 md:p-10 overflow-y-auto no-scrollbar flex-1">
-                                        <h2 className="text-3xl md:text-4xl font-bold mb-6 leading-tight">
-                                            {selectedProject.title}
-                                        </h2>
-                                        <div className="flex flex-wrap gap-2 mb-8">
-                                            {selectedProject.tags
-                                                ?.split(',')
-                                                .map(
-                                                    (
-                                                        t: string,
-                                                        idx: number,
-                                                    ) => (
-                                                        <span
-                                                            key={idx}
-                                                            className="px-3 py-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300"
-                                                        >
-                                                            {t.trim()}
-                                                        </span>
-                                                    ),
+                                    {/* COLUMNA DERECHA (TEXTO) */}
+                                    <div className="w-full md:w-5/12 bg-white dark:bg-slate-900 border-t md:border-t-0 md:border-l border-slate-200 dark:border-slate-800 flex flex-col md:h-full">
+                                        <div className="p-8 md:p-10 md:overflow-y-auto no-scrollbar flex-1">
+                                            <h2 className="text-3xl md:text-4xl font-bold mb-6 leading-tight">
+                                                {selectedProject.title}
+                                            </h2>
+                                            <div className="flex flex-wrap gap-2 mb-8">
+                                                {selectedProject.tags
+                                                    ?.split(',')
+                                                    .map(
+                                                        (
+                                                            t: string,
+                                                            idx: number,
+                                                        ) => (
+                                                            <span
+                                                                key={idx}
+                                                                className="px-3 py-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300"
+                                                            >
+                                                                {t.trim()}
+                                                            </span>
+                                                        ),
+                                                    )}
+                                            </div>
+                                            <div className="prose dark:prose-invert prose-sm max-w-none text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap mb-10">
+                                                {selectedProject.desc}
+                                            </div>
+
+                                            {/* DOCUMENTOS */}
+                                            {selectedProject.documents &&
+                                                selectedProject.documents
+                                                    .length > 0 && (
+                                                    <div className="mt-8 pt-8 border-t border-slate-200 dark:border-slate-800">
+                                                        <h4 className="text-xs font-bold uppercase text-slate-400 mb-4 tracking-wider">
+                                                            Documentos Adjuntos
+                                                        </h4>
+                                                        <div className="space-y-3">
+                                                            {selectedProject.documents.map(
+                                                                (
+                                                                    doc: any,
+                                                                    i: number,
+                                                                ) => (
+                                                                    <button
+                                                                        key={i}
+                                                                        onClick={() =>
+                                                                            forceDownload(
+                                                                                doc.url,
+                                                                                doc.name,
+                                                                            )
+                                                                        }
+                                                                        className="flex items-center gap-3 p-3 w-full text-left bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 transition-all group"
+                                                                    >
+                                                                        <div className="p-2 bg-white dark:bg-slate-900 rounded border border-slate-200 dark:border-slate-700 group-hover:border-blue-500 transition-colors">
+                                                                            <FileText className="w-5 h-5 text-blue-500" />
+                                                                        </div>
+                                                                        <div className="flex-1 overflow-hidden">
+                                                                            <p className="text-sm font-bold truncate group-hover:text-blue-500 transition-colors">
+                                                                                {
+                                                                                    doc.name
+                                                                                }
+                                                                            </p>
+                                                                            <p className="text-[10px] opacity-50">
+                                                                                Clic
+                                                                                para
+                                                                                descargar
+                                                                            </p>
+                                                                        </div>
+                                                                        <Download className="w-4 h-4 opacity-40 group-hover:opacity-100" />
+                                                                    </button>
+                                                                ),
+                                                            )}
+                                                        </div>
+                                                    </div>
                                                 )}
                                         </div>
-                                        <div className="prose dark:prose-invert prose-sm max-w-none text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap mb-10">
-                                            {selectedProject.desc}
-                                        </div>
 
-                                        {selectedProject.documents &&
-                                            selectedProject.documents.length >
-                                                0 && (
-                                                <div className="mt-8 pt-8 border-t border-slate-200 dark:border-slate-800">
-                                                    <h4 className="text-xs font-bold uppercase text-slate-400 mb-4 tracking-wider">
-                                                        Documentos Adjuntos
-                                                    </h4>
-                                                    <div className="space-y-3">
-                                                        {selectedProject.documents.map(
-                                                            (
-                                                                doc: any,
-                                                                i: number,
-                                                            ) => (
-                                                                <button
-                                                                    key={i}
-                                                                    onClick={() =>
-                                                                        forceDownload(
-                                                                            doc.url,
-                                                                            doc.name,
-                                                                        )
-                                                                    }
-                                                                    className="flex items-center gap-3 p-3 w-full text-left bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 transition-all group"
-                                                                >
-                                                                    <div className="p-2 bg-white dark:bg-slate-900 rounded border border-slate-200 dark:border-slate-700 group-hover:border-blue-500 transition-colors">
-                                                                        <FileText className="w-5 h-5 text-blue-500" />
-                                                                    </div>
-                                                                    <div className="flex-1 overflow-hidden">
-                                                                        <p className="text-sm font-bold truncate group-hover:text-blue-500 transition-colors">
-                                                                            {
-                                                                                doc.name
-                                                                            }
-                                                                        </p>
-                                                                        <p className="text-[10px] opacity-50">
-                                                                            Clic
-                                                                            para
-                                                                            descargar
-                                                                        </p>
-                                                                    </div>
-                                                                    <Download className="w-4 h-4 opacity-40 group-hover:opacity-100" />
-                                                                </button>
-                                                            ),
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            )}
+                                        {/* BOTÓN VISITAR */}
+                                        {selectedProject.link && (
+                                            <div className="p-6 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 z-10 sticky bottom-0 md:relative">
+                                                <a
+                                                    href={
+                                                        selectedProject.link.startsWith(
+                                                            'http',
+                                                        )
+                                                            ? selectedProject.link
+                                                            : `https://${selectedProject.link}`
+                                                    }
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="flex w-full items-center justify-center gap-2 bg-slate-900 dark:bg-white text-white dark:text-black px-6 py-4 rounded-xl font-bold hover:opacity-90 transition-all shadow-lg"
+                                                >
+                                                    Visitar Proyecto{' '}
+                                                    <ExternalLink className="w-4 h-4" />
+                                                </a>
+                                            </div>
+                                        )}
                                     </div>
-                                    {selectedProject.link && (
-                                        <div className="p-6 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 z-10">
-                                            <a
-                                                href={
-                                                    selectedProject.link.startsWith(
-                                                        'http',
-                                                    )
-                                                        ? selectedProject.link
-                                                        : `https://${selectedProject.link}`
-                                                }
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="flex w-full items-center justify-center gap-2 bg-slate-900 dark:bg-white text-white dark:text-black px-6 py-4 rounded-xl font-bold hover:opacity-90 transition-all shadow-lg"
-                                            >
-                                                Visitar Proyecto{' '}
-                                                <ExternalLink className="w-4 h-4" />
-                                            </a>
-                                        </div>
-                                    )}
                                 </div>
                             </div>
                         </motion.div>
