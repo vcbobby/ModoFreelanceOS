@@ -22,7 +22,6 @@ interface CVBuilderProps {
 }
 
 export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
-    // Estado del CV
     const [cvData, setCvData] = useState({
         fullName: '',
         title: '',
@@ -43,7 +42,6 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
         message: '',
     })
 
-    // 1. CARGAR DATOS AL INICIO
     useEffect(() => {
         if (!userId) return
         const loadCV = async () => {
@@ -52,25 +50,23 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                 const snap = await getDoc(docRef)
                 if (snap.exists()) setCvData(snap.data() as any)
             } catch (e) {
-                console.error('Error cargando CV', e)
+                console.error(e)
             }
         }
         loadCV()
     }, [userId])
 
-    // 2. GUARDAR DATOS
     const saveCV = async () => {
         if (!userId) return
         setSaving(true)
         try {
             await setDoc(doc(db, 'users', userId, 'cv_data', 'main'), cvData)
         } catch (e) {
-            console.error('Error guardando CV', e)
+            console.error(e)
         }
         setSaving(false)
     }
 
-    // Funciones de formulario
     const updateField = (field: string, value: any) =>
         setCvData((prev) => ({ ...prev, [field]: value }))
 
@@ -128,18 +124,19 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
     const handleDownloadCV = async () => {
         await saveCV()
         const element = document.getElementById('cv-preview')
+
+        // CONFIGURACIÓN AJUSTADA PARA QUE NO CORTE
         const opt = {
-            margin: [10, 10, 10, 10], // Margen [top, left, bottom, right] en mm
+            margin: 0, // Usamos margin 0 porque el padding ya está en el CSS del div
             filename: `CV-${cvData.fullName.replace(/\s+/g, '-')}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: {
                 scale: 2,
                 useCORS: true,
-                windowWidth: 1200,
-                scrollY: 0, // Importante para que no corte si hay scroll
+                // IMPORTANTE: No fijar windowWidth aquí para que tome el del elemento real
+                scrollY: 0,
             },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            // Evita cortes feos en medio de textos
             pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
         }
 
@@ -169,7 +166,7 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
     }
 
     return (
-        <div className="max-w-6xl mx-auto pb-20">
+        <div className="max-w-7xl mx-auto pb-20">
             <ConfirmationModal
                 isOpen={modal.isOpen}
                 onClose={() => setModal({ ...modal, isOpen: false })}
@@ -183,12 +180,12 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                     <FileText className="w-6 h-6 text-brand-600" /> Constructor
                     CV
                 </h2>
-                {/* Eliminado selector de tabs */}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                 {/* COLUMNA IZQUIERDA: EDITOR */}
                 <div className="space-y-6">
+                    {/* ... (Tus cards de inputs siguen igual, no cambiaron) ... */}
                     <Card className="p-6 bg-white dark:bg-slate-800">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="font-bold dark:text-white">
@@ -256,7 +253,6 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                         </div>
                     </Card>
 
-                    {/* EXPERIENCIA */}
                     <Card className="p-6 bg-white dark:bg-slate-800">
                         <div className="flex justify-between mb-4">
                             <h3 className="font-bold dark:text-white">
@@ -308,7 +304,7 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                                 </div>
                                 <input
                                     className="w-full p-2 border rounded text-sm mb-2 dark:bg-slate-900 dark:border-slate-700 dark:text-white"
-                                    placeholder="Fechas (Ej: Ene 2020 - Actualidad)"
+                                    placeholder="Fechas"
                                     value={exp.dates}
                                     onChange={(e) =>
                                         updateExp(
@@ -320,7 +316,7 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                                 />
                                 <textarea
                                     className="w-full p-2 border rounded text-sm h-20 dark:bg-slate-900 dark:border-slate-700 dark:text-white"
-                                    placeholder="Descripción de logros..."
+                                    placeholder="Descripción..."
                                     value={exp.desc}
                                     onChange={(e) =>
                                         updateExp(
@@ -334,7 +330,6 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                         ))}
                     </Card>
 
-                    {/* EDUCACIÓN */}
                     <Card className="p-6 bg-white dark:bg-slate-800">
                         <div className="flex justify-between mb-4">
                             <h3 className="font-bold dark:text-white">
@@ -400,14 +395,13 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                         ))}
                     </Card>
 
-                    {/* HABILIDADES */}
                     <Card className="p-6 bg-white dark:bg-slate-800">
                         <h3 className="font-bold mb-4 dark:text-white">
                             Habilidades
                         </h3>
                         <textarea
                             className="w-full p-3 border rounded h-24 dark:bg-slate-900 dark:border-slate-700 dark:text-white"
-                            placeholder="Lista tus habilidades separadas por comas..."
+                            placeholder="Habilidades..."
                             value={cvData.skills}
                             onChange={(e) =>
                                 updateField('skills', e.target.value)
@@ -430,47 +424,50 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                     </div>
                 </div>
 
-                {/* VISTA PREVIA ESCALABLE (Derecha) */}
-                <div className="relative bg-slate-200 dark:bg-slate-900 rounded-xl border border-slate-300 dark:border-slate-700 overflow-hidden flex flex-col h-[500px] md:h-[850px]">
-                    {/* Header visual de la vista previa */}
-                    <div className="bg-slate-300 dark:bg-slate-800 p-2 text-center text-xs font-bold text-slate-500 uppercase tracking-widest border-b border-slate-300 dark:border-slate-700">
-                        Vista Previa (A4)
+                {/* VISTA PREVIA (DERECHA) - CORREGIDA */}
+                <div className="relative bg-slate-200 dark:bg-slate-900 rounded-xl border border-slate-300 dark:border-slate-700 overflow-hidden flex flex-col h-[600px] md:h-[850px] shadow-inner">
+                    <div className="bg-slate-300 dark:bg-slate-800 p-2 text-center text-xs font-bold text-slate-500 uppercase tracking-widest border-b border-slate-300 dark:border-slate-700 z-10 relative">
+                        Vista Previa
                     </div>
 
-                    {/* Contenedor con SCROLL EN AMBAS DIRECCIONES (overflow-auto) */}
-                    {/* Esto evita el recorte si la hoja es más ancha que la pantalla */}
-                    <div className="flex-1 overflow-auto custom-scrollbar p-4 md:p-8 flex justify-center items-start bg-slate-100 dark:bg-slate-950/50">
-                        {/* ESCALADO RESPONSIVO AJUSTADO */}
-                        {/* Bajamos la escala base a 0.35 para móviles pequeños */}
-                        {/* En escritorio (xl) ajustamos a 0.65 para que quepa en la columna */}
-                        <div className="origin-top scale-[0.35] sm:scale-[0.5] md:scale-[0.55] lg:scale-[0.6] xl:scale-[0.7] mb-8 shrink-0">
+                    {/* CONTENEDOR DE SCROLL RESPONSIVO */}
+                    <div className="flex-1 overflow-auto bg-slate-100 dark:bg-slate-950/50 p-4 md:p-8 flex justify-center items-start">
+                        {/* WRAPPER DE ESCALA */}
+                        {/* Usamos un ancho fijo para el wrapper para que el zoom no lo mueva raro */}
+                        <div
+                            className="origin-top transform-gpu transition-transform duration-300"
+                            style={{ transform: 'scale(0.55)', width: '210mm' }}
+                        >
                             <div
                                 id="cv-preview"
-                                // A4 Fijo con padding simulando márgenes de impresión
-                                className="bg-white text-slate-800 w-[210mm] min-h-[297mm] p-[15mm] box-border shadow-2xl mx-auto"
+                                className="bg-white text-slate-800 shadow-2xl mx-auto box-border"
                                 style={{
+                                    width: '210mm', // Ancho A4 exacto
+                                    minHeight: '297mm', // Alto A4 mínimo
+                                    padding: '15mm', // Márgenes internos seguros (padding)
                                     fontFamily: 'Inter, sans-serif',
-                                    border: '1px solid #e2e8f0',
+                                    fontSize: '11pt', // Tamaño base legible
+                                    lineHeight: '1.5',
                                 }}
                             >
-                                {/* Header del CV */}
+                                {/* Header */}
                                 <div className="border-b-2 border-slate-800 pb-6 mb-8 flex gap-8 items-center page-break-inside-avoid">
                                     {cvData.photo && (
                                         <img
                                             src={cvData.photo}
                                             alt="Profile"
-                                            className="w-36 h-36 rounded-full object-cover border-4 border-slate-100 shadow-sm shrink-0"
+                                            className="w-32 h-32 rounded-full object-cover border-4 border-slate-100 shadow-sm shrink-0"
                                         />
                                     )}
                                     <div className="flex-1 min-w-0">
-                                        <h1 className="text-4xl font-extrabold uppercase tracking-tight break-words text-slate-900 leading-tight">
+                                        <h1 className="text-3xl font-extrabold uppercase tracking-tight text-slate-900 leading-tight mb-1">
                                             {cvData.fullName || 'Tu Nombre'}
                                         </h1>
-                                        <p className="text-xl text-slate-600 font-medium mt-2 mb-4">
+                                        <p className="text-xl text-brand-700 font-medium mb-3">
                                             {cvData.title ||
                                                 'Título Profesional'}
                                         </p>
-                                        <div className="flex flex-wrap gap-y-2 gap-x-6 text-sm text-slate-500">
+                                        <div className="flex flex-wrap gap-y-2 gap-x-4 text-sm text-slate-600">
                                             {cvData.email && (
                                                 <span className="flex items-center gap-1.5">
                                                     <Mail className="w-4 h-4 text-brand-600" />{' '}
@@ -492,20 +489,19 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                                     </div>
                                 </div>
 
-                                {/* Resumen */}
+                                {/* Contenido */}
                                 {cvData.summary && (
-                                    <div className="mb-10 page-break-inside-avoid">
+                                    <div className="mb-8 page-break-inside-avoid">
                                         <h3 className="font-bold uppercase text-slate-900 border-b-2 border-slate-100 mb-3 pb-1 text-sm tracking-widest">
                                             Perfil
                                         </h3>
-                                        <p className="text-justify text-base leading-relaxed whitespace-pre-wrap text-slate-700">
+                                        <p className="text-justify text-sm text-slate-700">
                                             {cvData.summary}
                                         </p>
                                     </div>
                                 )}
 
-                                {/* Experiencia */}
-                                <div className="mb-10">
+                                <div className="mb-8">
                                     <h3 className="font-bold uppercase text-slate-900 border-b-2 border-slate-100 mb-4 pb-1 text-sm tracking-widest page-break-after-avoid">
                                         Experiencia Profesional
                                     </h3>
@@ -515,40 +511,39 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                                             className="mb-6 last:mb-0 page-break-inside-avoid"
                                         >
                                             <div className="flex justify-between items-baseline mb-1">
-                                                <h4 className="font-bold text-lg text-slate-800">
+                                                <h4 className="font-bold text-base text-slate-900">
                                                     {exp.role}
                                                 </h4>
-                                                <span className="text-sm text-slate-500 font-medium italic shrink-0 ml-4">
+                                                <span className="text-xs text-slate-500 font-medium italic shrink-0 ml-4 bg-slate-100 px-2 py-0.5 rounded">
                                                     {exp.dates}
                                                 </span>
                                             </div>
-                                            <p className="text-brand-700 font-semibold text-base mb-2">
+                                            <p className="text-brand-700 font-semibold text-sm mb-2">
                                                 {exp.company}
                                             </p>
-                                            <p className="text-sm whitespace-pre-wrap text-slate-600 leading-relaxed">
+                                            <p className="text-sm text-slate-600 whitespace-pre-wrap">
                                                 {exp.desc}
                                             </p>
                                         </div>
                                     ))}
                                 </div>
 
-                                {/* Educación */}
                                 {cvData.education.length > 0 &&
                                     cvData.education[0].degree && (
-                                        <div className="mb-10 page-break-inside-avoid">
+                                        <div className="mb-8 page-break-inside-avoid">
                                             <h3 className="font-bold uppercase text-slate-900 border-b-2 border-slate-100 mb-4 pb-1 text-sm tracking-widest">
                                                 Formación
                                             </h3>
                                             {cvData.education.map((edu) => (
                                                 <div
                                                     key={edu.id}
-                                                    className="mb-3"
+                                                    className="mb-3 page-break-inside-avoid"
                                                 >
                                                     <div className="flex justify-between items-baseline">
-                                                        <h4 className="font-bold text-base text-slate-800">
+                                                        <h4 className="font-bold text-sm text-slate-900">
                                                             {edu.degree}
                                                         </h4>
-                                                        <span className="text-sm text-slate-500 italic shrink-0 ml-4">
+                                                        <span className="text-xs text-slate-500 italic shrink-0 ml-4">
                                                             {edu.dates}
                                                         </span>
                                                     </div>
@@ -560,13 +555,12 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                                         </div>
                                     )}
 
-                                {/* Habilidades */}
                                 {cvData.skills && (
                                     <div className="page-break-inside-avoid">
                                         <h3 className="font-bold uppercase text-slate-900 border-b-2 border-slate-100 mb-3 pb-1 text-sm tracking-widest">
                                             Habilidades
                                         </h3>
-                                        <p className="text-base leading-relaxed text-slate-700">
+                                        <p className="text-sm text-slate-700 leading-relaxed">
                                             {cvData.skills}
                                         </p>
                                     </div>
