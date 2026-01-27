@@ -125,18 +125,21 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
         await saveCV()
         const element = document.getElementById('cv-preview')
 
-        // CONFIGURACIÓN AJUSTADA PARA QUE NO CORTE
+        // CORRECCIÓN PDF: Márgenes físicos para cada hoja
         const opt = {
-            margin: 0, // Usamos margin 0 porque el padding ya está en el CSS del div
+            // Margen [Arriba, Izquierda, Abajo, Derecha] en mm
+            // Esto asegura que la página 2 tenga espacio blanco arriba
+            margin: [10, 10, 10, 10],
             filename: `CV-${cvData.fullName.replace(/\s+/g, '-')}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: {
                 scale: 2,
                 useCORS: true,
-                // IMPORTANTE: No fijar windowWidth aquí para que tome el del elemento real
+                letterRendering: true,
                 scrollY: 0,
             },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            // Evitar cortes feos en textos
             pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
         }
 
@@ -424,157 +427,155 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage, userId }) => {
                     </div>
                 </div>
 
-                {/* VISTA PREVIA (DERECHA) - RE-CORREGIDA */}
-                <div className="relative bg-slate-200 dark:bg-slate-900 rounded-xl border border-slate-300 dark:border-slate-700 overflow-hidden flex flex-col h-[600px] md:h-[850px] shadow-inner">
+                {/* VISTA PREVIA (DERECHA) - VERSIÓN FINAL */}
+                <div className="relative bg-slate-200 dark:bg-slate-900 rounded-xl border border-slate-300 dark:border-slate-700 overflow-hidden flex flex-col h-[550px] md:h-[850px] shadow-inner">
                     <div className="bg-slate-300 dark:bg-slate-800 p-2 text-center text-xs font-bold text-slate-500 uppercase tracking-widest border-b border-slate-300 dark:border-slate-700 z-10 relative">
                         Vista Previa (A4)
                     </div>
 
-                    {/* CONTENEDOR CON SCROLL ESTILIZADO */}
-                    {/* Agregamos clases [&::-webkit-scrollbar] para estilizar las barras */}
+                    {/* CONTENEDOR DE SCROLL */}
+                    {/* Usamos 'grid' y 'place-items-center' o un wrapper con mx-auto para evitar el corte izquierdo */}
                     <div
-                        className="flex-1 overflow-auto bg-slate-100 dark:bg-slate-950/50 p-2 md:p-8 flex justify-center items-start
-                        scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600 scrollbar-track-transparent scrollbar-thumb-rounded-full
-                        [&::-webkit-scrollbar]:w-2 
-                        [&::-webkit-scrollbar]:h-2
-                        [&::-webkit-scrollbar-track]:bg-transparent
-                        [&::-webkit-scrollbar-thumb]:bg-slate-300 
-                        [&::-webkit-scrollbar-thumb]:rounded-full
-                        dark:[&::-webkit-scrollbar-thumb]:bg-slate-600"
+                        className="flex-1 overflow-auto bg-slate-100 dark:bg-slate-950/50 p-4 md:p-8
+                        scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600 scrollbar-track-transparent scrollbar-thumb-rounded-full"
                     >
-                        {/* WRAPPER DE ESCALA RESPONSIVA */}
-                        {/* Quitamos el 'transform' inline para que las clases 'scale' funcionen */}
-                        {/* scale-[0.4] en móvil arregla el corte izquierdo */}
-                        <div className="origin-top transform-gpu transition-transform duration-300 scale-[0.4] sm:scale-[0.55] md:scale-[0.6] lg:scale-[0.65] xl:scale-[0.75]">
-                            <div
-                                id="cv-preview"
-                                className="bg-white text-slate-800 shadow-2xl mx-auto box-border"
-                                style={{
-                                    width: '210mm', // Ancho A4
-                                    minHeight: '297mm', // Alto A4
-                                    // AUMENTADO padding-top a 20mm (antes 15mm) para más margen superior
-                                    padding: '20mm 15mm 15mm 15mm',
-                                    fontFamily: 'Inter, sans-serif',
-                                    fontSize: '11pt',
-                                    lineHeight: '1.5',
-                                    border: '1px solid #e2e8f0',
-                                }}
-                            >
-                                {/* Header */}
-                                <div className="border-b-2 border-slate-800 pb-6 mb-8 flex gap-8 items-center page-break-inside-avoid">
-                                    {cvData.photo && (
-                                        <img
-                                            src={cvData.photo}
-                                            alt="Profile"
-                                            className="w-32 h-32 rounded-full object-cover border-4 border-slate-100 shadow-sm shrink-0"
-                                        />
-                                    )}
-                                    <div className="flex-1 min-w-0">
-                                        <h1 className="text-3xl font-extrabold uppercase tracking-tight text-slate-900 leading-tight mb-1">
-                                            {cvData.fullName || 'Tu Nombre'}
-                                        </h1>
-                                        <p className="text-xl text-brand-700 font-medium mb-3">
-                                            {cvData.title ||
-                                                'Título Profesional'}
-                                        </p>
-                                        <div className="flex flex-wrap gap-y-2 gap-x-4 text-sm text-slate-600">
-                                            {cvData.email && (
-                                                <span className="flex items-center gap-1.5">
-                                                    <Mail className="w-4 h-4 text-brand-600" />{' '}
-                                                    {cvData.email}
-                                                </span>
-                                            )}
-                                            {cvData.phone && (
-                                                <span className="flex items-center gap-1.5">
-                                                    Tel: {cvData.phone}
-                                                </span>
-                                            )}
-                                            {cvData.address && (
-                                                <span className="flex items-center gap-1.5">
-                                                    <MapPin className="w-4 h-4 text-brand-600" />{' '}
-                                                    {cvData.address}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Contenido */}
-                                {cvData.summary && (
-                                    <div className="mb-8 page-break-inside-avoid">
-                                        <h3 className="font-bold uppercase text-slate-900 border-b-2 border-slate-100 mb-3 pb-1 text-sm tracking-widest">
-                                            Perfil
-                                        </h3>
-                                        <p className="text-justify text-sm text-slate-700">
-                                            {cvData.summary}
-                                        </p>
-                                    </div>
-                                )}
-
-                                <div className="mb-8">
-                                    <h3 className="font-bold uppercase text-slate-900 border-b-2 border-slate-100 mb-4 pb-1 text-sm tracking-widest page-break-after-avoid">
-                                        Experiencia Profesional
-                                    </h3>
-                                    {cvData.experience.map((exp) => (
-                                        <div
-                                            key={exp.id}
-                                            className="mb-6 last:mb-0 page-break-inside-avoid"
-                                        >
-                                            <div className="flex justify-between items-baseline mb-1">
-                                                <h4 className="font-bold text-base text-slate-900">
-                                                    {exp.role}
-                                                </h4>
-                                                <span className="text-xs text-slate-500 font-medium italic shrink-0 ml-4 bg-slate-100 px-2 py-0.5 rounded">
-                                                    {exp.dates}
-                                                </span>
+                        {/* WRAPPER PARA EL CENTRADO SEGURO */}
+                        {/* 'min-w-fit' obliga al contenedor a tener el ancho del hijo, evitando recortes */}
+                        {/* 'mx-auto' centra si sobra espacio */}
+                        <div className="min-w-fit mx-auto">
+                            {/* ESCALA RESPONSIVA */}
+                            <div className="origin-top transform-gpu transition-transform duration-300 scale-[0.45] sm:scale-[0.55] md:scale-[0.65] lg:scale-[0.7] xl:scale-[0.8]">
+                                <div
+                                    id="cv-preview"
+                                    className="bg-white text-slate-800 shadow-2xl box-border"
+                                    style={{
+                                        width: '210mm',
+                                        minHeight: '297mm',
+                                        // Reduje un poco el padding visual porque ahora el PDF agregará su propio margen blanco (opt.margin)
+                                        // Así se equilibra y no queda demasiado espacio en el PDF
+                                        padding: '10mm 15mm',
+                                        fontFamily: 'Inter, sans-serif',
+                                        fontSize: '11pt',
+                                        lineHeight: '1.5',
+                                        border: '1px solid #e2e8f0',
+                                    }}
+                                >
+                                    {/* Header */}
+                                    <div className="border-b-2 border-slate-800 pb-6 mb-8 flex gap-8 items-center page-break-inside-avoid">
+                                        {cvData.photo && (
+                                            <img
+                                                src={cvData.photo}
+                                                alt="Profile"
+                                                className="w-32 h-32 rounded-full object-cover border-4 border-slate-100 shadow-sm shrink-0"
+                                            />
+                                        )}
+                                        <div className="flex-1 min-w-0">
+                                            <h1 className="text-3xl font-extrabold uppercase tracking-tight text-slate-900 leading-tight mb-1">
+                                                {cvData.fullName || 'Tu Nombre'}
+                                            </h1>
+                                            <p className="text-xl text-brand-700 font-medium mb-3">
+                                                {cvData.title ||
+                                                    'Título Profesional'}
+                                            </p>
+                                            <div className="flex flex-wrap gap-y-2 gap-x-4 text-sm text-slate-600">
+                                                {cvData.email && (
+                                                    <span className="flex items-center gap-1.5">
+                                                        <Mail className="w-4 h-4 text-brand-600" />{' '}
+                                                        {cvData.email}
+                                                    </span>
+                                                )}
+                                                {cvData.phone && (
+                                                    <span className="flex items-center gap-1.5">
+                                                        Tel: {cvData.phone}
+                                                    </span>
+                                                )}
+                                                {cvData.address && (
+                                                    <span className="flex items-center gap-1.5">
+                                                        <MapPin className="w-4 h-4 text-brand-600" />{' '}
+                                                        {cvData.address}
+                                                    </span>
+                                                )}
                                             </div>
-                                            <p className="text-brand-700 font-semibold text-sm mb-2">
-                                                {exp.company}
-                                            </p>
-                                            <p className="text-sm text-slate-600 whitespace-pre-wrap text-justify">
-                                                {exp.desc}
-                                            </p>
                                         </div>
-                                    ))}
-                                </div>
+                                    </div>
 
-                                {cvData.education.length > 0 &&
-                                    cvData.education[0].degree && (
+                                    {/* Contenido */}
+                                    {cvData.summary && (
                                         <div className="mb-8 page-break-inside-avoid">
-                                            <h3 className="font-bold uppercase text-slate-900 border-b-2 border-slate-100 mb-4 pb-1 text-sm tracking-widest">
-                                                Formación
+                                            <h3 className="font-bold uppercase text-slate-900 border-b-2 border-slate-100 mb-3 pb-1 text-sm tracking-widest">
+                                                Perfil
                                             </h3>
-                                            {cvData.education.map((edu) => (
-                                                <div
-                                                    key={edu.id}
-                                                    className="mb-3 page-break-inside-avoid"
-                                                >
-                                                    <div className="flex justify-between items-baseline">
-                                                        <h4 className="font-bold text-sm text-slate-900">
-                                                            {edu.degree}
-                                                        </h4>
-                                                        <span className="text-xs text-slate-500 italic shrink-0 ml-4">
-                                                            {edu.dates}
-                                                        </span>
-                                                    </div>
-                                                    <p className="text-slate-600 text-sm">
-                                                        {edu.school}
-                                                    </p>
-                                                </div>
-                                            ))}
+                                            <p className="text-justify text-sm text-slate-700">
+                                                {cvData.summary}
+                                            </p>
                                         </div>
                                     )}
 
-                                {cvData.skills && (
-                                    <div className="page-break-inside-avoid">
-                                        <h3 className="font-bold uppercase text-slate-900 border-b-2 border-slate-100 mb-3 pb-1 text-sm tracking-widest">
-                                            Habilidades
+                                    <div className="mb-8">
+                                        <h3 className="font-bold uppercase text-slate-900 border-b-2 border-slate-100 mb-4 pb-1 text-sm tracking-widest page-break-after-avoid">
+                                            Experiencia Profesional
                                         </h3>
-                                        <p className="text-sm text-slate-700 leading-relaxed">
-                                            {cvData.skills}
-                                        </p>
+                                        {cvData.experience.map((exp) => (
+                                            <div
+                                                key={exp.id}
+                                                className="mb-6 last:mb-0 page-break-inside-avoid"
+                                            >
+                                                <div className="flex justify-between items-baseline mb-1">
+                                                    <h4 className="font-bold text-base text-slate-900">
+                                                        {exp.role}
+                                                    </h4>
+                                                    <span className="text-xs text-slate-500 font-medium italic shrink-0 ml-4 bg-slate-100 px-2 py-0.5 rounded">
+                                                        {exp.dates}
+                                                    </span>
+                                                </div>
+                                                <p className="text-brand-700 font-semibold text-sm mb-2">
+                                                    {exp.company}
+                                                </p>
+                                                <p className="text-sm text-slate-600 whitespace-pre-wrap text-justify">
+                                                    {exp.desc}
+                                                </p>
+                                            </div>
+                                        ))}
                                     </div>
-                                )}
+
+                                    {cvData.education.length > 0 &&
+                                        cvData.education[0].degree && (
+                                            <div className="mb-8 page-break-inside-avoid">
+                                                <h3 className="font-bold uppercase text-slate-900 border-b-2 border-slate-100 mb-4 pb-1 text-sm tracking-widest">
+                                                    Formación
+                                                </h3>
+                                                {cvData.education.map((edu) => (
+                                                    <div
+                                                        key={edu.id}
+                                                        className="mb-3 page-break-inside-avoid"
+                                                    >
+                                                        <div className="flex justify-between items-baseline">
+                                                            <h4 className="font-bold text-sm text-slate-900">
+                                                                {edu.degree}
+                                                            </h4>
+                                                            <span className="text-xs text-slate-500 italic shrink-0 ml-4">
+                                                                {edu.dates}
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-slate-600 text-sm">
+                                                            {edu.school}
+                                                        </p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                    {cvData.skills && (
+                                        <div className="page-break-inside-avoid">
+                                            <h3 className="font-bold uppercase text-slate-900 border-b-2 border-slate-100 mb-3 pb-1 text-sm tracking-widest">
+                                                Habilidades
+                                            </h3>
+                                            <p className="text-sm text-slate-700 leading-relaxed">
+                                                {cvData.skills}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
