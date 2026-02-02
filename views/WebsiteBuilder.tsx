@@ -226,7 +226,6 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
     const handleExportPDF = async () => {
         setLoading(true)
         try {
-            // Enviamos los datos actuales al backend
             const response = await fetch(
                 `${BACKEND_URL}/api/export-portfolio-pdf`,
                 {
@@ -236,29 +235,41 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                 },
             )
 
-            if (!response.ok)
-                throw new Error('Fallo al generar PDF en el servidor')
+            if (!response.ok) throw new Error('Error en el servidor de PDF')
 
-            // Convertimos la respuesta en un archivo descargable
+            // 1. Obtenemos el archivo como un array de bytes
             const blob = await response.blob()
-            const url = window.URL.createObjectURL(blob)
-            const link = document.createElement('a')
-            link.href = url
-            link.download = `Portafolio-${siteData.name.replace(
-                /\s+/g,
-                '-',
-            )}.pdf`
-            document.body.appendChild(link)
-            link.click()
-            document.body.removeChild(link)
 
-            console.log('PDF generado correctamente desde el Backend')
+            // 2. Lo convertimos a base64 para que sea compatible con downloadFile
+            const reader = new FileReader()
+            reader.readAsDataURL(blob)
+            reader.onloadend = async () => {
+                const base64data = reader.result as string
+
+                // 3. Usamos tu utilidad universal que funciona en Android/Web/Windows
+                const fileName = `Portafolio-${siteData.name.replace(
+                    /\s+/g,
+                    '-',
+                )}.pdf`
+
+                try {
+                    // Importa downloadFile de '../utils/downloadUtils'
+                    await downloadFile(base64data, fileName)
+                    console.log('Descarga iniciada')
+                } catch (err) {
+                    // Fallback si la utilidad falla (Web pura)
+                    const link = document.createElement('a')
+                    link.href = base64data
+                    link.download = fileName
+                    link.click()
+                }
+            }
         } catch (e) {
             console.error(e)
             setModal({
                 isOpen: true,
                 title: 'Error',
-                message: 'No se pudo generar el PDF.',
+                message: 'No se pudo generar el PDF. Verifica tu conexión.',
             })
         } finally {
             setLoading(false)
