@@ -228,28 +228,24 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
         setLoading(true)
         await handleSave()
 
-        // 1. Clonamos el contenido para que html2pdf lo vea como un elemento fresco
-        const original = document.getElementById('portfolio-pdf-template')
-        if (!original) return
+        const element = document.getElementById('portfolio-pdf-template')
+        if (!element) {
+            setLoading(false)
+            return
+        }
 
-        const container = original.cloneNode(true) as HTMLElement
-        container.style.position = 'relative'
-        container.style.left = '0'
-        container.style.top = '0'
-        container.style.zIndex = '1'
-
-        // 2. Configuramos el generador
         const opt = {
-            margin: [10, 0, 10, 0], // Margen físico de 1cm arriba y abajo
+            margin: [10, 10, 10, 10], // Margen de 1cm en el PDF
             filename: `Portafolio-${siteData.name.replace(/\s+/g, '-')}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: {
                 scale: 2,
-                useCORS: true,
+                useCORS: true, // Importante para las fotos de Cloudinary
+                logging: false,
                 letterRendering: true,
-                // Esto evita las páginas en blanco:
-                scrollY: 0,
-                scrollX: 0,
+                // Forzamos al canvas a mirar el inicio del elemento
+                scrollY: -window.scrollY,
+                windowWidth: 1000, // Ancho de renderizado estable
             },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
             pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
@@ -257,13 +253,13 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
 
         try {
             // @ts-ignore
-            await html2pdf().set(opt).from(container).save()
+            await html2pdf().set(opt).from(element).save()
         } catch (e) {
-            console.error('Error PDF:', e)
+            console.error('Error al generar PDF:', e)
             setModal({
                 isOpen: true,
                 title: 'Error',
-                message: 'No se pudo generar el PDF.',
+                message: 'Error de renderizado. Inténtalo de nuevo.',
             })
         } finally {
             setLoading(false)
@@ -1446,33 +1442,45 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                     </Card>
                 </div>
             </div>
-            {/* --- PLANTILLA PARA PDF (ESTRUCTURA SIMPLIFICADA ANTI-CORTE) --- */}
-            <div style={{ display: 'none' }}>
+            {/* --- PLANTILLA PARA PDF (NUEVA ESTRUCTURA ANTIBLANCO) --- */}
+            <div
+                style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    width: '210mm',
+                    zIndex: -1, // Detrás de la interfaz
+                    pointerEvents: 'none',
+                    overflow: 'hidden',
+                    height: '1px', // Solo ocupa 1px de alto visualmente pero el contenido existe
+                }}
+            >
                 <div
                     id="portfolio-pdf-template"
                     style={{
-                        width: '210mm',
-                        color: '#1a202c',
+                        width: '794px', // Ancho exacto A4 en píxeles (proporcional)
                         backgroundColor: 'white',
+                        color: '#1a202c',
+                        padding: '40px',
+                        boxSizing: 'border-box',
                     }}
                 >
-                    {/* PORTADA - Bloque sólido */}
+                    {/* PORTADA */}
                     <div
                         style={{
-                            height: '280mm',
+                            height: '1050px',
                             display: 'flex',
                             flexDirection: 'column',
                             justifyContent: 'center',
                             alignItems: 'center',
                             textAlign: 'center',
-                            padding: '20mm',
-                            boxSizing: 'border-box',
+                            borderBottom: '2px solid #edf2f7',
                         }}
                     >
                         <div
                             style={{
                                 width: '100%',
-                                height: '8px',
+                                height: '20px',
                                 backgroundColor: siteData.color,
                                 position: 'absolute',
                                 top: 0,
@@ -1483,71 +1491,80 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                         {siteData.photo && (
                             <img
                                 src={siteData.photo}
+                                crossOrigin="anonymous" // Permite cargar la foto en el PDF
                                 style={{
-                                    width: '180px',
-                                    height: '180px',
-                                    borderRadius: '50%',
+                                    width: '200px',
+                                    height: '200px',
+                                    borderRadius: '100px',
                                     objectFit: 'cover',
                                     marginBottom: '30px',
-                                    border: `5px solid ${siteData.color}`,
+                                    border: `6px solid white`,
+                                    boxShadow: '0 10px 15px rgba(0,0,0,0.1)',
                                 }}
                             />
                         )}
 
                         <h1
                             style={{
-                                fontSize: '42pt',
-                                fontWeight: 'bold',
+                                fontSize: '48px',
+                                fontWeight: '900',
                                 margin: '0 0 10px 0',
                                 color: '#111827',
+                                textTransform: 'uppercase',
                             }}
                         >
                             {siteData.name}
                         </h1>
                         <p
                             style={{
-                                fontSize: '18pt',
-                                color: '#4b5563',
-                                margin: '0 0 40px 0',
+                                fontSize: '24px',
+                                color: siteData.color,
+                                fontWeight: 'bold',
+                                margin: '0 0 30px 0',
+                                textTransform: 'uppercase',
                                 letterSpacing: '2px',
                             }}
                         >
                             {siteData.role}
                         </p>
 
-                        <div
+                        <p
                             style={{
-                                fontSize: '12pt',
+                                fontSize: '16px',
                                 lineHeight: '1.6',
-                                color: '#374151',
-                                maxWidth: '80%',
+                                color: '#4b5563',
+                                maxWidth: '90%',
+                                margin: '0 auto 40px auto',
                             }}
                         >
                             {siteData.bio}
-                        </div>
+                        </p>
 
                         <div
                             style={{
-                                marginTop: '50px',
-                                borderTop: '1px solid #e5e7eb',
-                                paddingTop: '20px',
-                                fontSize: '10pt',
+                                fontSize: '12px',
                                 color: '#9ca3af',
+                                borderTop: '1px solid #eee',
+                                paddingTop: '20px',
                             }}
                         >
-                            {siteData.email} • modofreelanceos.com/p/
-                            {siteData.slug}
+                            {siteData.email}{' '}
+                            {siteData.whatsapp && ` • ${siteData.whatsapp}`}
+                            <br />
+                            modofreelanceos.com/p/{siteData.slug}
                         </div>
                     </div>
 
-                    {/* CONTENIDO - PROYECTOS */}
-                    <div style={{ padding: '20mm' }}>
+                    {/* SECCIÓN PROYECTOS */}
+                    <div style={{ paddingTop: '40px' }}>
                         <h2
                             style={{
-                                fontSize: '22pt',
-                                borderBottom: `3px solid ${siteData.color}`,
-                                paddingBottom: '10px',
+                                fontSize: '28px',
+                                fontWeight: 'bold',
+                                color: '#111827',
                                 marginBottom: '30px',
+                                borderLeft: `8px solid ${siteData.color}`,
+                                paddingLeft: '15px',
                             }}
                         >
                             PORTAFOLIO
@@ -1557,16 +1574,16 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                             <div
                                 key={i}
                                 style={{
-                                    marginBottom: '40px',
+                                    marginBottom: '50px',
                                     pageBreakInside: 'avoid',
                                     borderBottom: '1px solid #f3f4f6',
                                     paddingBottom: '30px',
                                 }}
                             >
-                                {/* Título y Descripción */}
                                 <h3
                                     style={{
-                                        fontSize: '18pt',
+                                        fontSize: '22px',
+                                        fontWeight: 'bold',
                                         margin: '0 0 5px 0',
                                     }}
                                 >
@@ -1575,143 +1592,228 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                 <p
                                     style={{
                                         color: siteData.color,
-                                        fontSize: '10pt',
+                                        fontSize: '12px',
                                         fontWeight: 'bold',
                                         margin: '0 0 15px 0',
+                                        textTransform: 'uppercase',
                                     }}
                                 >
                                     {proj.tags}
                                 </p>
                                 <p
                                     style={{
-                                        fontSize: '11pt',
+                                        fontSize: '14px',
+                                        lineHeight: '1.6',
+                                        color: '#374151',
                                         marginBottom: '20px',
-                                        textAlign: 'justify',
                                     }}
                                 >
                                     {proj.desc}
                                 </p>
 
-                                {/* Galería de Imágenes Grandes */}
+                                {/* PORTADA DEL PROYECTO */}
+                                {proj.cover && (
+                                    <img
+                                        src={proj.cover}
+                                        crossOrigin="anonymous"
+                                        style={{
+                                            width: '100%',
+                                            height: '350px',
+                                            objectFit: 'cover',
+                                            borderRadius: '12px',
+                                            marginBottom: '15px',
+                                        }}
+                                    />
+                                )}
+
+                                {/* GALERÍA DE IMÁGENES EXTRA (GRANDES) */}
                                 {proj.gallery && proj.gallery.length > 0 && (
-                                    <div style={{ display: 'block' }}>
+                                    <div style={{ marginTop: '20px' }}>
                                         {proj.gallery
                                             .filter((img: any) =>
                                                 img.type.includes('image'),
                                             )
                                             .map((img: any, idx: number) => (
-                                                <img
+                                                <div
                                                     key={idx}
-                                                    src={img.url}
                                                     style={{
-                                                        width: '100%',
-                                                        height: '110mm', // Imagen casi media página para que se vea perfecta
-                                                        objectFit: 'cover',
-                                                        borderRadius: '10px',
-                                                        marginBottom: '15px',
-                                                        display: 'block',
+                                                        marginBottom: '20px',
+                                                        pageBreakInside:
+                                                            'avoid',
                                                     }}
-                                                />
+                                                >
+                                                    <img
+                                                        src={img.url}
+                                                        crossOrigin="anonymous"
+                                                        style={{
+                                                            width: '100%',
+                                                            height: '400px',
+                                                            objectFit: 'cover',
+                                                            borderRadius:
+                                                                '12px',
+                                                            border: '1px solid #eee',
+                                                        }}
+                                                    />
+                                                </div>
                                             ))}
                                     </div>
                                 )}
                             </div>
                         ))}
+                    </div>
 
-                        {/* EXPERIENCIA Y EDUCACIÓN */}
-                        <div
+                    {/* RESUMEN PROFESIONAL */}
+                    <div
+                        style={{ padding: '40px 0', pageBreakInside: 'avoid' }}
+                    >
+                        <h2
                             style={{
-                                marginTop: '40px',
-                                pageBreakInside: 'avoid',
+                                fontSize: '28px',
+                                fontWeight: 'bold',
+                                color: '#111827',
+                                marginBottom: '30px',
+                                borderLeft: `8px solid ${siteData.color}`,
+                                paddingLeft: '15px',
                             }}
                         >
-                            <h2
-                                style={{
-                                    fontSize: '20pt',
-                                    borderBottom: `2px solid ${siteData.color}`,
-                                    paddingBottom: '10px',
-                                    marginBottom: '20px',
-                                }}
-                            >
-                                RESUMEN PROFESIONAL
-                            </h2>
+                            RESUMEN
+                        </h2>
 
-                            <div style={{ display: 'flex', gap: '40px' }}>
-                                <div style={{ flex: 1 }}>
-                                    <h3
-                                        style={{
-                                            fontSize: '14pt',
-                                            marginBottom: '15px',
-                                        }}
-                                    >
-                                        Experiencia
-                                    </h3>
-                                    {siteData.experience?.map(
-                                        (exp: any, i: number) => (
+                        <div style={{ display: 'flex', gap: '50px' }}>
+                            {/* Experiencia */}
+                            <div style={{ flex: 1 }}>
+                                <h3
+                                    style={{
+                                        fontSize: '18px',
+                                        fontWeight: 'bold',
+                                        color: siteData.color,
+                                        marginBottom: '20px',
+                                    }}
+                                >
+                                    Experiencia
+                                </h3>
+                                {siteData.experience?.map(
+                                    (exp: any, i: number) => (
+                                        <div
+                                            key={i}
+                                            style={{ marginBottom: '20px' }}
+                                        >
                                             <div
-                                                key={i}
-                                                style={{ marginBottom: '15px' }}
+                                                style={{
+                                                    fontWeight: 'bold',
+                                                    fontSize: '14px',
+                                                }}
                                             >
-                                                <div
-                                                    style={{
-                                                        fontWeight: 'bold',
-                                                    }}
-                                                >
-                                                    {exp.role}
-                                                </div>
-                                                <div
-                                                    style={{
-                                                        fontSize: '9pt',
-                                                        color: '#6b7280',
-                                                    }}
-                                                >
-                                                    {exp.company} • {exp.year}
-                                                </div>
-                                                <div
-                                                    style={{ fontSize: '10pt' }}
-                                                >
-                                                    {exp.desc}
-                                                </div>
+                                                {exp.role}
                                             </div>
-                                        ),
-                                    )}
-                                </div>
-                                <div style={{ flex: 1 }}>
-                                    <h3
-                                        style={{
-                                            fontSize: '14pt',
-                                            marginBottom: '15px',
-                                        }}
-                                    >
-                                        Educación
-                                    </h3>
-                                    {siteData.education?.map(
-                                        (edu: any, i: number) => (
                                             <div
-                                                key={i}
-                                                style={{ marginBottom: '10px' }}
+                                                style={{
+                                                    fontSize: '12px',
+                                                    color: '#6b7280',
+                                                    margin: '2px 0',
+                                                }}
                                             >
-                                                <div
-                                                    style={{
-                                                        fontWeight: 'bold',
-                                                    }}
-                                                >
-                                                    {edu.degree}
-                                                </div>
-                                                <div
-                                                    style={{
-                                                        fontSize: '9pt',
-                                                        color: '#6b7280',
-                                                    }}
-                                                >
-                                                    {edu.school} • {edu.year}
-                                                </div>
+                                                {exp.company} • {exp.year}
                                             </div>
-                                        ),
-                                    )}
+                                            <div
+                                                style={{
+                                                    fontSize: '13px',
+                                                    color: '#4b5563',
+                                                }}
+                                            >
+                                                {exp.desc}
+                                            </div>
+                                        </div>
+                                    ),
+                                )}
+                            </div>
+
+                            {/* Educación / Skills */}
+                            <div style={{ flex: 1 }}>
+                                <h3
+                                    style={{
+                                        fontSize: '18px',
+                                        fontWeight: 'bold',
+                                        color: siteData.color,
+                                        marginBottom: '20px',
+                                    }}
+                                >
+                                    Educación
+                                </h3>
+                                {siteData.education?.map(
+                                    (edu: any, i: number) => (
+                                        <div
+                                            key={i}
+                                            style={{ marginBottom: '15px' }}
+                                        >
+                                            <div
+                                                style={{
+                                                    fontWeight: 'bold',
+                                                    fontSize: '14px',
+                                                }}
+                                            >
+                                                {edu.degree}
+                                            </div>
+                                            <div
+                                                style={{
+                                                    fontSize: '12px',
+                                                    color: '#6b7280',
+                                                }}
+                                            >
+                                                {edu.school} • {edu.year}
+                                            </div>
+                                        </div>
+                                    ),
+                                )}
+
+                                <h3
+                                    style={{
+                                        fontSize: '18px',
+                                        fontWeight: 'bold',
+                                        color: siteData.color,
+                                        margin: '30px 0 20px 0',
+                                    }}
+                                >
+                                    Habilidades
+                                </h3>
+                                <div
+                                    style={{
+                                        display: 'flex',
+                                        flexWrap: 'wrap',
+                                        gap: '8px',
+                                    }}
+                                >
+                                    {siteData.skills
+                                        .split(',')
+                                        .map((s: string, i: number) => (
+                                            <span
+                                                key={i}
+                                                style={{
+                                                    padding: '4px 12px',
+                                                    backgroundColor: '#f3f4f6',
+                                                    borderRadius: '20px',
+                                                    fontSize: '11px',
+                                                    fontWeight: 'bold',
+                                                }}
+                                            >
+                                                {s.trim()}
+                                            </span>
+                                        ))}
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    <div
+                        style={{
+                            textAlign: 'center',
+                            padding: '40px 0',
+                            borderTop: '1px solid #eee',
+                            color: '#9ca3af',
+                            fontSize: '10px',
+                        }}
+                    >
+                        Documento generado por ModoFreelanceOS
                     </div>
                 </div>
             </div>
