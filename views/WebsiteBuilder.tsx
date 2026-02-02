@@ -224,15 +224,13 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
         load()
     }, [userId])
 
-    // FUNCIÓN PARA EXPORTAR EL PORTAFOLIO EN PDF
     const handleExportPDF = async () => {
         await handleSave()
         const element = document.getElementById('portfolio-pdf-template')
 
         const opt = {
-            // MARGENES REALES (Arriba, Izq, Abajo, Der) en mm
-            // Esto asegura que CADA página nueva tenga espacio blanco arriba
-            margin: [15, 10, 15, 10],
+            // MARGEN CERO: Nosotros controlamos el espacio con CSS para que no se mueva nada
+            margin: 0,
 
             filename: `Portafolio-${siteData.name.replace(/\s+/g, '-')}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
@@ -240,10 +238,9 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                 scale: 2,
                 useCORS: true,
                 scrollY: 0,
-                windowWidth: 794, // Ancho A4 exacto en px
+                windowWidth: 794, // Ancho exacto A4 en px (96 DPI)
             },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            // Evitar cortes duros en imágenes o textos
             pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
         }
 
@@ -1439,7 +1436,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                     </Card>
                 </div>
             </div>
-            {/* --- PLANTILLA OCULTA PARA PDF (DOSSIER) MEJORADA --- */}
+            {/* --- PLANTILLA OCULTA PARA PDF (SOLUCIÓN FINAL DE CORTES) --- */}
             <div
                 style={{
                     position: 'absolute',
@@ -1451,100 +1448,105 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
             >
                 <div
                     id="portfolio-pdf-template"
-                    className="bg-white text-slate-900 box-border"
+                    className="bg-white text-slate-900"
                     style={{
                         width: '210mm',
+                        minHeight: '297mm',
                         fontFamily: 'Helvetica, Arial, sans-serif',
                         fontSize: '11pt',
                         lineHeight: '1.5',
+                        // CLAVE: El padding aquí actúa como margen de la hoja
+                        padding: '15mm 20mm', // 15mm Arriba/Abajo, 20mm Izq/Der
+                        boxSizing: 'border-box', // Esto evita que el padding ensanche la hoja
+                        margin: '0 auto',
                     }}
                 >
                     {/* PORTADA */}
-                    <div className="w-full h-[290mm] relative flex flex-col justify-center items-center text-center p-12 page-break-after-always box-border">
+                    <div className="w-full relative flex flex-col justify-center items-center text-center mb-16 pb-12 border-b-2 border-slate-100 page-break-after-avoid">
                         <div
-                            className="absolute top-0 left-0 w-full h-6"
+                            className="absolute top-[-15mm] left-[-20mm] w-[210mm] h-4"
                             style={{ backgroundColor: siteData.color }}
                         ></div>
 
                         {siteData.photo && (
                             <img
                                 src={siteData.photo}
-                                className="w-48 h-48 rounded-full object-cover shadow-xl mb-8 border-4 border-white"
+                                className="w-40 h-40 rounded-full object-cover shadow-xl mb-6 border-4 border-white"
                                 style={{ borderColor: siteData.color }}
                             />
                         )}
 
-                        <h1 className="text-5xl font-black uppercase tracking-tight mb-4 leading-none text-slate-900">
+                        <h1 className="text-4xl font-black uppercase tracking-tight mb-2 leading-none text-slate-900">
                             {siteData.name}
                         </h1>
-                        <p className="text-xl font-medium uppercase tracking-widest text-slate-500 mb-8">
+                        <p className="text-lg font-medium uppercase tracking-widest text-slate-500 mb-6">
                             {siteData.role}
                         </p>
 
-                        <div className="max-w-md mx-auto text-base text-slate-600 leading-relaxed mb-12">
+                        <div className="max-w-md mx-auto text-sm text-slate-600 leading-relaxed mb-8">
                             {siteData.bio}
                         </div>
 
-                        <div className="flex flex-wrap justify-center gap-6 text-xs font-bold text-slate-400 uppercase tracking-wider border-t pt-8 w-full border-slate-100">
+                        <div className="flex flex-wrap justify-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50 py-2 px-6 rounded-full">
                             {siteData.email && <span>{siteData.email}</span>}
                             {siteData.whatsapp && (
                                 <span>• {siteData.whatsapp}</span>
                             )}
                             {siteData.slug && (
                                 <span>
-                                    • app.modofreelanceos.com/p/{siteData.slug}
+                                    • modofreelanceos.com/p/{siteData.slug}
                                 </span>
                             )}
                         </div>
                     </div>
 
-                    {/* CONTENIDO FLUIDO */}
-                    <div className="p-8">
-                        {/* PROYECTOS + GALERÍA GRANDE */}
+                    {/* CONTENIDO PRINCIPAL */}
+                    <div>
+                        {/* PROYECTOS */}
                         {siteData.projects?.length > 0 && (
-                            <div className="mb-12">
+                            <div className="mb-8">
                                 <div
-                                    className="flex items-center gap-4 mb-8 border-b-2 pb-2"
+                                    className="flex items-center gap-4 mb-6 border-b-2 pb-2"
                                     style={{ borderColor: siteData.color }}
                                 >
-                                    <h2 className="text-2xl font-bold uppercase text-slate-800">
-                                        Portafolio Seleccionado
+                                    <h2 className="text-xl font-bold uppercase text-slate-800">
+                                        Portafolio
                                     </h2>
                                 </div>
 
-                                <div className="space-y-12">
+                                <div className="space-y-8">
                                     {siteData.projects.map(
                                         (proj: any, i: number) => (
                                             <div
                                                 key={i}
-                                                className="mb-10 border-b border-slate-100 pb-8"
-                                                // ESTO ES LO QUE EVITA EL CORTE:
+                                                className="mb-8 border-b border-slate-100 pb-8"
+                                                // ESTO ES LO QUE EVITA QUE SE CORTE A LA MITAD:
                                                 style={{
                                                     pageBreakInside: 'avoid',
                                                     breakInside: 'avoid',
                                                 }}
                                             >
                                                 {/* Cabecera del Proyecto */}
-                                                <div className="flex gap-6 mb-6">
-                                                    <div className="w-32 shrink-0">
+                                                <div className="flex gap-6 mb-4">
+                                                    <div className="w-24 shrink-0">
                                                         {proj.cover ? (
                                                             <img
                                                                 src={proj.cover}
                                                                 className="w-full h-24 object-cover rounded-lg shadow-sm bg-slate-100"
                                                             />
                                                         ) : (
-                                                            <div className="w-full h-24 bg-slate-100 rounded-lg flex items-center justify-center text-xs text-slate-400">
-                                                                Sin Portada
+                                                            <div className="w-full h-24 bg-slate-100 rounded-lg flex items-center justify-center text-[10px] text-slate-400">
+                                                                Sin Foto
                                                             </div>
                                                         )}
                                                     </div>
                                                     <div className="flex-1">
-                                                        <h3 className="text-xl font-bold text-slate-900 mb-1">
+                                                        <h3 className="text-lg font-bold text-slate-900 mb-1">
                                                             {proj.title}
                                                         </h3>
                                                         {proj.tags && (
                                                             <p
-                                                                className="text-xs font-bold uppercase mb-2 opacity-70"
+                                                                className="text-[10px] font-bold uppercase mb-2 opacity-70"
                                                                 style={{
                                                                     color: siteData.color,
                                                                 }}
@@ -1552,32 +1554,30 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                                                 {proj.tags}
                                                             </p>
                                                         )}
-                                                        <p className="text-sm text-slate-600 leading-relaxed mb-2 text-justify">
+                                                        <p className="text-xs text-slate-600 leading-relaxed mb-2 text-justify">
                                                             {proj.desc}
                                                         </p>
                                                         {proj.link && (
                                                             <a
                                                                 href={proj.link}
-                                                                className="text-xs underline text-slate-400"
+                                                                className="text-[10px] underline text-slate-400"
                                                             >
                                                                 Ver Proyecto
-                                                                Online
                                                             </a>
                                                         )}
                                                     </div>
                                                 </div>
 
-                                                {/* GALERÍA DE IMÁGENES EXTRA (MEJORADA) */}
+                                                {/* GALERÍA DE IMÁGENES */}
                                                 {proj.gallery &&
                                                     proj.gallery.length > 0 && (
-                                                        <div className="mt-4 p-4 bg-slate-50 rounded-xl">
-                                                            <p className="text-xs font-bold text-slate-400 uppercase mb-3">
-                                                                Galería del
-                                                                proyecto:
+                                                        <div className="mt-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                                                            <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">
+                                                                Galería:
                                                             </p>
 
-                                                            {/* GRID DE 2 COLUMNAS (IMÁGENES MÁS GRANDES) */}
-                                                            <div className="grid grid-cols-2 gap-4">
+                                                            {/* GRID DE 2 COLUMNAS + IMÁGENES MÁS GRANDES */}
+                                                            <div className="grid grid-cols-2 gap-3">
                                                                 {proj.gallery.map(
                                                                     (
                                                                         img: any,
@@ -1590,18 +1590,21 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                                                         )
                                                                             return null
                                                                         return (
+                                                                            // break-inside: avoid en la imagen individual por si acaso
                                                                             <div
                                                                                 key={
                                                                                     idx
                                                                                 }
-                                                                                className="break-inside-avoid"
+                                                                                style={{
+                                                                                    breakInside:
+                                                                                        'avoid',
+                                                                                }}
                                                                             >
                                                                                 <img
                                                                                     src={
                                                                                         img.url
                                                                                     }
-                                                                                    // Altura fija mayor (180px/48 tailwind) para ver detalles
-                                                                                    className="w-full h-48 object-cover rounded-lg border border-slate-200 bg-white"
+                                                                                    className="w-full h-40 object-cover rounded border border-slate-200 bg-white"
                                                                                     alt="Gallery item"
                                                                                 />
                                                                             </div>
@@ -1618,65 +1621,57 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                             </div>
                         )}
 
-                        {/* EXPERIENCIA Y EDUCACIÓN */}
-                        <div className="grid grid-cols-2 gap-10">
-                            {/* Columna Izquierda: Experiencia */}
-                            <div>
-                                {siteData.experience?.length > 0 && (
-                                    <>
-                                        <h3 className="text-lg font-bold uppercase mb-4 pb-2 border-b border-slate-200 text-slate-800">
-                                            Experiencia
-                                        </h3>
-                                        {siteData.experience.map(
-                                            (exp: any, i: number) => (
-                                                <div
-                                                    key={i}
-                                                    className="mb-5"
-                                                    style={{
-                                                        pageBreakInside:
-                                                            'avoid',
-                                                        breakInside: 'avoid',
-                                                    }}
-                                                >
-                                                    <h4 className="font-bold text-base text-slate-900">
-                                                        {exp.role}
-                                                    </h4>
-                                                    <p className="text-xs font-bold text-slate-500 mb-1">
-                                                        {exp.company} •{' '}
-                                                        {exp.year}
-                                                    </p>
-                                                    <p className="text-xs text-slate-600 leading-relaxed text-justify">
-                                                        {exp.desc}
-                                                    </p>
-                                                </div>
-                                            ),
-                                        )}
-                                    </>
-                                )}
-                            </div>
+                        {/* EXPERIENCIA Y EDUCACIÓN (En bloque para que no se rompan feo) */}
+                        <div className="grid grid-cols-1 gap-8">
+                            {/* Experiencia */}
+                            {siteData.experience?.length > 0 && (
+                                <div
+                                    style={{
+                                        pageBreakInside: 'avoid',
+                                        breakInside: 'avoid',
+                                    }}
+                                >
+                                    <h3 className="text-lg font-bold uppercase mb-4 pb-2 border-b border-slate-200 text-slate-800">
+                                        Experiencia
+                                    </h3>
+                                    {siteData.experience.map(
+                                        (exp: any, i: number) => (
+                                            <div key={i} className="mb-4">
+                                                <h4 className="font-bold text-sm text-slate-900">
+                                                    {exp.role}
+                                                </h4>
+                                                <p className="text-xs font-bold text-slate-500 mb-1">
+                                                    {exp.company} • {exp.year}
+                                                </p>
+                                                <p className="text-xs text-slate-600 leading-relaxed text-justify">
+                                                    {exp.desc}
+                                                </p>
+                                            </div>
+                                        ),
+                                    )}
+                                </div>
+                            )}
 
-                            {/* Columna Derecha: Educación y Skills */}
-                            <div>
+                            {/* Educación y Skills */}
+                            <div
+                                className="grid grid-cols-2 gap-6"
+                                style={{
+                                    pageBreakInside: 'avoid',
+                                    breakInside: 'avoid',
+                                }}
+                            >
                                 {siteData.education?.length > 0 && (
-                                    <div className="mb-8">
-                                        <h3 className="text-lg font-bold uppercase mb-4 pb-2 border-b border-slate-200 text-slate-800">
+                                    <div>
+                                        <h3 className="text-base font-bold uppercase mb-3 pb-1 border-b border-slate-200 text-slate-800">
                                             Educación
                                         </h3>
                                         {siteData.education.map(
                                             (edu: any, i: number) => (
-                                                <div
-                                                    key={i}
-                                                    className="mb-3"
-                                                    style={{
-                                                        pageBreakInside:
-                                                            'avoid',
-                                                        breakInside: 'avoid',
-                                                    }}
-                                                >
-                                                    <h4 className="font-bold text-sm text-slate-900">
+                                                <div key={i} className="mb-3">
+                                                    <h4 className="font-bold text-xs text-slate-900">
                                                         {edu.degree}
                                                     </h4>
-                                                    <p className="text-xs text-slate-500">
+                                                    <p className="text-[10px] text-slate-500">
                                                         {edu.school} •{' '}
                                                         {edu.year}
                                                     </p>
@@ -1687,22 +1682,17 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                 )}
 
                                 {siteData.skills && (
-                                    <div
-                                        style={{
-                                            pageBreakInside: 'avoid',
-                                            breakInside: 'avoid',
-                                        }}
-                                    >
-                                        <h3 className="text-lg font-bold uppercase mb-4 pb-2 border-b border-slate-200 text-slate-800">
+                                    <div>
+                                        <h3 className="text-base font-bold uppercase mb-3 pb-1 border-b border-slate-200 text-slate-800">
                                             Habilidades
                                         </h3>
-                                        <div className="flex flex-wrap gap-2">
+                                        <div className="flex flex-wrap gap-1">
                                             {siteData.skills
                                                 .split(',')
                                                 .map((s: string, i: number) => (
                                                     <span
                                                         key={i}
-                                                        className="px-3 py-1 bg-slate-100 text-slate-700 text-xs font-bold rounded border border-slate-200"
+                                                        className="px-2 py-1 bg-slate-100 text-slate-700 text-[10px] font-bold rounded border border-slate-200"
                                                     >
                                                         {s.trim()}
                                                     </span>
