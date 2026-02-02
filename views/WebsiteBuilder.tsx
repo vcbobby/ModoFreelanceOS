@@ -226,21 +226,22 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
 
     // FUNCIÓN PARA EXPORTAR EL PORTAFOLIO EN PDF
     const handleExportPDF = async () => {
-        // 1. Guardamos primero por seguridad
+        // 1. Guardamos primero
         await handleSave()
 
-        // 2. Buscamos la plantilla "oculta" diseñada para A4
         const element = document.getElementById('portfolio-pdf-template')
 
         const opt = {
-            margin: [0, 0, 0, 0], // Sin margen, controlamos con CSS
+            margin: 0, // Dejamos el margen en 0 y lo controlamos con CSS (padding)
             filename: `Portafolio-${siteData.name.replace(/\s+/g, '-')}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: {
                 scale: 2,
                 useCORS: true,
                 scrollY: 0,
-                windowWidth: 800, // Ancho fijo para consistencia
+                // TRUCO: 794px es el ancho aproximado de A4 en pantalla.
+                // Esto evita que el renderizador "piense" que la pantalla es más ancha y corte el lado derecho.
+                windowWidth: 794,
             },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
             pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
@@ -248,18 +249,14 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
 
         setLoading(true)
         try {
+            // @ts-ignore
             await html2pdf().set(opt).from(element).save()
-
-            // Opcional: Guardar en historial que se descargó
-            if (userId) {
-                // ... tu lógica de historial ...
-            }
         } catch (e) {
             console.error(e)
             setModal({
                 isOpen: true,
                 title: 'Error',
-                message: 'No se pudo generar el PDF del portafolio.',
+                message: 'No se pudo generar el PDF.',
             })
         } finally {
             setLoading(false)
@@ -1441,199 +1438,205 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
             <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
                 <div
                     id="portfolio-pdf-template"
-                    className="bg-white text-slate-900"
+                    className="bg-white text-slate-900 box-border"
                     style={{
                         width: '210mm',
                         minHeight: '297mm',
-                        fontFamily: 'Arial, sans-serif',
+                        fontFamily: 'Helvetica, Arial, sans-serif',
+                        fontSize: '11pt',
+                        lineHeight: '1.5',
                     }}
                 >
-                    {/* PORTADA */}
-                    <div className="w-full h-[297mm] relative flex flex-col justify-center items-center text-center p-12 page-break-after-always">
-                        {/* Fondo decorativo con el color del usuario */}
-                        <div className="absolute top-0 left-0 w-full h-4 bg-slate-900"></div>
+                    {/* PORTADA (PÁGINA 1) */}
+                    <div className="w-full h-[297mm] relative flex flex-col justify-center items-center text-center p-[20mm] page-break-after-always box-border">
+                        {/* Decoración de fondo */}
                         <div
-                            className="absolute bottom-0 right-0 w-32 h-32 rounded-tl-full opacity-20"
+                            className="absolute top-0 left-0 w-full h-6"
+                            style={{ backgroundColor: siteData.color }}
+                        ></div>
+                        <div
+                            className="absolute bottom-0 right-0 w-40 h-40 opacity-10 rounded-tl-full"
                             style={{ backgroundColor: siteData.color }}
                         ></div>
 
                         {siteData.photo && (
                             <img
                                 src={siteData.photo}
-                                className="w-64 h-64 rounded-full object-cover shadow-2xl mb-8 border-8 border-white"
+                                className="w-48 h-48 rounded-full object-cover shadow-xl mb-8 border-4 border-white"
                                 style={{ borderColor: siteData.color }}
                             />
                         )}
 
-                        <h1 className="text-6xl font-black uppercase tracking-tighter mb-4 leading-none">
+                        <h1 className="text-5xl font-black uppercase tracking-tight mb-4 leading-none text-slate-900">
                             {siteData.name}
                         </h1>
-                        <p className="text-2xl font-light uppercase tracking-widest text-slate-500 mb-8">
+                        <p className="text-xl font-medium uppercase tracking-widest text-slate-500 mb-8">
                             {siteData.role}
                         </p>
 
-                        <div className="max-w-lg mx-auto text-lg text-slate-600 leading-relaxed mb-12">
+                        <div className="max-w-md mx-auto text-base text-slate-600 leading-relaxed mb-12">
                             {siteData.bio}
                         </div>
 
-                        <div className="flex gap-6 text-sm font-bold text-slate-400 uppercase tracking-wider">
+                        <div className="flex flex-wrap justify-center gap-6 text-xs font-bold text-slate-400 uppercase tracking-wider border-t pt-8 w-full border-slate-100">
                             {siteData.email && <span>{siteData.email}</span>}
-                            {siteData.phone && (
-                                <span>• {siteData.phone}</span>
-                            )}{' '}
-                            {/* Asegúrate de tener phone en el estado si lo quieres */}
                             {siteData.whatsapp && (
                                 <span>• WhatsApp: {siteData.whatsapp}</span>
+                            )}
+                            {siteData.slug && (
+                                <span>
+                                    • modofreelanceos.com/p/{siteData.slug}
+                                </span>
                             )}
                         </div>
                     </div>
 
-                    {/* PÁGINA DE PROYECTOS */}
-                    <div className="p-12 min-h-[297mm]">
-                        <div
-                            className="flex items-center gap-4 mb-12 border-b-2 pb-4"
-                            style={{ borderColor: siteData.color }}
-                        >
-                            <h2 className="text-4xl font-bold uppercase">
-                                Portafolio Seleccionado
-                            </h2>
-                        </div>
-
-                        <div className="space-y-12">
-                            {siteData.projects?.map((proj, i) => (
+                    {/* CONTENIDO (PÁGINAS SIGUIENTES) */}
+                    {/* Aquí usamos padding 20mm para simular el margen de la hoja */}
+                    <div className="p-[20mm]">
+                        {/* Sección Proyectos */}
+                        {siteData.projects?.length > 0 && (
+                            <div className="mb-12">
                                 <div
-                                    key={i}
-                                    className="flex gap-8 mb-10 page-break-inside-avoid"
+                                    className="flex items-center gap-4 mb-8 border-b-2 pb-2"
+                                    style={{ borderColor: siteData.color }}
                                 >
-                                    {/* Imagen del proyecto */}
-                                    <div className="w-1/3 shrink-0">
-                                        {proj.cover ? (
-                                            <img
-                                                src={proj.cover}
-                                                className="w-full rounded-lg shadow-md object-cover aspect-video"
-                                            />
-                                        ) : (
-                                            <div className="w-full h-32 bg-slate-100 rounded-lg flex items-center justify-center text-slate-300 font-bold">
-                                                SIN FOTO
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Info del proyecto */}
-                                    <div className="w-2/3">
-                                        <h3 className="text-2xl font-bold mb-2">
-                                            {proj.title}
-                                        </h3>
-                                        <p
-                                            className="text-sm text-slate-500 mb-3 font-mono"
-                                            style={{ color: siteData.color }}
-                                        >
-                                            {proj.tags}
-                                        </p>
-                                        <p className="text-slate-600 text-sm leading-relaxed mb-3">
-                                            {proj.desc}
-                                        </p>
-                                        {proj.link && (
-                                            <span className="text-xs text-slate-400 underline">
-                                                {proj.link}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* PÁGINA DE EXPERIENCIA / FINAL */}
-                    {(siteData.experience?.length > 0 ||
-                        siteData.education?.length > 0) && (
-                        <div className="p-12 min-h-[297mm]">
-                            <div className="grid grid-cols-2 gap-12">
-                                {/* Experiencia */}
-                                <div>
-                                    <h3
-                                        className="text-2xl font-bold uppercase mb-6 pb-2 border-b"
-                                        style={{ borderColor: siteData.color }}
-                                    >
-                                        Experiencia
-                                    </h3>
-                                    {siteData.experience?.map((exp, i) => (
-                                        <div
-                                            key={i}
-                                            className="mb-6 page-break-inside-avoid"
-                                        >
-                                            <h4 className="font-bold text-lg">
-                                                {exp.role}
-                                            </h4>
-                                            <p className="text-sm font-bold text-slate-500 mb-1">
-                                                {exp.company} | {exp.year}
-                                            </p>
-                                            <p className="text-sm text-slate-600">
-                                                {exp.desc}
-                                            </p>
-                                        </div>
-                                    ))}
+                                    <h2 className="text-2xl font-bold uppercase text-slate-800">
+                                        Portafolio Seleccionado
+                                    </h2>
                                 </div>
 
-                                {/* Educación y Skills */}
-                                <div>
-                                    {siteData.education?.length > 0 && (
-                                        <div className="mb-10">
-                                            <h3
-                                                className="text-2xl font-bold uppercase mb-6 pb-2 border-b"
-                                                style={{
-                                                    borderColor: siteData.color,
-                                                }}
+                                <div className="space-y-10">
+                                    {siteData.projects.map(
+                                        (proj: any, i: number) => (
+                                            <div
+                                                key={i}
+                                                className="flex gap-6 mb-8 page-break-inside-avoid break-inside-avoid"
                                             >
-                                                Educación
-                                            </h3>
-                                            {siteData.education?.map(
-                                                (edu, i) => (
-                                                    <div
-                                                        key={i}
-                                                        className="mb-4 page-break-inside-avoid"
-                                                    >
-                                                        <h4 className="font-bold">
-                                                            {edu.degree}
-                                                        </h4>
-                                                        <p className="text-sm text-slate-500">
-                                                            {edu.school} -{' '}
-                                                            {edu.year}
-                                                        </p>
-                                                    </div>
-                                                ),
-                                            )}
-                                        </div>
-                                    )}
+                                                {/* Imagen pequeña del proyecto */}
+                                                <div className="w-32 shrink-0">
+                                                    {proj.cover ? (
+                                                        <img
+                                                            src={proj.cover}
+                                                            className="w-full h-24 object-cover rounded-lg shadow-sm bg-slate-100"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-24 bg-slate-100 rounded-lg flex items-center justify-center text-xs text-slate-400">
+                                                            Sin Foto
+                                                        </div>
+                                                    )}
+                                                </div>
 
-                                    {siteData.skills && (
-                                        <div>
-                                            <h3
-                                                className="text-2xl font-bold uppercase mb-6 pb-2 border-b"
-                                                style={{
-                                                    borderColor: siteData.color,
-                                                }}
-                                            >
-                                                Habilidades
-                                            </h3>
-                                            <div className="flex flex-wrap gap-2">
-                                                {siteData.skills
-                                                    .split(',')
-                                                    .map((skill, i) => (
-                                                        <span
-                                                            key={i}
-                                                            className="px-3 py-1 bg-slate-100 text-slate-700 text-xs font-bold rounded-full"
+                                                {/* Info */}
+                                                <div className="flex-1">
+                                                    <h3 className="text-xl font-bold text-slate-900 mb-1">
+                                                        {proj.title}
+                                                    </h3>
+                                                    {proj.tags && (
+                                                        <p
+                                                            className="text-xs font-bold uppercase mb-2 opacity-70"
+                                                            style={{
+                                                                color: siteData.color,
+                                                            }}
                                                         >
-                                                            {skill.trim()}
-                                                        </span>
-                                                    ))}
+                                                            {proj.tags}
+                                                        </p>
+                                                    )}
+                                                    <p className="text-sm text-slate-600 leading-relaxed mb-2 text-justify">
+                                                        {proj.desc}
+                                                    </p>
+                                                    {proj.link && (
+                                                        <a
+                                                            href={proj.link}
+                                                            className="text-xs underline text-slate-400"
+                                                        >
+                                                            Ver Proyecto Online
+                                                        </a>
+                                                    )}
+                                                </div>
                                             </div>
-                                        </div>
+                                        ),
                                     )}
                                 </div>
                             </div>
+                        )}
+
+                        {/* Sección Experiencia y Educación (2 Columnas si cabe) */}
+                        <div className="grid grid-cols-2 gap-10 page-break-inside-avoid">
+                            {/* Columna Izquierda: Experiencia */}
+                            {siteData.experience?.length > 0 && (
+                                <div>
+                                    <h3 className="text-lg font-bold uppercase mb-4 pb-2 border-b border-slate-200 text-slate-800">
+                                        Experiencia
+                                    </h3>
+                                    {siteData.experience.map(
+                                        (exp: any, i: number) => (
+                                            <div key={i} className="mb-5">
+                                                <h4 className="font-bold text-base text-slate-900">
+                                                    {exp.role}
+                                                </h4>
+                                                <p className="text-xs font-bold text-slate-500 mb-1">
+                                                    {exp.company} • {exp.year}
+                                                </p>
+                                                <p className="text-xs text-slate-600 leading-relaxed">
+                                                    {exp.desc}
+                                                </p>
+                                            </div>
+                                        ),
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Columna Derecha: Educación y Skills */}
+                            <div>
+                                {siteData.education?.length > 0 && (
+                                    <div className="mb-8">
+                                        <h3 className="text-lg font-bold uppercase mb-4 pb-2 border-b border-slate-200 text-slate-800">
+                                            Educación
+                                        </h3>
+                                        {siteData.education.map(
+                                            (edu: any, i: number) => (
+                                                <div key={i} className="mb-3">
+                                                    <h4 className="font-bold text-sm text-slate-900">
+                                                        {edu.degree}
+                                                    </h4>
+                                                    <p className="text-xs text-slate-500">
+                                                        {edu.school} •{' '}
+                                                        {edu.year}
+                                                    </p>
+                                                </div>
+                                            ),
+                                        )}
+                                    </div>
+                                )}
+
+                                {siteData.skills && (
+                                    <div>
+                                        <h3 className="text-lg font-bold uppercase mb-4 pb-2 border-b border-slate-200 text-slate-800">
+                                            Habilidades
+                                        </h3>
+                                        <div className="flex flex-wrap gap-2">
+                                            {siteData.skills
+                                                .split(',')
+                                                .map((s: string, i: number) => (
+                                                    <span
+                                                        key={i}
+                                                        className="px-2 py-1 bg-slate-100 text-slate-700 text-xs font-bold rounded"
+                                                    >
+                                                        {s.trim()}
+                                                    </span>
+                                                ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                    )}
+                    </div>
+
+                    {/* Footer simple en cada página (si el contenido fluye) */}
+                    <div className="w-full text-center py-4 border-t border-slate-100 mt-auto text-xs text-slate-300">
+                        Portfolio generado con ModoFreelanceOS
+                    </div>
                 </div>
             </div>
         </div>
