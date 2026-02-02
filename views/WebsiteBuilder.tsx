@@ -226,31 +226,22 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
 
     const handleExportPDF = async () => {
         setLoading(true)
-        // 1. Guardamos cambios
         await handleSave()
 
-        // 2. Seleccionamos el elemento (que ahora siempre estará "vivo" en el DOM)
         const element = document.getElementById('portfolio-pdf-template')
-        if (!element) {
-            setLoading(false)
-            return
-        }
+        if (!element) return
 
         const opt = {
-            margin: [10, 0, 10, 0], // Margen arriba/abajo para que no se pegue al borde
+            margin: [10, 10, 10, 10], // Margen de 1cm en todas las páginas
             filename: `Portafolio-${siteData.name.replace(/\s+/g, '-')}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: {
                 scale: 2,
                 useCORS: true,
                 letterRendering: true,
-                // CLAVE: Esto evita las páginas en blanco al capturar elementos fuera de vista
-                logging: false,
-                scrollY: 0,
-                scrollX: 0,
+                // Eliminamos scrollY y windowWidth para que use el tamaño natural del elemento
             },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            // Evita cortes en mitad de proyectos
             pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
         }
 
@@ -262,7 +253,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
             setModal({
                 isOpen: true,
                 title: 'Error',
-                message: 'Fallo al procesar el documento. Intenta de nuevo.',
+                message: 'No se pudo generar el PDF.',
             })
         } finally {
             setLoading(false)
@@ -1444,101 +1435,77 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                     </Card>
                 </div>
             </div>
-            {/* --- PLANTILLA PARA PDF (SOLUCIÓN DEFINITIVA) --- */}
-            {/* Este contenedor está "vivo" pero fuera de la vista del usuario */}
+            {/* --- PLANTILLA PARA PDF (DISEÑO LINEAL REFORZADO) --- */}
             <div
                 style={{
-                    position: 'absolute',
-                    left: '-4000px',
-                    top: 0,
-                    width: '210mm',
-                    zIndex: -100,
+                    opacity: 0,
+                    height: 0,
+                    overflow: 'hidden',
                     pointerEvents: 'none',
                 }}
             >
                 <div
                     id="portfolio-pdf-template"
                     style={{
-                        width: '210mm', // Ancho exacto A4
+                        width: '794px', // Ancho estándar A4
                         backgroundColor: 'white',
                         color: '#1a202c',
-                        fontFamily: 'Helvetica, Arial, sans-serif',
-                        padding: '0',
-                        margin: '0',
+                        fontFamily: 'Arial, sans-serif',
                     }}
                 >
-                    {/* --- PÁGINA 1: PORTADA --- */}
+                    {/* PORTADA */}
                     <div
                         style={{
-                            height: '290mm',
-                            padding: '20mm',
-                            boxSizing: 'border-box',
                             textAlign: 'center',
-                            borderBottom: '2px solid #eee',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'center',
+                            padding: '100px 40px',
+                            borderBottom: `8px solid ${siteData.color}`,
                         }}
                     >
-                        <div
-                            style={{
-                                width: '100%',
-                                height: '10mm',
-                                backgroundColor: siteData.color,
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                            }}
-                        ></div>
-
                         {siteData.photo && (
                             <img
                                 src={siteData.photo}
+                                crossOrigin="anonymous"
                                 style={{
-                                    width: '60mm',
-                                    height: '60mm',
+                                    width: '200px',
+                                    height: '200px',
                                     borderRadius: '50%',
                                     objectFit: 'cover',
-                                    border: `5mm solid white`,
-                                    boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
-                                    marginBottom: '10mm',
-                                    marginLeft: 'auto',
-                                    marginRight: 'auto',
+                                    border: `6px solid white`,
+                                    boxShadow: '0 10px 20px rgba(0,0,0,0.1)',
+                                    marginBottom: '30px',
                                 }}
                             />
                         )}
-
                         <h1
                             style={{
-                                fontSize: '36pt',
+                                fontSize: '42px',
                                 fontWeight: 'bold',
-                                color: '#111827',
                                 margin: '0',
+                                color: '#111827',
                                 textTransform: 'uppercase',
                             }}
                         >
-                            {siteData.name || 'Tu Nombre'}
+                            {siteData.name}
                         </h1>
                         <p
                             style={{
-                                fontSize: '18pt',
+                                fontSize: '20px',
                                 color: siteData.color,
                                 fontWeight: 'bold',
-                                marginTop: '5mm',
+                                marginTop: '10px',
                                 textTransform: 'uppercase',
                                 letterSpacing: '2px',
                             }}
                         >
-                            {siteData.role || 'Freelancer'}
+                            {siteData.role}
                         </p>
-
                         <div
                             style={{
-                                margin: '15mm auto',
-                                maxWidth: '80%',
-                                fontSize: '12pt',
+                                fontSize: '14px',
                                 lineHeight: '1.6',
                                 color: '#4b5563',
+                                marginTop: '30px',
+                                padding: '0 60px',
                             }}
                         >
                             {siteData.bio}
@@ -1546,101 +1513,94 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
 
                         <div
                             style={{
-                                fontSize: '10pt',
+                                marginTop: '40px',
+                                fontSize: '12px',
                                 color: '#9ca3af',
-                                borderTop: '1px solid #eee',
-                                paddingTop: '10mm',
                             }}
                         >
-                            {siteData.email}{' '}
-                            {siteData.whatsapp && ` • ${siteData.whatsapp}`}
+                            {siteData.email} • {siteData.whatsapp}
                             <br />
-                            <span
-                                style={{
-                                    color: siteData.color,
-                                    fontWeight: 'bold',
-                                }}
-                            >
+                            <span style={{ color: siteData.color }}>
                                 app.modofreelanceos.com/p/{siteData.slug}
                             </span>
                         </div>
                     </div>
 
-                    {/* --- PÁGINAS SIGUIENTES: PROYECTOS --- */}
-                    <div style={{ padding: '20mm' }}>
+                    {/* CONTENIDO PROYECTOS */}
+                    <div style={{ padding: '50px 40px' }}>
                         <h2
                             style={{
-                                fontSize: '20pt',
+                                fontSize: '26px',
                                 fontWeight: 'bold',
                                 color: '#111827',
-                                marginBottom: '10mm',
-                                borderLeft: `5mm solid ${siteData.color}`,
-                                paddingLeft: '5mm',
+                                marginBottom: '40px',
+                                borderLeft: `10px solid ${siteData.color}`,
+                                paddingLeft: '20px',
                             }}
                         >
-                            PORTAFOLIO DE PROYECTOS
+                            PORTAFOLIO
                         </h2>
 
                         {siteData.projects?.map((proj: any, i: number) => (
                             <div
                                 key={i}
                                 style={{
-                                    marginBottom: '15mm',
+                                    marginBottom: '60px',
                                     pageBreakInside: 'avoid',
-                                    display: 'block',
-                                    width: '100%',
+                                    borderBottom: '1px solid #f3f4f6',
+                                    paddingBottom: '40px',
                                 }}
                             >
                                 <h3
                                     style={{
-                                        fontSize: '16pt',
+                                        fontSize: '22px',
                                         fontWeight: 'bold',
                                         color: '#111827',
-                                        margin: '0 0 2mm 0',
+                                        margin: '0 0 5px 0',
                                     }}
                                 >
                                     {proj.title}
                                 </h3>
                                 <p
                                     style={{
-                                        fontSize: '10pt',
+                                        fontSize: '11px',
                                         fontWeight: 'bold',
                                         color: siteData.color,
                                         textTransform: 'uppercase',
-                                        marginBottom: '4mm',
+                                        marginBottom: '15px',
                                     }}
                                 >
                                     {proj.tags}
                                 </p>
                                 <p
                                     style={{
-                                        fontSize: '11pt',
-                                        lineHeight: '1.5',
+                                        fontSize: '14px',
+                                        lineHeight: '1.6',
                                         color: '#374151',
-                                        marginBottom: '6mm',
-                                        textAlign: 'justify',
+                                        marginBottom: '30px',
                                     }}
                                 >
                                     {proj.desc}
                                 </p>
 
+                                {/* Portada de Proyecto - Grande */}
                                 {proj.cover && (
                                     <img
                                         src={proj.cover}
+                                        crossOrigin="anonymous"
                                         style={{
                                             width: '100%',
-                                            height: '80mm',
+                                            height: '400px',
                                             objectFit: 'cover',
-                                            borderRadius: '5mm',
-                                            marginBottom: '5mm',
-                                            display: 'block',
+                                            borderRadius: '15px',
+                                            marginBottom: '20px',
                                         }}
                                     />
                                 )}
 
-                                {/* GALERÍA DE IMÁGENES EXTRA (MÁS GRANDES) */}
+                                {/* Galería de Proyecto - Fotos Muy Grandes */}
                                 {proj.gallery && proj.gallery.length > 0 && (
-                                    <div style={{ width: '100%' }}>
+                                    <div>
                                         {proj.gallery
                                             .filter((g: any) =>
                                                 g.type.includes('image'),
@@ -1649,19 +1609,20 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                                 <div
                                                     key={idx}
                                                     style={{
-                                                        marginBottom: '5mm',
                                                         pageBreakInside:
                                                             'avoid',
+                                                        marginTop: '15px',
                                                     }}
                                                 >
                                                     <img
                                                         src={img.url}
+                                                        crossOrigin="anonymous"
                                                         style={{
                                                             width: '100%',
-                                                            height: '100mm',
+                                                            height: '450px',
                                                             objectFit: 'cover',
-                                                            borderRadius: '5mm',
-                                                            display: 'block',
+                                                            borderRadius:
+                                                                '15px',
                                                         }}
                                                     />
                                                 </div>
@@ -1671,58 +1632,54 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                             </div>
                         ))}
 
-                        {/* --- SECCIÓN FINAL: RESUMEN --- */}
+                        {/* RESUMEN FINAL */}
                         <div
                             style={{
-                                marginTop: '10mm',
                                 pageBreakInside: 'avoid',
+                                marginTop: '40px',
                             }}
                         >
                             <h2
                                 style={{
-                                    fontSize: '20pt',
+                                    fontSize: '26px',
                                     fontWeight: 'bold',
                                     color: '#111827',
-                                    marginBottom: '8mm',
-                                    borderLeft: `5mm solid ${siteData.color}`,
-                                    paddingLeft: '5mm',
+                                    marginBottom: '30px',
+                                    borderLeft: `10px solid ${siteData.color}`,
+                                    paddingLeft: '20px',
                                 }}
                             >
-                                RESUMEN PROFESIONAL
+                                RESUMEN
                             </h2>
 
-                            <div style={{ marginBottom: '10mm' }}>
+                            <div style={{ marginBottom: '30px' }}>
                                 <h3
                                     style={{
-                                        fontSize: '14pt',
+                                        fontSize: '18px',
                                         fontWeight: 'bold',
                                         color: siteData.color,
-                                        marginBottom: '5mm',
+                                        marginBottom: '15px',
                                     }}
                                 >
-                                    Experiencia Laboral
+                                    Experiencia
                                 </h3>
                                 {siteData.experience?.map(
                                     (exp: any, i: number) => (
                                         <div
                                             key={i}
-                                            style={{
-                                                marginBottom: '6mm',
-                                                pageBreakInside: 'avoid',
-                                            }}
+                                            style={{ marginBottom: '20px' }}
                                         >
                                             <div
                                                 style={{
                                                     fontWeight: 'bold',
-                                                    fontSize: '12pt',
-                                                    color: '#111827',
+                                                    fontSize: '16px',
                                                 }}
                                             >
                                                 {exp.role}
                                             </div>
                                             <div
                                                 style={{
-                                                    fontSize: '10pt',
+                                                    fontSize: '12px',
                                                     color: '#6b7280',
                                                 }}
                                             >
@@ -1730,10 +1687,8 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                             </div>
                                             <p
                                                 style={{
-                                                    fontSize: '10pt',
+                                                    fontSize: '13px',
                                                     color: '#4b5563',
-                                                    marginTop: '2mm',
-                                                    textAlign: 'justify',
                                                 }}
                                             >
                                                 {exp.desc}
@@ -1743,13 +1698,13 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                 )}
                             </div>
 
-                            <div style={{ pageBreakInside: 'avoid' }}>
+                            <div>
                                 <h3
                                     style={{
-                                        fontSize: '14pt',
+                                        fontSize: '18px',
                                         fontWeight: 'bold',
                                         color: siteData.color,
-                                        marginBottom: '5mm',
+                                        marginBottom: '15px',
                                     }}
                                 >
                                     Educación y Habilidades
@@ -1758,42 +1713,32 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                     (edu: any, i: number) => (
                                         <div
                                             key={i}
-                                            style={{ marginBottom: '3mm' }}
+                                            style={{
+                                                marginBottom: '10px',
+                                                fontSize: '14px',
+                                            }}
                                         >
-                                            <span
-                                                style={{ fontWeight: 'bold' }}
-                                            >
-                                                {edu.degree}
-                                            </span>{' '}
-                                            —{' '}
-                                            <span style={{ color: '#6b7280' }}>
-                                                {edu.school} ({edu.year})
-                                            </span>
+                                            <b>{edu.degree}</b> — {edu.school} (
+                                            {edu.year})
                                         </div>
                                     ),
                                 )}
 
-                                <div
-                                    style={{
-                                        marginTop: '8mm',
-                                        display: 'flex',
-                                        flexWrap: 'wrap',
-                                        gap: '3mm',
-                                    }}
-                                >
+                                <div style={{ marginTop: '20px' }}>
                                     {siteData.skills
                                         .split(',')
                                         .map((s: string, i: number) => (
                                             <span
                                                 key={i}
                                                 style={{
-                                                    padding: '2mm 4mm',
+                                                    display: 'inline-block',
+                                                    padding: '5px 15px',
                                                     backgroundColor: '#f3f4f6',
-                                                    borderRadius: '5mm',
-                                                    fontSize: '9pt',
+                                                    borderRadius: '20px',
+                                                    fontSize: '12px',
                                                     fontWeight: 'bold',
-                                                    color: '#374151',
-                                                    border: '0.2mm solid #e5e7eb',
+                                                    marginRight: '8px',
+                                                    marginBottom: '8px',
                                                 }}
                                             >
                                                 {s.trim()}
@@ -1801,19 +1746,6 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                         ))}
                                 </div>
                             </div>
-                        </div>
-
-                        <div
-                            style={{
-                                textAlign: 'center',
-                                marginTop: '15mm',
-                                paddingTop: '5mm',
-                                borderTop: '1px solid #eee',
-                                color: '#9ca3af',
-                                fontSize: '8pt',
-                            }}
-                        >
-                            Documento generado por ModoFreelanceOS
                         </div>
                     </div>
                 </div>
