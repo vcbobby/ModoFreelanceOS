@@ -1510,122 +1510,265 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                     </div>
 
                     {/* CONTENIDO PRINCIPAL */}
+
                     <div>
                         {/* PROYECTOS */}
+                        {/* ================= PROYECTOS ================= */}
                         {siteData.projects?.length > 0 && (
                             <div className="mb-8">
+                                {/* TITULO + PRIMER PROYECTO (NO SE SEPARAN) */}
                                 <div
-                                    className="flex items-center gap-4 mb-6 border-b-2 pb-2"
-                                    style={{ borderColor: siteData.color }}
+                                    style={{
+                                        pageBreakInside: 'avoid',
+                                        breakInside: 'avoid',
+                                    }}
                                 >
-                                    <h2 className="text-xl font-bold uppercase text-slate-800">
-                                        Portafolio
-                                    </h2>
-                                </div>
+                                    <div
+                                        className="flex items-center gap-4 mb-6 border-b-2 pb-2"
+                                        style={{ borderColor: siteData.color }}
+                                    >
+                                        <h2 className="text-xl font-bold uppercase text-slate-800">
+                                            Portafolio
+                                        </h2>
+                                    </div>
 
-                                <div className="space-y-8">
-                                    {siteData.projects.map(
-                                        (proj: any, i: number) => (
-                                            <div
-                                                key={i}
-                                                className="mb-8 border-b border-slate-100 pb-8"
-                                                // ESTO ES LO QUE EVITA QUE SE CORTE A LA MITAD:
-                                                style={{
-                                                    pageBreakInside: 'avoid',
-                                                    breakInside: 'avoid',
-                                                }}
-                                            >
-                                                {/* Cabecera del Proyecto */}
-                                                <div className="flex gap-6 mb-4">
-                                                    <div className="w-24 shrink-0">
-                                                        {proj.cover ? (
-                                                            <img
-                                                                src={proj.cover}
-                                                                className="w-full h-24 object-cover rounded-lg shadow-sm bg-slate-100"
-                                                            />
-                                                        ) : (
-                                                            <div className="w-full h-24 bg-slate-100 rounded-lg flex items-center justify-center text-[10px] text-slate-400">
-                                                                Sin Foto
-                                                            </div>
-                                                        )}
+                                    {/* PRIMER PROYECTO */}
+                                    <div
+                                        className="mb-8 border-b border-slate-100 pb-8"
+                                        style={{
+                                            pageBreakInside: 'avoid',
+                                            breakInside: 'avoid',
+                                        }}
+                                    >
+                                        {/* Cabecera del Proyecto */}
+                                        <div className="flex gap-6 mb-4">
+                                            <div className="w-24 shrink-0">
+                                                {siteData.projects[0].cover ? (
+                                                    <img
+                                                        src={
+                                                            siteData.projects[0]
+                                                                .cover
+                                                        }
+                                                        className="w-full h-24 object-cover rounded-lg shadow-sm bg-slate-100"
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-24 bg-slate-100 rounded-lg flex items-center justify-center text-[10px] text-slate-400">
+                                                        Sin Foto
                                                     </div>
-                                                    <div className="flex-1">
-                                                        <h3 className="text-lg font-bold text-slate-900 mb-1">
-                                                            {proj.title}
-                                                        </h3>
-                                                        {proj.tags && (
-                                                            <p
-                                                                className="text-[10px] font-bold uppercase mb-2 opacity-70"
-                                                                style={{
-                                                                    color: siteData.color,
-                                                                }}
-                                                            >
-                                                                {proj.tags}
-                                                            </p>
-                                                        )}
-                                                        <p className="text-xs text-slate-600 leading-relaxed mb-2 text-justify">
-                                                            {proj.desc}
-                                                        </p>
-                                                        {proj.link && (
-                                                            <a
-                                                                href={proj.link}
-                                                                className="text-[10px] underline text-slate-400"
-                                                            >
-                                                                Ver Proyecto
-                                                            </a>
+                                                )}
+                                            </div>
+
+                                            <div className="flex-1">
+                                                <h3 className="text-lg font-bold text-slate-900 mb-1">
+                                                    {siteData.projects[0].title}
+                                                </h3>
+
+                                                {siteData.projects[0].tags && (
+                                                    <p
+                                                        className="text-[10px] font-bold uppercase mb-2 opacity-70"
+                                                        style={{
+                                                            color: siteData.color,
+                                                        }}
+                                                    >
+                                                        {
+                                                            siteData.projects[0]
+                                                                .tags
+                                                        }
+                                                    </p>
+                                                )}
+
+                                                <p className="text-xs text-slate-600 leading-relaxed mb-2 text-justify">
+                                                    {siteData.projects[0].desc}
+                                                </p>
+
+                                                {siteData.projects[0].link && (
+                                                    <a
+                                                        href={
+                                                            siteData.projects[0]
+                                                                .link
+                                                        }
+                                                        className="text-[10px] underline text-slate-400"
+                                                    >
+                                                        Ver Proyecto
+                                                    </a>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* GALERÍA */}
+                                        {siteData.projects[0].gallery &&
+                                            siteData.projects[0].gallery
+                                                .length > 0 && (
+                                                <div className="mt-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                                                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">
+                                                        Galería:
+                                                    </p>
+
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        {siteData.projects[0].gallery.map(
+                                                            (
+                                                                img: any,
+                                                                idx: number,
+                                                            ) => {
+                                                                if (
+                                                                    !img.type?.includes(
+                                                                        'image',
+                                                                    )
+                                                                )
+                                                                    return null
+
+                                                                return (
+                                                                    <div
+                                                                        key={
+                                                                            idx
+                                                                        }
+                                                                        style={{
+                                                                            breakInside:
+                                                                                'avoid',
+                                                                        }}
+                                                                    >
+                                                                        <img
+                                                                            src={
+                                                                                img.url
+                                                                            }
+                                                                            className="w-full h-40 object-cover rounded border border-slate-200 bg-white"
+                                                                        />
+                                                                    </div>
+                                                                )
+                                                            },
                                                         )}
                                                     </div>
                                                 </div>
+                                            )}
+                                    </div>
+                                </div>
 
-                                                {/* GALERÍA DE IMÁGENES */}
-                                                {proj.gallery &&
-                                                    proj.gallery.length > 0 && (
-                                                        <div className="mt-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
-                                                            <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">
-                                                                Galería:
+                                {/* RESTO DE PROYECTOS */}
+                                <div className="space-y-8">
+                                    {siteData.projects
+                                        .slice(1)
+                                        .map((proj: any, i: number) => {
+                                            const isLast =
+                                                i ===
+                                                siteData.projects.slice(1)
+                                                    .length -
+                                                    1
+
+                                            return (
+                                                <div
+                                                    key={i}
+                                                    className={`mb-8 pb-8 ${
+                                                        isLast
+                                                            ? ''
+                                                            : 'border-b border-slate-100'
+                                                    }`}
+                                                    style={{
+                                                        pageBreakInside:
+                                                            'avoid',
+                                                        breakInside: 'avoid',
+                                                        pageBreakBefore: isLast
+                                                            ? 'always'
+                                                            : 'auto',
+                                                    }}
+                                                >
+                                                    {/* Cabecera del Proyecto */}
+                                                    <div className="flex gap-6 mb-4">
+                                                        <div className="w-24 shrink-0">
+                                                            {proj.cover ? (
+                                                                <img
+                                                                    src={
+                                                                        proj.cover
+                                                                    }
+                                                                    className="w-full h-24 object-cover rounded-lg shadow-sm bg-slate-100"
+                                                                />
+                                                            ) : (
+                                                                <div className="w-full h-24 bg-slate-100 rounded-lg flex items-center justify-center text-[10px] text-slate-400">
+                                                                    Sin Foto
+                                                                </div>
+                                                            )}
+                                                        </div>
+
+                                                        <div className="flex-1">
+                                                            <h3 className="text-lg font-bold text-slate-900 mb-1">
+                                                                {proj.title}
+                                                            </h3>
+
+                                                            {proj.tags && (
+                                                                <p
+                                                                    className="text-[10px] font-bold uppercase mb-2 opacity-70"
+                                                                    style={{
+                                                                        color: siteData.color,
+                                                                    }}
+                                                                >
+                                                                    {proj.tags}
+                                                                </p>
+                                                            )}
+
+                                                            <p className="text-xs text-slate-600 leading-relaxed mb-2 text-justify">
+                                                                {proj.desc}
                                                             </p>
 
-                                                            {/* GRID DE 2 COLUMNAS + IMÁGENES MÁS GRANDES */}
-                                                            <div className="grid grid-cols-2 gap-3">
-                                                                {proj.gallery.map(
-                                                                    (
-                                                                        img: any,
-                                                                        idx: number,
-                                                                    ) => {
-                                                                        if (
-                                                                            !img.type.includes(
-                                                                                'image',
-                                                                            )
-                                                                        )
-                                                                            return null
-                                                                        return (
-                                                                            // break-inside: avoid en la imagen individual por si acaso
-                                                                            <div
-                                                                                key={
-                                                                                    idx
-                                                                                }
-                                                                                style={{
-                                                                                    breakInside:
-                                                                                        'avoid',
-                                                                                }}
-                                                                            >
-                                                                                <img
-                                                                                    src={
-                                                                                        img.url
-                                                                                    }
-                                                                                    className="w-full h-40 object-cover rounded border border-slate-200 bg-white"
-                                                                                    alt="Gallery item"
-                                                                                />
-                                                                            </div>
-                                                                        )
-                                                                    },
-                                                                )}
-                                                            </div>
+                                                            {proj.link && (
+                                                                <a
+                                                                    href={
+                                                                        proj.link
+                                                                    }
+                                                                    className="text-[10px] underline text-slate-400"
+                                                                >
+                                                                    Ver Proyecto
+                                                                </a>
+                                                            )}
                                                         </div>
-                                                    )}
-                                            </div>
-                                        ),
-                                    )}
+                                                    </div>
+
+                                                    {/* GALERÍA */}
+                                                    {proj.gallery &&
+                                                        proj.gallery.length >
+                                                            0 && (
+                                                            <div className="mt-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                                                                <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">
+                                                                    Galería:
+                                                                </p>
+
+                                                                <div className="grid grid-cols-2 gap-3">
+                                                                    {proj.gallery.map(
+                                                                        (
+                                                                            img: any,
+                                                                            idx: number,
+                                                                        ) => {
+                                                                            if (
+                                                                                !img.type?.includes(
+                                                                                    'image',
+                                                                                )
+                                                                            )
+                                                                                return null
+
+                                                                            return (
+                                                                                <div
+                                                                                    key={
+                                                                                        idx
+                                                                                    }
+                                                                                    style={{
+                                                                                        breakInside:
+                                                                                            'avoid',
+                                                                                    }}
+                                                                                >
+                                                                                    <img
+                                                                                        src={
+                                                                                            img.url
+                                                                                        }
+                                                                                        className="w-full h-40 object-cover rounded border border-slate-200 bg-white"
+                                                                                    />
+                                                                                </div>
+                                                                            )
+                                                                        },
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                </div>
+                                            )
+                                        })}
                                 </div>
                             </div>
                         )}
