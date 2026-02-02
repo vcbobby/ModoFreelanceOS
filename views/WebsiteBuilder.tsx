@@ -25,7 +25,6 @@ import {
 import { Button, Card, ConfirmationModal } from '../components/ui'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '../firebase'
-import html2pdf from 'html2pdf.js'
 
 interface WebsiteBuilderProps {
     onUsage: (cost: number) => Promise<boolean>
@@ -226,43 +225,45 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
 
     const handleExportPDF = async () => {
         setLoading(true)
-        await handleSave()
-
-        const element = document.getElementById('portfolio-pdf-template')
-        if (!element) {
-            setLoading(false)
-            return
-        }
-
-        const opt = {
-            margin: [15, 15, 15, 15], // Márgenes de 1.5cm parejos en todas las hojas
-            filename: `Portafolio-${siteData.name.replace(/\s+/g, '-')}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: {
-                scale: 2,
-                useCORS: true,
-                letterRendering: true,
-                // Eliminamos x, y, scrollY para que tome el elemento de forma natural
-            },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak: { mode: 'avoid-all', before: '.page-break' },
-        }
-
         try {
-            // @ts-ignore
-            await html2pdf().set(opt).from(element).save()
+            // Enviamos los datos actuales al backend
+            const response = await fetch(
+                `${BACKEND_URL}/api/export-portfolio-pdf`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(siteData),
+                },
+            )
+
+            if (!response.ok)
+                throw new Error('Fallo al generar PDF en el servidor')
+
+            // Convertimos la respuesta en un archivo descargable
+            const blob = await response.blob()
+            const url = window.URL.createObjectURL(blob)
+            const link = document.createElement('a')
+            link.href = url
+            link.download = `Portafolio-${siteData.name.replace(
+                /\s+/g,
+                '-',
+            )}.pdf`
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+
+            console.log('PDF generado correctamente desde el Backend')
         } catch (e) {
-            console.error('Error PDF:', e)
+            console.error(e)
             setModal({
                 isOpen: true,
                 title: 'Error',
-                message: 'Reintenta la descarga.',
+                message: 'No se pudo generar el PDF.',
             })
         } finally {
             setLoading(false)
         }
     }
-
     // SUBIDA DE ARCHIVOS
     const uploadFileToBackend = async (file: File) => {
         const formData = new FormData()
@@ -1437,330 +1438,6 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                             </div>
                         )}
                     </Card>
-                </div>
-            </div>
-            {/* --- PLANTILLA PARA PDF (ESTRUCTURA LINEAL ANTI-CORTES) --- */}
-            {/* Usamos opacity-0 pero mantenemos el flujo para que el canvas lo detecte perfecto */}
-            <div
-                style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    zIndex: -100,
-                    opacity: 0,
-                    pointerEvents: 'none',
-                }}
-            >
-                <div
-                    id="portfolio-pdf-template"
-                    style={{
-                        width: '750px', // Ancho optimizado para A4
-                        backgroundColor: 'white',
-                        color: '#1a202c',
-                        fontFamily: 'Arial, sans-serif',
-                    }}
-                >
-                    {/* PORTADA (Bloque 1) */}
-                    <div
-                        style={{
-                            textAlign: 'center',
-                            paddingBottom: '50px',
-                            borderBottom: '3px solid #eee',
-                        }}
-                    >
-                        <div
-                            style={{
-                                width: '100%',
-                                height: '15px',
-                                backgroundColor: siteData.color,
-                                marginBottom: '40px',
-                            }}
-                        ></div>
-
-                        {siteData.photo && (
-                            <img
-                                src={siteData.photo}
-                                crossOrigin="anonymous"
-                                style={{
-                                    width: '180px',
-                                    height: '180px',
-                                    borderRadius: '50%',
-                                    objectFit: 'cover',
-                                    border: `5px solid ${siteData.color}`,
-                                    marginBottom: '20px',
-                                }}
-                            />
-                        )}
-
-                        <h1
-                            style={{
-                                fontSize: '40px',
-                                fontWeight: 'bold',
-                                margin: '0',
-                                color: '#111827',
-                            }}
-                        >
-                            {siteData.name}
-                        </h1>
-                        <p
-                            style={{
-                                fontSize: '20px',
-                                color: siteData.color,
-                                fontWeight: 'bold',
-                                margin: '10px 0 20px 0',
-                                textTransform: 'uppercase',
-                            }}
-                        >
-                            {siteData.role}
-                        </p>
-                        <p
-                            style={{
-                                fontSize: '14px',
-                                lineHeight: '1.6',
-                                color: '#4b5563',
-                                padding: '0 40px',
-                            }}
-                        >
-                            {siteData.bio}
-                        </p>
-
-                        <div
-                            style={{
-                                fontSize: '11px',
-                                color: '#9ca3af',
-                                marginTop: '30px',
-                            }}
-                        >
-                            {siteData.email} • {siteData.whatsapp}
-                            <br />
-                            app.modofreelanceos.com/p/{siteData.slug}
-                        </div>
-                    </div>
-
-                    {/* SECCIÓN PORTAFOLIO (Bloque 2) */}
-                    <div style={{ padding: '40px 0' }}>
-                        <h2
-                            style={{
-                                fontSize: '24px',
-                                fontWeight: 'bold',
-                                marginBottom: '30px',
-                                color: '#111827',
-                                borderLeft: `6px solid ${siteData.color}`,
-                                paddingLeft: '15px',
-                            }}
-                        >
-                            PORTAFOLIO DE PROYECTOS
-                        </h2>
-
-                        {siteData.projects?.map((proj: any, i: number) => (
-                            <div
-                                key={i}
-                                style={{
-                                    marginBottom: '60px',
-                                    pageBreakInside: 'avoid',
-                                    borderBottom: '1px solid #f3f4f6',
-                                    paddingBottom: '30px',
-                                }}
-                            >
-                                <h3
-                                    style={{
-                                        fontSize: '20px',
-                                        fontWeight: 'bold',
-                                        margin: '0 0 5px 0',
-                                    }}
-                                >
-                                    {proj.title}
-                                </h3>
-                                <p
-                                    style={{
-                                        color: siteData.color,
-                                        fontSize: '11px',
-                                        fontWeight: 'bold',
-                                        margin: '0 0 15px 0',
-                                    }}
-                                >
-                                    {proj.tags}
-                                </p>
-                                <p
-                                    style={{
-                                        fontSize: '13px',
-                                        lineHeight: '1.6',
-                                        color: '#374151',
-                                        marginBottom: '20px',
-                                    }}
-                                >
-                                    {proj.desc}
-                                </p>
-
-                                {proj.cover && (
-                                    <img
-                                        src={proj.cover}
-                                        crossOrigin="anonymous"
-                                        style={{
-                                            width: '100%',
-                                            borderRadius: '10px',
-                                            marginBottom: '15px',
-                                        }}
-                                    />
-                                )}
-
-                                {/* GALERÍA DE IMÁGENES GRANDES */}
-                                {proj.gallery && proj.gallery.length > 0 && (
-                                    <div style={{ marginTop: '15px' }}>
-                                        {proj.gallery
-                                            .filter((img: any) =>
-                                                img.type.includes('image'),
-                                            )
-                                            .map((img: any, idx: number) => (
-                                                <div
-                                                    key={idx}
-                                                    style={{
-                                                        marginBottom: '15px',
-                                                        pageBreakInside:
-                                                            'avoid',
-                                                    }}
-                                                >
-                                                    <img
-                                                        src={img.url}
-                                                        crossOrigin="anonymous"
-                                                        style={{
-                                                            width: '100%',
-                                                            borderRadius: '8px',
-                                                            border: '1px solid #eee',
-                                                        }}
-                                                    />
-                                                </div>
-                                            ))}
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* RESUMEN (Bloque 3) */}
-                    <div
-                        style={{ pageBreakInside: 'avoid', paddingTop: '20px' }}
-                    >
-                        <h2
-                            style={{
-                                fontSize: '24px',
-                                fontWeight: 'bold',
-                                marginBottom: '30px',
-                                borderLeft: `6px solid ${siteData.color}`,
-                                paddingLeft: '15px',
-                            }}
-                        >
-                            RESUMEN PROFESIONAL
-                        </h2>
-
-                        {/* Experiencia - Lista Simple para evitar cortes de Grid */}
-                        <div style={{ marginBottom: '40px' }}>
-                            <h3
-                                style={{
-                                    fontSize: '18px',
-                                    fontWeight: 'bold',
-                                    color: siteData.color,
-                                    marginBottom: '15px',
-                                }}
-                            >
-                                Experiencia
-                            </h3>
-                            {siteData.experience?.map((exp: any, i: number) => (
-                                <div key={i} style={{ marginBottom: '20px' }}>
-                                    <div
-                                        style={{
-                                            fontWeight: 'bold',
-                                            fontSize: '14px',
-                                        }}
-                                    >
-                                        {exp.role}
-                                    </div>
-                                    <div
-                                        style={{
-                                            fontSize: '12px',
-                                            color: '#6b7280',
-                                        }}
-                                    >
-                                        {exp.company} • {exp.year}
-                                    </div>
-                                    <div
-                                        style={{
-                                            fontSize: '12px',
-                                            color: '#4b5563',
-                                            marginTop: '5px',
-                                        }}
-                                    >
-                                        {exp.desc}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Educación y Habilidades */}
-                        <div style={{ marginBottom: '30px' }}>
-                            <h3
-                                style={{
-                                    fontSize: '18px',
-                                    fontWeight: 'bold',
-                                    color: siteData.color,
-                                    marginBottom: '15px',
-                                }}
-                            >
-                                Educación
-                            </h3>
-                            {siteData.education?.map((edu: any, i: number) => (
-                                <div key={i} style={{ marginBottom: '10px' }}>
-                                    <div
-                                        style={{
-                                            fontWeight: 'bold',
-                                            fontSize: '14px',
-                                        }}
-                                    >
-                                        {edu.degree}
-                                    </div>
-                                    <div
-                                        style={{
-                                            fontSize: '12px',
-                                            color: '#6b7280',
-                                        }}
-                                    >
-                                        {edu.school} • {edu.year}
-                                    </div>
-                                </div>
-                            ))}
-
-                            <h3
-                                style={{
-                                    fontSize: '18px',
-                                    fontWeight: 'bold',
-                                    color: siteData.color,
-                                    marginTop: '30px',
-                                    marginBottom: '15px',
-                                }}
-                            >
-                                Habilidades
-                            </h3>
-                            <div style={{ lineHeight: '2' }}>
-                                {siteData.skills
-                                    .split(',')
-                                    .map((s: string, i: number) => (
-                                        <span
-                                            key={i}
-                                            style={{
-                                                padding: '4px 10px',
-                                                backgroundColor: '#f3f4f6',
-                                                borderRadius: '4px',
-                                                fontSize: '11px',
-                                                fontWeight: 'bold',
-                                                marginRight: '5px',
-                                            }}
-                                        >
-                                            {s.trim()}
-                                        </span>
-                                    ))}
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
