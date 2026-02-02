@@ -25,7 +25,8 @@ import {
 import { Button, Card, ConfirmationModal } from '../components/ui'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '../firebase'
-
+import html2pdf from 'html2pdf.js'
+import { downloadFile } from '../utils/downloadUtils.ts'
 interface WebsiteBuilderProps {
     onUsage: (cost: number) => Promise<boolean>
     userId?: string
