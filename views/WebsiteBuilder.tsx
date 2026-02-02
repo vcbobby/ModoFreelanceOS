@@ -224,92 +224,42 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
         load()
     }, [userId])
 
-    // const handleExportPDF = async () => {
-    //     await handleSave()
-    //     const element = document.getElementById('portfolio-pdf-template')
-
-    //     const opt = {
-    //         // MARGEN CERO: Nosotros controlamos el espacio con CSS para que no se mueva nada
-    //         margin: 0,
-
-    //         filename: `Portafolio-${siteData.name.replace(/\s+/g, '-')}.pdf`,
-    //         image: { type: 'jpeg', quality: 0.98 },
-    //         html2canvas: {
-    //             scale: 2,
-    //             useCORS: true,
-    //             scrollY: 0,
-    //             windowWidth: 794, // Ancho exacto A4 en px (96 DPI)
-    //         },
-    //         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    //         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
-    //     }
-
-    //     setLoading(true)
-    //     try {
-    //         // @ts-ignore
-    //         await html2pdf().set(opt).from(element).save()
-    //     } catch (e) {
-    //         console.error(e)
-    //         setModal({
-    //             isOpen: true,
-    //             title: 'Error',
-    //             message: 'No se pudo generar el PDF.',
-    //         })
-    //     } finally {
-    //         setLoading(false)
-    //     }
-    // }
-
     const handleExportPDF = async () => {
-        setLoading(true)
         await handleSave()
-
-        // 1. Seleccionamos la plantilla (que está en el DOM pero oculta)
         const element = document.getElementById('portfolio-pdf-template')
-        if (!element) return
-
-        // 2. LA CLAVE: Lo hacemos visible solo un segundo para capturarlo
-        element.style.display = 'block'
-        element.style.position = 'fixed'
-        element.style.top = '0'
-        element.style.left = '0'
-        element.style.zIndex = '9999'
 
         const opt = {
-            margin: [10, 10, 10, 10],
-            filename: `Portafolio-${siteData.name.replace(
-                /\s+/g,
-                '-',
-            )}.json`.replace('.json', '.pdf'),
+            // MARGEN CERO: Nosotros controlamos el espacio con CSS para que no se mueva nada
+            margin: 0,
+
+            filename: `Portafolio-${siteData.name.replace(/\s+/g, '-')}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: {
                 scale: 2,
                 useCORS: true,
-                letterRendering: true,
                 scrollY: 0,
-                scrollX: 0,
-                windowWidth: 850, // Ancho estable para el render
+                windowWidth: 794, // Ancho exacto A4 en px (96 DPI)
             },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
             pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
         }
 
+        setLoading(true)
         try {
             // @ts-ignore
-            const pdfDataUri = await html2pdf()
-                .set(opt)
-                .from(element)
-                .outputPdf('datauristring')
-            // Usamos tu utilidad de descarga (compatible con Android)
-            await downloadFile(pdfDataUri, opt.filename)
+            await html2pdf().set(opt).from(element).save()
         } catch (e) {
-            console.error('Error PDF:', e)
+            console.error(e)
+            setModal({
+                isOpen: true,
+                title: 'Error',
+                message: 'No se pudo generar el PDF.',
+            })
         } finally {
-            // 3. Lo volvemos a ocultar inmediatamente
-            element.style.display = 'none'
             setLoading(false)
         }
     }
+
     // SUBIDA DE ARCHIVOS
     const uploadFileToBackend = async (file: File) => {
         const formData = new FormData()
@@ -1486,281 +1436,272 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                     </Card>
                 </div>
             </div>
-            {/* --- PLANTILLA PARA PDF (DISEÑO FINAL) --- */}
+            {/* --- PLANTILLA OCULTA PARA PDF (SOLUCIÓN FINAL DE CORTES) --- */}
             <div
-                id="portfolio-pdf-template"
-                style={{ display: 'none', backgroundColor: 'white' }}
+                style={{
+                    position: 'absolute',
+                    left: '-9999px',
+                    top: 0,
+                    pointerEvents: 'none',
+                    zIndex: -50,
+                }}
             >
                 <div
+                    id="portfolio-pdf-template"
+                    className="bg-white text-slate-900"
                     style={{
-                        width: '800px',
-                        backgroundColor: 'white',
-                        color: '#1a202c',
-                        fontFamily: 'Arial, sans-serif',
-                        padding: '40px',
-                        boxSizing: 'border-box',
+                        width: '210mm',
+                        minHeight: '297mm',
+                        fontFamily: 'Helvetica, Arial, sans-serif',
+                        fontSize: '11pt',
+                        lineHeight: '1.5',
+                        // CLAVE: El padding aquí actúa como margen de la hoja
+                        padding: '15mm 20mm', // 15mm Arriba/Abajo, 20mm Izq/Der
+                        boxSizing: 'border-box', // Esto evita que el padding ensanche la hoja
+                        margin: '0 auto',
                     }}
                 >
                     {/* PORTADA */}
-                    <div
-                        style={{
-                            textAlign: 'center',
-                            padding: '60px 0',
-                            borderBottom: `5px solid ${siteData.color}`,
-                            marginBottom: '40px',
-                        }}
-                    >
+                    <div className="w-full relative flex flex-col justify-center items-center text-center mb-16 pb-12 border-b-2 border-slate-100 page-break-after-avoid">
+                        <div
+                            className="absolute top-[-15mm] left-[-20mm] w-[210mm] h-4"
+                            style={{ backgroundColor: siteData.color }}
+                        ></div>
+
                         {siteData.photo && (
                             <img
                                 src={siteData.photo}
-                                crossOrigin="anonymous"
-                                style={{
-                                    width: '180px',
-                                    height: '180px',
-                                    borderRadius: '50%',
-                                    objectFit: 'cover',
-                                    border: `4px solid white`,
-                                    boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
-                                    marginBottom: '20px',
-                                }}
+                                className="w-40 h-40 rounded-full object-cover shadow-xl mb-6 border-4 border-white"
+                                style={{ borderColor: siteData.color }}
                             />
                         )}
-                        <h1
-                            style={{
-                                fontSize: '36px',
-                                fontWeight: 'bold',
-                                margin: '0',
-                                color: '#111827',
-                            }}
-                        >
+
+                        <h1 className="text-4xl font-black uppercase tracking-tight mb-2 leading-none text-slate-900">
                             {siteData.name}
                         </h1>
-                        <p
-                            style={{
-                                fontSize: '18px',
-                                color: siteData.color,
-                                fontWeight: 'bold',
-                                marginTop: '10px',
-                                textTransform: 'uppercase',
-                            }}
-                        >
+                        <p className="text-lg font-medium uppercase tracking-widest text-slate-500 mb-6">
                             {siteData.role}
                         </p>
-                        <p
-                            style={{
-                                fontSize: '14px',
-                                lineHeight: '1.6',
-                                color: '#4b5563',
-                                marginTop: '20px',
-                            }}
-                        >
+
+                        <div className="max-w-md mx-auto text-sm text-slate-600 leading-relaxed mb-8">
                             {siteData.bio}
-                        </p>
-                        <p
-                            style={{
-                                fontSize: '11px',
-                                color: '#9ca3af',
-                                marginTop: '20px',
-                            }}
-                        >
-                            {siteData.email} • modofreelanceos.com/p/
-                            {siteData.slug}
-                        </p>
+                        </div>
+
+                        <div className="flex flex-wrap justify-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50 py-2 px-6 rounded-full">
+                            {siteData.email && <span>{siteData.email}</span>}
+                            {siteData.whatsapp && (
+                                <span>• {siteData.whatsapp}</span>
+                            )}
+                            {siteData.slug && (
+                                <span>
+                                    • modofreelanceos.com/p/{siteData.slug}
+                                </span>
+                            )}
+                        </div>
                     </div>
 
-                    {/* PORTAFOLIO */}
-                    <h2
-                        style={{
-                            fontSize: '22px',
-                            fontWeight: 'bold',
-                            marginBottom: '30px',
-                            color: '#111827',
-                        }}
-                    >
-                        PORTAFOLIO
-                    </h2>
-
-                    {siteData.projects?.map((proj: any, i: number) => (
-                        <div
-                            key={i}
-                            style={{
-                                marginBottom: '50px',
-                                pageBreakInside: 'avoid',
-                                borderBottom: '1px solid #eee',
-                                paddingBottom: '30px',
-                                display: 'block',
-                            }}
-                        >
-                            <h3
-                                style={{
-                                    fontSize: '20px',
-                                    fontWeight: 'bold',
-                                    margin: '0 0 5px 0',
-                                }}
-                            >
-                                {proj.title}
-                            </h3>
-                            <p
-                                style={{
-                                    fontSize: '11px',
-                                    fontWeight: 'bold',
-                                    color: siteData.color,
-                                    textTransform: 'uppercase',
-                                    marginBottom: '10px',
-                                }}
-                            >
-                                {proj.tags}
-                            </p>
-                            <p
-                                style={{
-                                    fontSize: '13px',
-                                    lineHeight: '1.5',
-                                    color: '#374151',
-                                    marginBottom: '20px',
-                                }}
-                            >
-                                {proj.desc}
-                            </p>
-
-                            {proj.cover && (
-                                <img
-                                    src={proj.cover}
-                                    crossOrigin="anonymous"
-                                    style={{
-                                        width: '100%',
-                                        borderRadius: '10px',
-                                        marginBottom: '15px',
-                                    }}
-                                />
-                            )}
-
-                            {/* Galería: Una debajo de otra para evitar errores de alineación */}
-                            {proj.gallery
-                                ?.filter((g: any) => g.type.includes('image'))
-                                .map((img: any, idx: number) => (
-                                    <div
-                                        key={idx}
-                                        style={{
-                                            pageBreakInside: 'avoid',
-                                            marginTop: '10px',
-                                        }}
-                                    >
-                                        <img
-                                            src={img.url}
-                                            crossOrigin="anonymous"
-                                            style={{
-                                                width: '100%',
-                                                borderRadius: '10px',
-                                            }}
-                                        />
-                                    </div>
-                                ))}
-                        </div>
-                    ))}
-
-                    {/* RESUMEN */}
-                    <div
-                        style={{ pageBreakInside: 'avoid', marginTop: '40px' }}
-                    >
-                        <h2
-                            style={{
-                                fontSize: '22px',
-                                fontWeight: 'bold',
-                                marginBottom: '20px',
-                            }}
-                        >
-                            RESUMEN PROFESIONAL
-                        </h2>
-
-                        <div style={{ marginBottom: '30px' }}>
-                            <h4
-                                style={{
-                                    color: siteData.color,
-                                    fontSize: '16px',
-                                    fontWeight: 'bold',
-                                }}
-                            >
-                                Experiencia
-                            </h4>
-                            {siteData.experience?.map((exp: any, i: number) => (
-                                <div key={i} style={{ marginBottom: '15px' }}>
-                                    <div style={{ fontWeight: 'bold' }}>
-                                        {exp.role}
-                                    </div>
-                                    <div
-                                        style={{
-                                            fontSize: '11px',
-                                            color: '#6b7280',
-                                        }}
-                                    >
-                                        {exp.company} • {exp.year}
-                                    </div>
-                                    <p
-                                        style={{
-                                            fontSize: '12px',
-                                            marginTop: '5px',
-                                        }}
-                                    >
-                                        {exp.desc}
-                                    </p>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div>
-                            <h4
-                                style={{
-                                    color: siteData.color,
-                                    fontSize: '16px',
-                                    fontWeight: 'bold',
-                                }}
-                            >
-                                Educación y Habilidades
-                            </h4>
-                            {siteData.education?.map((edu: any, i: number) => (
+                    {/* CONTENIDO PRINCIPAL */}
+                    <div>
+                        {/* PROYECTOS */}
+                        {siteData.projects?.length > 0 && (
+                            <div className="mb-8">
                                 <div
-                                    key={i}
+                                    className="flex items-center gap-4 mb-6 border-b-2 pb-2"
+                                    style={{ borderColor: siteData.color }}
+                                >
+                                    <h2 className="text-xl font-bold uppercase text-slate-800">
+                                        Portafolio
+                                    </h2>
+                                </div>
+
+                                <div className="space-y-8">
+                                    {siteData.projects.map(
+                                        (proj: any, i: number) => (
+                                            <div
+                                                key={i}
+                                                className="mb-8 border-b border-slate-100 pb-8"
+                                                // ESTO ES LO QUE EVITA QUE SE CORTE A LA MITAD:
+                                                style={{
+                                                    pageBreakInside: 'avoid',
+                                                    breakInside: 'avoid',
+                                                }}
+                                            >
+                                                {/* Cabecera del Proyecto */}
+                                                <div className="flex gap-6 mb-4">
+                                                    <div className="w-24 shrink-0">
+                                                        {proj.cover ? (
+                                                            <img
+                                                                src={proj.cover}
+                                                                className="w-full h-24 object-cover rounded-lg shadow-sm bg-slate-100"
+                                                            />
+                                                        ) : (
+                                                            <div className="w-full h-24 bg-slate-100 rounded-lg flex items-center justify-center text-[10px] text-slate-400">
+                                                                Sin Foto
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <h3 className="text-lg font-bold text-slate-900 mb-1">
+                                                            {proj.title}
+                                                        </h3>
+                                                        {proj.tags && (
+                                                            <p
+                                                                className="text-[10px] font-bold uppercase mb-2 opacity-70"
+                                                                style={{
+                                                                    color: siteData.color,
+                                                                }}
+                                                            >
+                                                                {proj.tags}
+                                                            </p>
+                                                        )}
+                                                        <p className="text-xs text-slate-600 leading-relaxed mb-2 text-justify">
+                                                            {proj.desc}
+                                                        </p>
+                                                        {proj.link && (
+                                                            <a
+                                                                href={proj.link}
+                                                                className="text-[10px] underline text-slate-400"
+                                                            >
+                                                                Ver Proyecto
+                                                            </a>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* GALERÍA DE IMÁGENES */}
+                                                {proj.gallery &&
+                                                    proj.gallery.length > 0 && (
+                                                        <div className="mt-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                                                            <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">
+                                                                Galería:
+                                                            </p>
+
+                                                            {/* GRID DE 2 COLUMNAS + IMÁGENES MÁS GRANDES */}
+                                                            <div className="grid grid-cols-2 gap-3">
+                                                                {proj.gallery.map(
+                                                                    (
+                                                                        img: any,
+                                                                        idx: number,
+                                                                    ) => {
+                                                                        if (
+                                                                            !img.type.includes(
+                                                                                'image',
+                                                                            )
+                                                                        )
+                                                                            return null
+                                                                        return (
+                                                                            // break-inside: avoid en la imagen individual por si acaso
+                                                                            <div
+                                                                                key={
+                                                                                    idx
+                                                                                }
+                                                                                style={{
+                                                                                    breakInside:
+                                                                                        'avoid',
+                                                                                }}
+                                                                            >
+                                                                                <img
+                                                                                    src={
+                                                                                        img.url
+                                                                                    }
+                                                                                    className="w-full h-40 object-cover rounded border border-slate-200 bg-white"
+                                                                                    alt="Gallery item"
+                                                                                />
+                                                                            </div>
+                                                                        )
+                                                                    },
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                            </div>
+                                        ),
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* EXPERIENCIA Y EDUCACIÓN (En bloque para que no se rompan feo) */}
+                        <div className="grid grid-cols-1 gap-8">
+                            {/* Experiencia */}
+                            {siteData.experience?.length > 0 && (
+                                <div
                                     style={{
-                                        fontSize: '12px',
-                                        marginBottom: '5px',
+                                        pageBreakInside: 'avoid',
+                                        breakInside: 'avoid',
                                     }}
                                 >
-                                    <b>{edu.degree}</b> — {edu.school} (
-                                    {edu.year})
+                                    <h3 className="text-lg font-bold uppercase mb-4 pb-2 border-b border-slate-200 text-slate-800">
+                                        Experiencia
+                                    </h3>
+                                    {siteData.experience.map(
+                                        (exp: any, i: number) => (
+                                            <div key={i} className="mb-4">
+                                                <h4 className="font-bold text-sm text-slate-900">
+                                                    {exp.role}
+                                                </h4>
+                                                <p className="text-xs font-bold text-slate-500 mb-1">
+                                                    {exp.company} • {exp.year}
+                                                </p>
+                                                <p className="text-xs text-slate-600 leading-relaxed text-justify">
+                                                    {exp.desc}
+                                                </p>
+                                            </div>
+                                        ),
+                                    )}
                                 </div>
-                            ))}
-                            <div style={{ marginTop: '15px' }}>
-                                {siteData.skills
-                                    .split(',')
-                                    .map((s: string, i: number) => (
-                                        <span
-                                            key={i}
-                                            style={{
-                                                display: 'inline-block',
-                                                padding: '4px 10px',
-                                                backgroundColor: '#f3f4f6',
-                                                borderRadius: '15px',
-                                                fontSize: '11px',
-                                                marginRight: '5px',
-                                                marginBottom: '5px',
-                                            }}
-                                        >
-                                            {s.trim()}
-                                        </span>
-                                    ))}
+                            )}
+
+                            {/* Educación y Skills */}
+                            <div
+                                className="grid grid-cols-2 gap-6"
+                                style={{
+                                    pageBreakInside: 'avoid',
+                                    breakInside: 'avoid',
+                                }}
+                            >
+                                {siteData.education?.length > 0 && (
+                                    <div>
+                                        <h3 className="text-base font-bold uppercase mb-3 pb-1 border-b border-slate-200 text-slate-800">
+                                            Educación
+                                        </h3>
+                                        {siteData.education.map(
+                                            (edu: any, i: number) => (
+                                                <div key={i} className="mb-3">
+                                                    <h4 className="font-bold text-xs text-slate-900">
+                                                        {edu.degree}
+                                                    </h4>
+                                                    <p className="text-[10px] text-slate-500">
+                                                        {edu.school} •{' '}
+                                                        {edu.year}
+                                                    </p>
+                                                </div>
+                                            ),
+                                        )}
+                                    </div>
+                                )}
+
+                                {siteData.skills && (
+                                    <div>
+                                        <h3 className="text-base font-bold uppercase mb-3 pb-1 border-b border-slate-200 text-slate-800">
+                                            Habilidades
+                                        </h3>
+                                        <div className="flex flex-wrap gap-1">
+                                            {siteData.skills
+                                                .split(',')
+                                                .map((s: string, i: number) => (
+                                                    <span
+                                                        key={i}
+                                                        className="px-2 py-1 bg-slate-100 text-slate-700 text-[10px] font-bold rounded border border-slate-200"
+                                                    >
+                                                        {s.trim()}
+                                                    </span>
+                                                ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
-                    </div>
-
-                    <div
-                        style={{
-                            textAlign: 'center',
-                            marginTop: '50px',
-                            color: '#9ca3af',
-                            fontSize: '10px',
-                        }}
-                    >
-                        Documento generado por ModoFreelanceOS
                     </div>
                 </div>
             </div>
