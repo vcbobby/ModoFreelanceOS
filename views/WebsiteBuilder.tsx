@@ -229,19 +229,21 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
         const element = document.getElementById('portfolio-pdf-template')
 
         const opt = {
-            // MARGEN CERO: Nosotros controlamos el espacio con CSS para que no se mueva nada
             margin: 0,
-
             filename: `Portafolio-${siteData.name.replace(/\s+/g, '-')}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: {
                 scale: 2,
                 useCORS: true,
+                // IMPORTANTE: Forzamos las coordenadas para que no capture espacio vacío
+                x: 0,
+                y: 0,
                 scrollY: 0,
-                windowWidth: 794, // Ancho exacto A4 en px (96 DPI)
+                scrollX: 0,
             },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+            // Cambiamos el modo de salto de página para que sea más estable
+            pagebreak: { mode: ['css', 'legacy'] },
         }
 
         setLoading(true)
@@ -1437,13 +1439,16 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                 </div>
             </div>
             {/* --- PLANTILLA OCULTA PARA PDF (SOLUCIÓN CORTES Y TÍTULOS) --- */}
+            {/* --- PLANTILLA OCULTA PARA PDF (SOLUCIÓN DEFINITIVA PÁGINAS BLANCAS) --- */}
+            {/* Cambiamos de 'absolute left: -9999px' a 'fixed top: 0 left: 0 z-index: -9999' */}
+            {/* Esto lo pone "detrás" de tu web, invisible al ojo pero visible para el generador de PDF */}
             <div
                 style={{
-                    position: 'absolute',
-                    left: '-9999px',
+                    position: 'fixed',
+                    left: 0,
                     top: 0,
-                    pointerEvents: 'none',
-                    zIndex: -50,
+                    zIndex: -9999,
+                    visibility: 'visible',
                 }}
             >
                 <div
@@ -1451,9 +1456,11 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                     className="bg-white text-slate-900 box-border"
                     style={{
                         width: '210mm',
+                        minHeight: '297mm', // Altura mínima de una hoja
                         fontFamily: 'Helvetica, Arial, sans-serif',
                         fontSize: '11pt',
-                        lineHeight: '1.4', // Reduje un poco el interlineado para ahorrar espacio
+                        lineHeight: '1.4',
+                        backgroundColor: 'white', // Aseguramos fondo blanco
                     }}
                 >
                     {/* PORTADA (PÁGINA 1) */}
