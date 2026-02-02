@@ -226,53 +226,45 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
 
     const handleExportPDF = async () => {
         setLoading(true)
-        // 1. Guardar cambios actuales
+        // 1. Guardamos cambios
         await handleSave()
 
-        // 2. Seleccionar el elemento
+        // 2. Seleccionamos el elemento (que ahora siempre estará "vivo" en el DOM)
         const element = document.getElementById('portfolio-pdf-template')
-        if (!element) return
-
-        // 3. Forzar que el elemento sea visible temporalmente para el motor de captura
-        element.style.display = 'block'
+        if (!element) {
+            setLoading(false)
+            return
+        }
 
         const opt = {
-            margin: [10, 10, 10, 10],
+            margin: [10, 0, 10, 0], // Margen arriba/abajo para que no se pegue al borde
             filename: `Portafolio-${siteData.name.replace(/\s+/g, '-')}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: {
                 scale: 2,
                 useCORS: true,
                 letterRendering: true,
-                // Esto asegura que la captura empiece desde el inicio del div, no desde donde estés tú
+                // CLAVE: Esto evita las páginas en blanco al capturar elementos fuera de vista
+                logging: false,
                 scrollY: 0,
                 scrollX: 0,
-                windowWidth: 800, // Ancho estable
             },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            // Evita cortes en mitad de proyectos
             pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
         }
 
         try {
-            // Generar el PDF y obtener el Data URI
             // @ts-ignore
-            const pdfDataUri = await html2pdf()
-                .set(opt)
-                .from(element)
-                .outputPdf('datauristring')
-
-            // Usar tu utilidad para descargar (Compatible con Android)
-            await downloadFile(pdfDataUri, opt.filename)
+            await html2pdf().set(opt).from(element).save()
         } catch (e) {
-            console.error(e)
+            console.error('Error PDF:', e)
             setModal({
                 isOpen: true,
                 title: 'Error',
-                message: 'No se pudo generar el archivo. Intenta de nuevo.',
+                message: 'Fallo al procesar el documento. Intenta de nuevo.',
             })
         } finally {
-            // 4. Volver a esconder la plantilla
-            element.style.display = 'none'
             setLoading(false)
         }
     }
@@ -1452,16 +1444,25 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                     </Card>
                 </div>
             </div>
-            {/* --- PLANTILLA PARA PDF (SOLUCIÓN FRON-END FINAL) --- */}
-            {/* El contenedor externo tiene display: none para que no moleste en la UI */}
-            <div style={{ display: 'none' }}>
+            {/* --- PLANTILLA PARA PDF (SOLUCIÓN DEFINITIVA) --- */}
+            {/* Este contenedor está "vivo" pero fuera de la vista del usuario */}
+            <div
+                style={{
+                    position: 'absolute',
+                    left: '-4000px',
+                    top: 0,
+                    width: '210mm',
+                    zIndex: -100,
+                    pointerEvents: 'none',
+                }}
+            >
                 <div
                     id="portfolio-pdf-template"
                     style={{
-                        width: '794px', // Ancho exacto A4
+                        width: '210mm', // Ancho exacto A4
                         backgroundColor: 'white',
                         color: '#1a202c',
-                        fontFamily: 'Arial, sans-serif',
+                        fontFamily: 'Helvetica, Arial, sans-serif',
                         padding: '0',
                         margin: '0',
                     }}
@@ -1469,18 +1470,20 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                     {/* --- PÁGINA 1: PORTADA --- */}
                     <div
                         style={{
-                            height: '1120px',
-                            padding: '60px',
+                            height: '290mm',
+                            padding: '20mm',
                             boxSizing: 'border-box',
                             textAlign: 'center',
-                            borderBottom: '1px solid #eee',
-                            position: 'relative',
+                            borderBottom: '2px solid #eee',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'center',
                         }}
                     >
                         <div
                             style={{
                                 width: '100%',
-                                height: '10px',
+                                height: '10mm',
                                 backgroundColor: siteData.color,
                                 position: 'absolute',
                                 top: 0,
@@ -1488,76 +1491,74 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                             }}
                         ></div>
 
-                        <div style={{ marginTop: '100px' }}>
-                            {siteData.photo && (
-                                <img
-                                    src={siteData.photo}
-                                    style={{
-                                        width: '220px',
-                                        height: '220px',
-                                        borderRadius: '50%',
-                                        objectFit: 'cover',
-                                        border: `8px solid white`,
-                                        boxShadow:
-                                            '0 10px 30px rgba(0,0,0,0.1)',
-                                        marginBottom: '40px',
-                                    }}
-                                />
-                            )}
-                            <h1
+                        {siteData.photo && (
+                            <img
+                                src={siteData.photo}
                                 style={{
-                                    fontSize: '48px',
-                                    fontWeight: '900',
-                                    color: '#111827',
-                                    margin: '0',
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '-1px',
+                                    width: '60mm',
+                                    height: '60mm',
+                                    borderRadius: '50%',
+                                    objectFit: 'cover',
+                                    border: `5mm solid white`,
+                                    boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
+                                    marginBottom: '10mm',
+                                    marginLeft: 'auto',
+                                    marginRight: 'auto',
                                 }}
-                            >
-                                {siteData.name}
-                            </h1>
-                            <p
-                                style={{
-                                    fontSize: '22px',
-                                    color: siteData.color,
-                                    fontWeight: 'bold',
-                                    marginTop: '10px',
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '3px',
-                                }}
-                            >
-                                {siteData.role}
-                            </p>
+                            />
+                        )}
 
-                            <div
-                                style={{
-                                    margin: '60px auto',
-                                    maxWidth: '80%',
-                                    fontSize: '16px',
-                                    lineHeight: '1.8',
-                                    color: '#4b5563',
-                                }}
-                            >
-                                {siteData.bio}
-                            </div>
+                        <h1
+                            style={{
+                                fontSize: '36pt',
+                                fontWeight: 'bold',
+                                color: '#111827',
+                                margin: '0',
+                                textTransform: 'uppercase',
+                            }}
+                        >
+                            {siteData.name || 'Tu Nombre'}
+                        </h1>
+                        <p
+                            style={{
+                                fontSize: '18pt',
+                                color: siteData.color,
+                                fontWeight: 'bold',
+                                marginTop: '5mm',
+                                textTransform: 'uppercase',
+                                letterSpacing: '2px',
+                            }}
+                        >
+                            {siteData.role || 'Freelancer'}
+                        </p>
+
+                        <div
+                            style={{
+                                margin: '15mm auto',
+                                maxWidth: '80%',
+                                fontSize: '12pt',
+                                lineHeight: '1.6',
+                                color: '#4b5563',
+                            }}
+                        >
+                            {siteData.bio}
                         </div>
 
                         <div
                             style={{
-                                position: 'absolute',
-                                bottom: '60px',
-                                left: 0,
-                                width: '100%',
-                                fontSize: '12px',
+                                fontSize: '10pt',
                                 color: '#9ca3af',
+                                borderTop: '1px solid #eee',
+                                paddingTop: '10mm',
                             }}
                         >
-                            {siteData.email} • {siteData.whatsapp}
+                            {siteData.email}{' '}
+                            {siteData.whatsapp && ` • ${siteData.whatsapp}`}
                             <br />
                             <span
                                 style={{
-                                    fontWeight: 'bold',
                                     color: siteData.color,
+                                    fontWeight: 'bold',
                                 }}
                             >
                                 app.modofreelanceos.com/p/{siteData.slug}
@@ -1566,15 +1567,15 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                     </div>
 
                     {/* --- PÁGINAS SIGUIENTES: PROYECTOS --- */}
-                    <div style={{ padding: '60px' }}>
+                    <div style={{ padding: '20mm' }}>
                         <h2
                             style={{
-                                fontSize: '24px',
+                                fontSize: '20pt',
                                 fontWeight: 'bold',
                                 color: '#111827',
-                                marginBottom: '40px',
-                                borderLeft: `10px solid ${siteData.color}`,
-                                paddingLeft: '20px',
+                                marginBottom: '10mm',
+                                borderLeft: `5mm solid ${siteData.color}`,
+                                paddingLeft: '5mm',
                             }}
                         >
                             PORTAFOLIO DE PROYECTOS
@@ -1584,7 +1585,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                             <div
                                 key={i}
                                 style={{
-                                    marginBottom: '60px',
+                                    marginBottom: '15mm',
                                     pageBreakInside: 'avoid',
                                     display: 'block',
                                     width: '100%',
@@ -1592,31 +1593,31 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                             >
                                 <h3
                                     style={{
-                                        fontSize: '22px',
+                                        fontSize: '16pt',
                                         fontWeight: 'bold',
                                         color: '#111827',
-                                        marginBottom: '5px',
+                                        margin: '0 0 2mm 0',
                                     }}
                                 >
                                     {proj.title}
                                 </h3>
                                 <p
                                     style={{
-                                        fontSize: '12px',
+                                        fontSize: '10pt',
                                         fontWeight: 'bold',
                                         color: siteData.color,
                                         textTransform: 'uppercase',
-                                        marginBottom: '15px',
+                                        marginBottom: '4mm',
                                     }}
                                 >
                                     {proj.tags}
                                 </p>
                                 <p
                                     style={{
-                                        fontSize: '14px',
-                                        lineHeight: '1.6',
+                                        fontSize: '11pt',
+                                        lineHeight: '1.5',
                                         color: '#374151',
-                                        marginBottom: '25px',
+                                        marginBottom: '6mm',
                                         textAlign: 'justify',
                                     }}
                                 >
@@ -1628,42 +1629,42 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                         src={proj.cover}
                                         style={{
                                             width: '100%',
-                                            height: '350px',
+                                            height: '80mm',
                                             objectFit: 'cover',
-                                            borderRadius: '15px',
-                                            marginBottom: '20px',
+                                            borderRadius: '5mm',
+                                            marginBottom: '5mm',
                                             display: 'block',
                                         }}
                                     />
                                 )}
 
-                                {/* Galería de imágenes adicionales */}
+                                {/* GALERÍA DE IMÁGENES EXTRA (MÁS GRANDES) */}
                                 {proj.gallery && proj.gallery.length > 0 && (
-                                    <div
-                                        style={{
-                                            width: '100%',
-                                            display: 'block',
-                                        }}
-                                    >
+                                    <div style={{ width: '100%' }}>
                                         {proj.gallery
                                             .filter((g: any) =>
                                                 g.type.includes('image'),
                                             )
                                             .map((img: any, idx: number) => (
-                                                <img
+                                                <div
                                                     key={idx}
-                                                    src={img.url}
                                                     style={{
-                                                        width: '100%',
-                                                        height: '400px',
-                                                        objectFit: 'cover',
-                                                        borderRadius: '15px',
-                                                        marginBottom: '15px',
-                                                        display: 'block',
+                                                        marginBottom: '5mm',
                                                         pageBreakInside:
                                                             'avoid',
                                                     }}
-                                                />
+                                                >
+                                                    <img
+                                                        src={img.url}
+                                                        style={{
+                                                            width: '100%',
+                                                            height: '100mm',
+                                                            objectFit: 'cover',
+                                                            borderRadius: '5mm',
+                                                            display: 'block',
+                                                        }}
+                                                    />
+                                                </div>
                                             ))}
                                     </div>
                                 )}
@@ -1673,31 +1674,30 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                         {/* --- SECCIÓN FINAL: RESUMEN --- */}
                         <div
                             style={{
-                                marginTop: '40px',
+                                marginTop: '10mm',
                                 pageBreakInside: 'avoid',
                             }}
                         >
                             <h2
                                 style={{
-                                    fontSize: '24px',
+                                    fontSize: '20pt',
                                     fontWeight: 'bold',
                                     color: '#111827',
-                                    marginBottom: '30px',
-                                    borderLeft: `10px solid ${siteData.color}`,
-                                    paddingLeft: '20px',
+                                    marginBottom: '8mm',
+                                    borderLeft: `5mm solid ${siteData.color}`,
+                                    paddingLeft: '5mm',
                                 }}
                             >
                                 RESUMEN PROFESIONAL
                             </h2>
 
-                            {/* Experiencia */}
-                            <div style={{ marginBottom: '40px' }}>
+                            <div style={{ marginBottom: '10mm' }}>
                                 <h3
                                     style={{
-                                        fontSize: '18px',
+                                        fontSize: '14pt',
                                         fontWeight: 'bold',
                                         color: siteData.color,
-                                        marginBottom: '20px',
+                                        marginBottom: '5mm',
                                     }}
                                 >
                                     Experiencia Laboral
@@ -1707,21 +1707,22 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                         <div
                                             key={i}
                                             style={{
-                                                marginBottom: '20px',
+                                                marginBottom: '6mm',
                                                 pageBreakInside: 'avoid',
                                             }}
                                         >
                                             <div
                                                 style={{
                                                     fontWeight: 'bold',
-                                                    fontSize: '16px',
+                                                    fontSize: '12pt',
+                                                    color: '#111827',
                                                 }}
                                             >
                                                 {exp.role}
                                             </div>
                                             <div
                                                 style={{
-                                                    fontSize: '13px',
+                                                    fontSize: '10pt',
                                                     color: '#6b7280',
                                                 }}
                                             >
@@ -1729,9 +1730,10 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                             </div>
                                             <p
                                                 style={{
-                                                    fontSize: '13px',
+                                                    fontSize: '10pt',
                                                     color: '#4b5563',
-                                                    marginTop: '5px',
+                                                    marginTop: '2mm',
+                                                    textAlign: 'justify',
                                                 }}
                                             >
                                                 {exp.desc}
@@ -1741,14 +1743,13 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                 )}
                             </div>
 
-                            {/* Educación y Habilidades */}
                             <div style={{ pageBreakInside: 'avoid' }}>
                                 <h3
                                     style={{
-                                        fontSize: '18px',
+                                        fontSize: '14pt',
                                         fontWeight: 'bold',
                                         color: siteData.color,
-                                        marginBottom: '20px',
+                                        marginBottom: '5mm',
                                     }}
                                 >
                                     Educación y Habilidades
@@ -1757,7 +1758,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                     (edu: any, i: number) => (
                                         <div
                                             key={i}
-                                            style={{ marginBottom: '10px' }}
+                                            style={{ marginBottom: '3mm' }}
                                         >
                                             <span
                                                 style={{ fontWeight: 'bold' }}
@@ -1772,21 +1773,27 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                     ),
                                 )}
 
-                                <div style={{ marginTop: '25px' }}>
+                                <div
+                                    style={{
+                                        marginTop: '8mm',
+                                        display: 'flex',
+                                        flexWrap: 'wrap',
+                                        gap: '3mm',
+                                    }}
+                                >
                                     {siteData.skills
                                         .split(',')
                                         .map((s: string, i: number) => (
                                             <span
                                                 key={i}
                                                 style={{
-                                                    display: 'inline-block',
-                                                    padding: '5px 15px',
+                                                    padding: '2mm 4mm',
                                                     backgroundColor: '#f3f4f6',
-                                                    borderRadius: '20px',
-                                                    fontSize: '12px',
+                                                    borderRadius: '5mm',
+                                                    fontSize: '9pt',
                                                     fontWeight: 'bold',
-                                                    marginRight: '10px',
-                                                    marginBottom: '10px',
+                                                    color: '#374151',
+                                                    border: '0.2mm solid #e5e7eb',
                                                 }}
                                             >
                                                 {s.trim()}
@@ -1799,11 +1806,11 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                         <div
                             style={{
                                 textAlign: 'center',
-                                marginTop: '60px',
-                                paddingTop: '20px',
+                                marginTop: '15mm',
+                                paddingTop: '5mm',
                                 borderTop: '1px solid #eee',
                                 color: '#9ca3af',
-                                fontSize: '10px',
+                                fontSize: '8pt',
                             }}
                         >
                             Documento generado por ModoFreelanceOS
