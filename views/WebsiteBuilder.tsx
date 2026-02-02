@@ -246,8 +246,17 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
 
         setLoading(true)
         try {
+            // --- PASO CLAVE PARA ANDROID ---
+            // En lugar de .save(), usamos .outputPdf('datauristring')
             // @ts-ignore
-            await html2pdf().set(opt).from(element).save()
+            const pdfDataUri = await html2pdf()
+                .set(opt)
+                .from(element)
+                .outputPdf('datauristring')
+
+            // --- LLAMADA A TU UTILIDAD NATIVA ---
+            // downloadFile ya sabe si estás en Android o PC y guarda el archivo correctamente
+            await downloadFile(pdfDataUri, opt.filename)
         } catch (e) {
             console.error(e)
             setModal({
