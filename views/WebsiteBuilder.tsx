@@ -225,53 +225,53 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
 
     const handleExportPDF = async () => {
         setLoading(true)
+        // 1. Guardar cambios actuales
+        await handleSave()
+
+        // 2. Seleccionar el elemento
+        const element = document.getElementById('portfolio-pdf-template')
+        if (!element) return
+
+        // 3. Forzar que el elemento sea visible temporalmente para el motor de captura
+        element.style.display = 'block'
+
+        const opt = {
+            margin: [10, 10, 10, 10],
+            filename: `Portafolio-${siteData.name.replace(/\s+/g, '-')}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: {
+                scale: 2,
+                useCORS: true,
+                letterRendering: true,
+                // Esto asegura que la captura empiece desde el inicio del div, no desde donde estés tú
+                scrollY: 0,
+                scrollX: 0,
+                windowWidth: 800, // Ancho estable
+            },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+        }
+
         try {
-            const response = await fetch(
-                `${BACKEND_URL}/api/export-portfolio-pdf`,
-                {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(siteData),
-                },
-            )
+            // Generar el PDF y obtener el Data URI
+            // @ts-ignore
+            const pdfDataUri = await html2pdf()
+                .set(opt)
+                .from(element)
+                .outputPdf('datauristring')
 
-            if (!response.ok) throw new Error('Error en el servidor de PDF')
-
-            // 1. Obtenemos el archivo como un array de bytes
-            const blob = await response.blob()
-
-            // 2. Lo convertimos a base64 para que sea compatible con downloadFile
-            const reader = new FileReader()
-            reader.readAsDataURL(blob)
-            reader.onloadend = async () => {
-                const base64data = reader.result as string
-
-                // 3. Usamos tu utilidad universal que funciona en Android/Web/Windows
-                const fileName = `Portafolio-${siteData.name.replace(
-                    /\s+/g,
-                    '-',
-                )}.pdf`
-
-                try {
-                    // Importa downloadFile de '../utils/downloadUtils'
-                    await downloadFile(base64data, fileName)
-                    console.log('Descarga iniciada')
-                } catch (err) {
-                    // Fallback si la utilidad falla (Web pura)
-                    const link = document.createElement('a')
-                    link.href = base64data
-                    link.download = fileName
-                    link.click()
-                }
-            }
+            // Usar tu utilidad para descargar (Compatible con Android)
+            await downloadFile(pdfDataUri, opt.filename)
         } catch (e) {
             console.error(e)
             setModal({
                 isOpen: true,
                 title: 'Error',
-                message: 'No se pudo generar el PDF. Verifica tu conexión.',
+                message: 'No se pudo generar el archivo. Intenta de nuevo.',
             })
         } finally {
+            // 4. Volver a esconder la plantilla
+            element.style.display = 'none'
             setLoading(false)
         }
     }
@@ -1449,6 +1449,365 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                             </div>
                         )}
                     </Card>
+                </div>
+            </div>
+            {/* --- PLANTILLA PARA PDF (SOLUCIÓN FRON-END FINAL) --- */}
+            {/* El contenedor externo tiene display: none para que no moleste en la UI */}
+            <div style={{ display: 'none' }}>
+                <div
+                    id="portfolio-pdf-template"
+                    style={{
+                        width: '794px', // Ancho exacto A4
+                        backgroundColor: 'white',
+                        color: '#1a202c',
+                        fontFamily: 'Arial, sans-serif',
+                        padding: '0',
+                        margin: '0',
+                    }}
+                >
+                    {/* --- PÁGINA 1: PORTADA --- */}
+                    <div
+                        style={{
+                            height: '1120px',
+                            padding: '60px',
+                            boxSizing: 'border-box',
+                            textAlign: 'center',
+                            borderBottom: '1px solid #eee',
+                            position: 'relative',
+                        }}
+                    >
+                        <div
+                            style={{
+                                width: '100%',
+                                height: '10px',
+                                backgroundColor: siteData.color,
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                            }}
+                        ></div>
+
+                        <div style={{ marginTop: '100px' }}>
+                            {siteData.photo && (
+                                <img
+                                    src={siteData.photo}
+                                    style={{
+                                        width: '220px',
+                                        height: '220px',
+                                        borderRadius: '50%',
+                                        objectFit: 'cover',
+                                        border: `8px solid white`,
+                                        boxShadow:
+                                            '0 10px 30px rgba(0,0,0,0.1)',
+                                        marginBottom: '40px',
+                                    }}
+                                />
+                            )}
+                            <h1
+                                style={{
+                                    fontSize: '48px',
+                                    fontWeight: '900',
+                                    color: '#111827',
+                                    margin: '0',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '-1px',
+                                }}
+                            >
+                                {siteData.name}
+                            </h1>
+                            <p
+                                style={{
+                                    fontSize: '22px',
+                                    color: siteData.color,
+                                    fontWeight: 'bold',
+                                    marginTop: '10px',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '3px',
+                                }}
+                            >
+                                {siteData.role}
+                            </p>
+
+                            <div
+                                style={{
+                                    margin: '60px auto',
+                                    maxWidth: '80%',
+                                    fontSize: '16px',
+                                    lineHeight: '1.8',
+                                    color: '#4b5563',
+                                }}
+                            >
+                                {siteData.bio}
+                            </div>
+                        </div>
+
+                        <div
+                            style={{
+                                position: 'absolute',
+                                bottom: '60px',
+                                left: 0,
+                                width: '100%',
+                                fontSize: '12px',
+                                color: '#9ca3af',
+                            }}
+                        >
+                            {siteData.email} • {siteData.whatsapp}
+                            <br />
+                            <span
+                                style={{
+                                    fontWeight: 'bold',
+                                    color: siteData.color,
+                                }}
+                            >
+                                app.modofreelanceos.com/p/{siteData.slug}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* --- PÁGINAS SIGUIENTES: PROYECTOS --- */}
+                    <div style={{ padding: '60px' }}>
+                        <h2
+                            style={{
+                                fontSize: '24px',
+                                fontWeight: 'bold',
+                                color: '#111827',
+                                marginBottom: '40px',
+                                borderLeft: `10px solid ${siteData.color}`,
+                                paddingLeft: '20px',
+                            }}
+                        >
+                            PORTAFOLIO DE PROYECTOS
+                        </h2>
+
+                        {siteData.projects?.map((proj: any, i: number) => (
+                            <div
+                                key={i}
+                                style={{
+                                    marginBottom: '60px',
+                                    pageBreakInside: 'avoid',
+                                    display: 'block',
+                                    width: '100%',
+                                }}
+                            >
+                                <h3
+                                    style={{
+                                        fontSize: '22px',
+                                        fontWeight: 'bold',
+                                        color: '#111827',
+                                        marginBottom: '5px',
+                                    }}
+                                >
+                                    {proj.title}
+                                </h3>
+                                <p
+                                    style={{
+                                        fontSize: '12px',
+                                        fontWeight: 'bold',
+                                        color: siteData.color,
+                                        textTransform: 'uppercase',
+                                        marginBottom: '15px',
+                                    }}
+                                >
+                                    {proj.tags}
+                                </p>
+                                <p
+                                    style={{
+                                        fontSize: '14px',
+                                        lineHeight: '1.6',
+                                        color: '#374151',
+                                        marginBottom: '25px',
+                                        textAlign: 'justify',
+                                    }}
+                                >
+                                    {proj.desc}
+                                </p>
+
+                                {proj.cover && (
+                                    <img
+                                        src={proj.cover}
+                                        style={{
+                                            width: '100%',
+                                            height: '350px',
+                                            objectFit: 'cover',
+                                            borderRadius: '15px',
+                                            marginBottom: '20px',
+                                            display: 'block',
+                                        }}
+                                    />
+                                )}
+
+                                {/* Galería de imágenes adicionales */}
+                                {proj.gallery && proj.gallery.length > 0 && (
+                                    <div
+                                        style={{
+                                            width: '100%',
+                                            display: 'block',
+                                        }}
+                                    >
+                                        {proj.gallery
+                                            .filter((g: any) =>
+                                                g.type.includes('image'),
+                                            )
+                                            .map((img: any, idx: number) => (
+                                                <img
+                                                    key={idx}
+                                                    src={img.url}
+                                                    style={{
+                                                        width: '100%',
+                                                        height: '400px',
+                                                        objectFit: 'cover',
+                                                        borderRadius: '15px',
+                                                        marginBottom: '15px',
+                                                        display: 'block',
+                                                        pageBreakInside:
+                                                            'avoid',
+                                                    }}
+                                                />
+                                            ))}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+
+                        {/* --- SECCIÓN FINAL: RESUMEN --- */}
+                        <div
+                            style={{
+                                marginTop: '40px',
+                                pageBreakInside: 'avoid',
+                            }}
+                        >
+                            <h2
+                                style={{
+                                    fontSize: '24px',
+                                    fontWeight: 'bold',
+                                    color: '#111827',
+                                    marginBottom: '30px',
+                                    borderLeft: `10px solid ${siteData.color}`,
+                                    paddingLeft: '20px',
+                                }}
+                            >
+                                RESUMEN PROFESIONAL
+                            </h2>
+
+                            {/* Experiencia */}
+                            <div style={{ marginBottom: '40px' }}>
+                                <h3
+                                    style={{
+                                        fontSize: '18px',
+                                        fontWeight: 'bold',
+                                        color: siteData.color,
+                                        marginBottom: '20px',
+                                    }}
+                                >
+                                    Experiencia Laboral
+                                </h3>
+                                {siteData.experience?.map(
+                                    (exp: any, i: number) => (
+                                        <div
+                                            key={i}
+                                            style={{
+                                                marginBottom: '20px',
+                                                pageBreakInside: 'avoid',
+                                            }}
+                                        >
+                                            <div
+                                                style={{
+                                                    fontWeight: 'bold',
+                                                    fontSize: '16px',
+                                                }}
+                                            >
+                                                {exp.role}
+                                            </div>
+                                            <div
+                                                style={{
+                                                    fontSize: '13px',
+                                                    color: '#6b7280',
+                                                }}
+                                            >
+                                                {exp.company} • {exp.year}
+                                            </div>
+                                            <p
+                                                style={{
+                                                    fontSize: '13px',
+                                                    color: '#4b5563',
+                                                    marginTop: '5px',
+                                                }}
+                                            >
+                                                {exp.desc}
+                                            </p>
+                                        </div>
+                                    ),
+                                )}
+                            </div>
+
+                            {/* Educación y Habilidades */}
+                            <div style={{ pageBreakInside: 'avoid' }}>
+                                <h3
+                                    style={{
+                                        fontSize: '18px',
+                                        fontWeight: 'bold',
+                                        color: siteData.color,
+                                        marginBottom: '20px',
+                                    }}
+                                >
+                                    Educación y Habilidades
+                                </h3>
+                                {siteData.education?.map(
+                                    (edu: any, i: number) => (
+                                        <div
+                                            key={i}
+                                            style={{ marginBottom: '10px' }}
+                                        >
+                                            <span
+                                                style={{ fontWeight: 'bold' }}
+                                            >
+                                                {edu.degree}
+                                            </span>{' '}
+                                            —{' '}
+                                            <span style={{ color: '#6b7280' }}>
+                                                {edu.school} ({edu.year})
+                                            </span>
+                                        </div>
+                                    ),
+                                )}
+
+                                <div style={{ marginTop: '25px' }}>
+                                    {siteData.skills
+                                        .split(',')
+                                        .map((s: string, i: number) => (
+                                            <span
+                                                key={i}
+                                                style={{
+                                                    display: 'inline-block',
+                                                    padding: '5px 15px',
+                                                    backgroundColor: '#f3f4f6',
+                                                    borderRadius: '20px',
+                                                    fontSize: '12px',
+                                                    fontWeight: 'bold',
+                                                    marginRight: '10px',
+                                                    marginBottom: '10px',
+                                                }}
+                                            >
+                                                {s.trim()}
+                                            </span>
+                                        ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div
+                            style={{
+                                textAlign: 'center',
+                                marginTop: '60px',
+                                paddingTop: '20px',
+                                borderTop: '1px solid #eee',
+                                color: '#9ca3af',
+                                fontSize: '10px',
+                            }}
+                        >
+                            Documento generado por ModoFreelanceOS
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
