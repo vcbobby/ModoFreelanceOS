@@ -1439,8 +1439,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                     </Card>
                 </div>
             </div>
-            {/* --- PLANTILLA OCULTA PARA PDF (DOSSIER) --- */}
-            {/* AGREGADO: pointerEvents: 'none', zIndex: -50 para que no bloquee clicks */}
+            {/* --- PLANTILLA OCULTA PARA PDF (DOSSIER) MEJORADA --- */}
             <div
                 style={{
                     position: 'absolute',
@@ -1455,14 +1454,12 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                     className="bg-white text-slate-900 box-border"
                     style={{
                         width: '210mm',
-                        // Quitamos minHeight fijo para dejar que fluya natural
                         fontFamily: 'Helvetica, Arial, sans-serif',
                         fontSize: '11pt',
                         lineHeight: '1.5',
-                        // Quitamos padding general, usamos margin de html2pdf
                     }}
                 >
-                    {/* PORTADA (PÁGINA 1) - Forzamos altura solo aquí */}
+                    {/* PORTADA */}
                     <div className="w-full h-[290mm] relative flex flex-col justify-center items-center text-center p-12 page-break-after-always box-border">
                         <div
                             className="absolute top-0 left-0 w-full h-6"
@@ -1503,7 +1500,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
 
                     {/* CONTENIDO FLUIDO */}
                     <div className="p-8">
-                        {/* PROYECTOS + GALERÍA */}
+                        {/* PROYECTOS + GALERÍA GRANDE */}
                         {siteData.projects?.length > 0 && (
                             <div className="mb-12">
                                 <div
@@ -1520,10 +1517,15 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                         (proj: any, i: number) => (
                                             <div
                                                 key={i}
-                                                className="mb-10 border-b border-slate-100 pb-8 page-break-inside-avoid"
+                                                className="mb-10 border-b border-slate-100 pb-8"
+                                                // ESTO ES LO QUE EVITA EL CORTE:
+                                                style={{
+                                                    pageBreakInside: 'avoid',
+                                                    breakInside: 'avoid',
+                                                }}
                                             >
                                                 {/* Cabecera del Proyecto */}
-                                                <div className="flex gap-6 mb-4">
+                                                <div className="flex gap-6 mb-6">
                                                     <div className="w-32 shrink-0">
                                                         {proj.cover ? (
                                                             <img
@@ -1565,21 +1567,22 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                                     </div>
                                                 </div>
 
-                                                {/* NUEVO: GALERÍA DE IMÁGENES EXTRA */}
+                                                {/* GALERÍA DE IMÁGENES EXTRA (MEJORADA) */}
                                                 {proj.gallery &&
                                                     proj.gallery.length > 0 && (
-                                                        <div className="mt-4">
-                                                            <p className="text-xs font-bold text-slate-400 uppercase mb-2">
+                                                        <div className="mt-4 p-4 bg-slate-50 rounded-xl">
+                                                            <p className="text-xs font-bold text-slate-400 uppercase mb-3">
                                                                 Galería del
                                                                 proyecto:
                                                             </p>
-                                                            <div className="grid grid-cols-3 gap-3">
+
+                                                            {/* GRID DE 2 COLUMNAS (IMÁGENES MÁS GRANDES) */}
+                                                            <div className="grid grid-cols-2 gap-4">
                                                                 {proj.gallery.map(
                                                                     (
                                                                         img: any,
                                                                         idx: number,
                                                                     ) => {
-                                                                        // Filtramos solo imágenes para el PDF (videos no se imprimen)
                                                                         if (
                                                                             !img.type.includes(
                                                                                 'image',
@@ -1587,16 +1590,21 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                                                         )
                                                                             return null
                                                                         return (
-                                                                            <img
+                                                                            <div
                                                                                 key={
                                                                                     idx
                                                                                 }
-                                                                                src={
-                                                                                    img.url
-                                                                                }
-                                                                                className="w-full h-32 object-cover rounded border border-slate-100"
-                                                                                alt="Gallery item"
-                                                                            />
+                                                                                className="break-inside-avoid"
+                                                                            >
+                                                                                <img
+                                                                                    src={
+                                                                                        img.url
+                                                                                    }
+                                                                                    // Altura fija mayor (180px/48 tailwind) para ver detalles
+                                                                                    className="w-full h-48 object-cover rounded-lg border border-slate-200 bg-white"
+                                                                                    alt="Gallery item"
+                                                                                />
+                                                                            </div>
                                                                         )
                                                                     },
                                                                 )}
@@ -1610,8 +1618,9 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                             </div>
                         )}
 
-                        {/* EXPERIENCIA Y EDUCACIÓN (Dos columnas) */}
+                        {/* EXPERIENCIA Y EDUCACIÓN */}
                         <div className="grid grid-cols-2 gap-10">
+                            {/* Columna Izquierda: Experiencia */}
                             <div>
                                 {siteData.experience?.length > 0 && (
                                     <>
@@ -1622,7 +1631,12 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                             (exp: any, i: number) => (
                                                 <div
                                                     key={i}
-                                                    className="mb-5 page-break-inside-avoid"
+                                                    className="mb-5"
+                                                    style={{
+                                                        pageBreakInside:
+                                                            'avoid',
+                                                        breakInside: 'avoid',
+                                                    }}
                                                 >
                                                     <h4 className="font-bold text-base text-slate-900">
                                                         {exp.role}
@@ -1631,7 +1645,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                                         {exp.company} •{' '}
                                                         {exp.year}
                                                     </p>
-                                                    <p className="text-xs text-slate-600 leading-relaxed">
+                                                    <p className="text-xs text-slate-600 leading-relaxed text-justify">
                                                         {exp.desc}
                                                     </p>
                                                 </div>
@@ -1641,6 +1655,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                 )}
                             </div>
 
+                            {/* Columna Derecha: Educación y Skills */}
                             <div>
                                 {siteData.education?.length > 0 && (
                                     <div className="mb-8">
@@ -1651,7 +1666,12 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                             (edu: any, i: number) => (
                                                 <div
                                                     key={i}
-                                                    className="mb-3 page-break-inside-avoid"
+                                                    className="mb-3"
+                                                    style={{
+                                                        pageBreakInside:
+                                                            'avoid',
+                                                        breakInside: 'avoid',
+                                                    }}
                                                 >
                                                     <h4 className="font-bold text-sm text-slate-900">
                                                         {edu.degree}
@@ -1667,7 +1687,12 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                 )}
 
                                 {siteData.skills && (
-                                    <div className="page-break-inside-avoid">
+                                    <div
+                                        style={{
+                                            pageBreakInside: 'avoid',
+                                            breakInside: 'avoid',
+                                        }}
+                                    >
                                         <h3 className="text-lg font-bold uppercase mb-4 pb-2 border-b border-slate-200 text-slate-800">
                                             Habilidades
                                         </h3>
@@ -1677,7 +1702,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                                                 .map((s: string, i: number) => (
                                                     <span
                                                         key={i}
-                                                        className="px-2 py-1 bg-slate-100 text-slate-700 text-xs font-bold rounded border border-slate-200"
+                                                        className="px-3 py-1 bg-slate-100 text-slate-700 text-xs font-bold rounded border border-slate-200"
                                                     >
                                                         {s.trim()}
                                                     </span>
