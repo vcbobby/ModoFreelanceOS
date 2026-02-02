@@ -20,10 +20,12 @@ import {
     Facebook,
     Youtube,
     Twitch,
+    FileDown,
 } from 'lucide-react'
 import { Button, Card, ConfirmationModal } from '../components/ui'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '../firebase'
+import html2pdf from 'html2pdf.js'
 
 interface WebsiteBuilderProps {
     onUsage: (cost: number) => Promise<boolean>
@@ -221,6 +223,48 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
         }
         load()
     }, [userId])
+
+    // FUNCIÓN PARA EXPORTAR EL PORTAFOLIO EN PDF
+    const handleExportPDF = async () => {
+        // 1. Guardamos primero por seguridad
+        await handleSave()
+
+        // 2. Buscamos la plantilla "oculta" diseñada para A4
+        const element = document.getElementById('portfolio-pdf-template')
+
+        const opt = {
+            margin: [0, 0, 0, 0], // Sin margen, controlamos con CSS
+            filename: `Portafolio-${siteData.name.replace(/\s+/g, '-')}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: {
+                scale: 2,
+                useCORS: true,
+                scrollY: 0,
+                windowWidth: 800, // Ancho fijo para consistencia
+            },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+        }
+
+        setLoading(true)
+        try {
+            await html2pdf().set(opt).from(element).save()
+
+            // Opcional: Guardar en historial que se descargó
+            if (userId) {
+                // ... tu lógica de historial ...
+            }
+        } catch (e) {
+            console.error(e)
+            setModal({
+                isOpen: true,
+                title: 'Error',
+                message: 'No se pudo generar el PDF del portafolio.',
+            })
+        } finally {
+            setLoading(false)
+        }
+    }
 
     // SUBIDA DE ARCHIVOS
     const uploadFileToBackend = async (file: File) => {
@@ -538,6 +582,14 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                         }
                     >
                         <Eye className="w-4 h-4 mr-2" /> Ver Sitio
+                    </Button>
+                    {/* NUEVO BOTÓN PDF */}
+                    <Button
+                        variant="secondary"
+                        onClick={handleExportPDF}
+                        disabled={uploading || loading}
+                    >
+                        <FileDown className="w-4 h-4 mr-2" /> Descargar PDF
                     </Button>
                     <Button
                         onClick={handleSave}
@@ -1383,6 +1435,205 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({
                             </div>
                         )}
                     </Card>
+                </div>
+            </div>
+            {/* --- PLANTILLA OCULTA PARA PDF (DOSSIER) --- */}
+            <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
+                <div
+                    id="portfolio-pdf-template"
+                    className="bg-white text-slate-900"
+                    style={{
+                        width: '210mm',
+                        minHeight: '297mm',
+                        fontFamily: 'Arial, sans-serif',
+                    }}
+                >
+                    {/* PORTADA */}
+                    <div className="w-full h-[297mm] relative flex flex-col justify-center items-center text-center p-12 page-break-after-always">
+                        {/* Fondo decorativo con el color del usuario */}
+                        <div className="absolute top-0 left-0 w-full h-4 bg-slate-900"></div>
+                        <div
+                            className="absolute bottom-0 right-0 w-32 h-32 rounded-tl-full opacity-20"
+                            style={{ backgroundColor: siteData.color }}
+                        ></div>
+
+                        {siteData.photo && (
+                            <img
+                                src={siteData.photo}
+                                className="w-64 h-64 rounded-full object-cover shadow-2xl mb-8 border-8 border-white"
+                                style={{ borderColor: siteData.color }}
+                            />
+                        )}
+
+                        <h1 className="text-6xl font-black uppercase tracking-tighter mb-4 leading-none">
+                            {siteData.name}
+                        </h1>
+                        <p className="text-2xl font-light uppercase tracking-widest text-slate-500 mb-8">
+                            {siteData.role}
+                        </p>
+
+                        <div className="max-w-lg mx-auto text-lg text-slate-600 leading-relaxed mb-12">
+                            {siteData.bio}
+                        </div>
+
+                        <div className="flex gap-6 text-sm font-bold text-slate-400 uppercase tracking-wider">
+                            {siteData.email && <span>{siteData.email}</span>}
+                            {siteData.phone && (
+                                <span>• {siteData.phone}</span>
+                            )}{' '}
+                            {/* Asegúrate de tener phone en el estado si lo quieres */}
+                            {siteData.whatsapp && (
+                                <span>• WhatsApp: {siteData.whatsapp}</span>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* PÁGINA DE PROYECTOS */}
+                    <div className="p-12 min-h-[297mm]">
+                        <div
+                            className="flex items-center gap-4 mb-12 border-b-2 pb-4"
+                            style={{ borderColor: siteData.color }}
+                        >
+                            <h2 className="text-4xl font-bold uppercase">
+                                Portafolio Seleccionado
+                            </h2>
+                        </div>
+
+                        <div className="space-y-12">
+                            {siteData.projects?.map((proj, i) => (
+                                <div
+                                    key={i}
+                                    className="flex gap-8 mb-10 page-break-inside-avoid"
+                                >
+                                    {/* Imagen del proyecto */}
+                                    <div className="w-1/3 shrink-0">
+                                        {proj.cover ? (
+                                            <img
+                                                src={proj.cover}
+                                                className="w-full rounded-lg shadow-md object-cover aspect-video"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-32 bg-slate-100 rounded-lg flex items-center justify-center text-slate-300 font-bold">
+                                                SIN FOTO
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Info del proyecto */}
+                                    <div className="w-2/3">
+                                        <h3 className="text-2xl font-bold mb-2">
+                                            {proj.title}
+                                        </h3>
+                                        <p
+                                            className="text-sm text-slate-500 mb-3 font-mono"
+                                            style={{ color: siteData.color }}
+                                        >
+                                            {proj.tags}
+                                        </p>
+                                        <p className="text-slate-600 text-sm leading-relaxed mb-3">
+                                            {proj.desc}
+                                        </p>
+                                        {proj.link && (
+                                            <span className="text-xs text-slate-400 underline">
+                                                {proj.link}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* PÁGINA DE EXPERIENCIA / FINAL */}
+                    {(siteData.experience?.length > 0 ||
+                        siteData.education?.length > 0) && (
+                        <div className="p-12 min-h-[297mm]">
+                            <div className="grid grid-cols-2 gap-12">
+                                {/* Experiencia */}
+                                <div>
+                                    <h3
+                                        className="text-2xl font-bold uppercase mb-6 pb-2 border-b"
+                                        style={{ borderColor: siteData.color }}
+                                    >
+                                        Experiencia
+                                    </h3>
+                                    {siteData.experience?.map((exp, i) => (
+                                        <div
+                                            key={i}
+                                            className="mb-6 page-break-inside-avoid"
+                                        >
+                                            <h4 className="font-bold text-lg">
+                                                {exp.role}
+                                            </h4>
+                                            <p className="text-sm font-bold text-slate-500 mb-1">
+                                                {exp.company} | {exp.year}
+                                            </p>
+                                            <p className="text-sm text-slate-600">
+                                                {exp.desc}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Educación y Skills */}
+                                <div>
+                                    {siteData.education?.length > 0 && (
+                                        <div className="mb-10">
+                                            <h3
+                                                className="text-2xl font-bold uppercase mb-6 pb-2 border-b"
+                                                style={{
+                                                    borderColor: siteData.color,
+                                                }}
+                                            >
+                                                Educación
+                                            </h3>
+                                            {siteData.education?.map(
+                                                (edu, i) => (
+                                                    <div
+                                                        key={i}
+                                                        className="mb-4 page-break-inside-avoid"
+                                                    >
+                                                        <h4 className="font-bold">
+                                                            {edu.degree}
+                                                        </h4>
+                                                        <p className="text-sm text-slate-500">
+                                                            {edu.school} -{' '}
+                                                            {edu.year}
+                                                        </p>
+                                                    </div>
+                                                ),
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {siteData.skills && (
+                                        <div>
+                                            <h3
+                                                className="text-2xl font-bold uppercase mb-6 pb-2 border-b"
+                                                style={{
+                                                    borderColor: siteData.color,
+                                                }}
+                                            >
+                                                Habilidades
+                                            </h3>
+                                            <div className="flex flex-wrap gap-2">
+                                                {siteData.skills
+                                                    .split(',')
+                                                    .map((skill, i) => (
+                                                        <span
+                                                            key={i}
+                                                            className="px-3 py-1 bg-slate-100 text-slate-700 text-xs font-bold rounded-full"
+                                                        >
+                                                            {skill.trim()}
+                                                        </span>
+                                                    ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
