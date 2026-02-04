@@ -53,9 +53,11 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
     const [showResetModal, setShowResetModal] = useState(false)
     const [errorModal, setErrorModal] = useState({ isOpen: false, message: '' })
 
-    const BACKEND_URL = import.meta.env.PROD
-        ? 'https://backend-freelanceos.onrender.com'
-        : 'http://localhost:8000'
+    const BACKEND_URL =
+        import.meta.env.VITE_BACKEND_URL ||
+        (import.meta.env.PROD
+            ? 'https://backend-freelanceos.onrender.com'
+            : 'http://localhost:8000')
 
     // --- CARGAR PERFIL ---
     useEffect(() => {
@@ -118,14 +120,28 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({
             formData.append('platform', platform)
             formData.append('clientName', clientName)
 
-            const res = await fetch(`${BACKEND_URL}/api/generate-proposal`, {
-                method: 'POST',
-                body: formData,
-            })
+            let res: Response
+            try {
+                res = await fetch(`${BACKEND_URL}/api/generate-proposal`, {
+                    method: 'POST',
+                    body: formData,
+                })
+            } catch (networkErr: any) {
+                console.error('Network error calling backend:', networkErr)
+                throw new Error(
+                    `No se pudo conectar al servidor (${BACKEND_URL}). Revisa que esté en ejecución y las reglas CORS.`,
+                )
+            }
 
             if (!res.ok) {
-                const errData = await res.json()
-                throw new Error(errData.detail || 'Error en el servidor')
+                let errMsg = 'Error en el servidor'
+                try {
+                    const errData = await res.json()
+                    errMsg = errData.detail || JSON.stringify(errData)
+                } catch (_) {
+                    // response no JSON
+                }
+                throw new Error(errMsg)
             }
 
             const data = await res.json()

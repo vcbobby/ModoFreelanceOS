@@ -5,13 +5,20 @@ import {
 } from '@google/generative-ai'
 import { Proposal } from '../types'
 
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY || ''
 
+let genAI: any = null
 if (!apiKey) {
-    throw new Error('Falta la API Key en las variables de entorno')
+    // No forzamos un throw en tiempo de importación para evitar romper
+    // la aplicación completa cuando la variable de entorno falta.
+    // En su lugar, inicializamos `genAI` solo si hay key y dejamos
+    // que las funciones comprueben la disponibilidad al ejecutarse.
+    console.warn(
+        'VITE_GEMINI_API_KEY no configurada. Funciones de IA deshabilitadas.',
+    )
+} else {
+    genAI = new GoogleGenerativeAI(apiKey)
 }
-
-const genAI = new GoogleGenerativeAI(apiKey)
 // Usamos el modelo más compatible y rápido para todos los navegadores
 const MODEL_NAME = 'gemini-2.5-flash'
 
@@ -43,6 +50,11 @@ export const generateProposals = async (
     platform: string,
     clientName?: string,
 ): Promise<Proposal[]> => {
+    if (!genAI) {
+        throw new Error(
+            'Gemini no está configurado. Define VITE_GEMINI_API_KEY en tu .env',
+        )
+    }
     try {
         const model = genAI.getGenerativeModel({
             model: MODEL_NAME,
@@ -168,6 +180,11 @@ export const analyzeDocument = async (
     text: string,
     mode: 'resumen' | 'riesgos' | 'accion' | 'mejora',
 ): Promise<string> => {
+    if (!genAI) {
+        throw new Error(
+            'Gemini no está configurado. Define VITE_GEMINI_API_KEY en tu .env',
+        )
+    }
     try {
         const model = genAI.getGenerativeModel({ model: MODEL_NAME })
         const prompt = `
@@ -189,6 +206,11 @@ export const analyzeFinancialHealth = async (
     summary: { income: number; expense: number; balance: number },
     pending: { toCollect: number; toPay: number },
 ): Promise<string> => {
+    if (!genAI) {
+        throw new Error(
+            'Gemini no está configurado. Define VITE_GEMINI_API_KEY en tu .env',
+        )
+    }
     try {
         const model = genAI.getGenerativeModel({ model: MODEL_NAME })
 
@@ -243,6 +265,11 @@ export const chatWithAssistant = async (
         currentDate: string
     },
 ): Promise<string> => {
+    if (!genAI) {
+        throw new Error(
+            'Gemini no está configurado. Define VITE_GEMINI_API_KEY en tu .env',
+        )
+    }
     try {
         const model = genAI.getGenerativeModel({
             model: MODEL_NAME,

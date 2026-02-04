@@ -72,7 +72,7 @@ const GUMROAD_LINK = 'https://modofreelanceos.gumroad.com/l/pro-subs'
 const WORDPRESS_URL = 'http://modofreelanceos.com/'
 const BACKEND_URL = import.meta.env.PROD
     ? 'https://backend-freelanceos.onrender.com' // Se usa en Vercel, Windows (.exe) y Android (.apk)
-    : 'http://localhost:8000' // Se usa solo en tu PC cuando haces "npm run dev"
+    : 'http://localhost:8001' // Se usa solo en tu PC cuando haces "npm run dev"
 
 const ADMIN_EMAILS = ['castillovictor2461@gmail.com']
 const DashboardPomodoroWidget = ({
