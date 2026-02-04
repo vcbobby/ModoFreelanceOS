@@ -9,8 +9,14 @@ import { db } from './config/firebase'
 import { doc, getDoc } from 'firebase/firestore'
 import { LandingModern } from './views/LandingModern'
 import { Analytics } from '@vercel/analytics/react'
+import * as Sentry from '@sentry/react'
 // import './index.css'
 
+Sentry.init({
+    dsn: import.meta.env.VITE_SENTRY_DSN,
+    environment: import.meta.env.MODE,
+    tracesSampleRate: 1.0,
+})
 const rootElement = document.getElementById('root')
 if (!rootElement) throw new Error('Failed to find the root element')
 

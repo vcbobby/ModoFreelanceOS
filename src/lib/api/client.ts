@@ -1,3 +1,5 @@
+import { getBackendURL } from '@config/features'
+
 class APIError extends Error {
     constructor(public message: string, public status: number) {
         super(message)
@@ -50,6 +52,4 @@ class APIClient {
     }
 }
 
-export const apiClient = new APIClient(
-    import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000',
-)
+export const apiClient = new APIClient(getBackendURL())
