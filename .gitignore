@@ -16,6 +16,7 @@ dist-ssr
 .env.*.local
 .env.local
 electron 
+.env.example
 
 # Editor directories and files
 .vscode/*
