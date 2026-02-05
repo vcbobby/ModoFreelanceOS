@@ -1,11 +1,47 @@
-*** Begin Patch
-*** Update File: lib/api.js
-@@
+diff --git a/node_modules/jsdom/lib/api.js b/node_modules/jsdom/lib/api.js
+index 6040d4f..b9c540a 100644
+--- a/node_modules/jsdom/lib/api.js
++++ b/node_modules/jsdom/lib/api.js
+@@ -6,7 +6,13 @@ const vm = require("vm");
+ const toughCookie = require("tough-cookie");
+ const sniffHTMLEncoding = require("html-encoding-sniffer");
+ const whatwgURL = require("whatwg-url");
 -const { legacyHookDecode } = require("@exodus/bytes/encoding.js");
-+let legacyHookDecode;
++let legacyHookDecode = (buf) => (buf && buf.toString ? buf.toString() : "");
 +try {
-+  legacyHookDecode = require("@exodus/bytes/encoding.js").legacyHookDecode;
-+} catch (err) {
-+  legacyHookDecode = function (buf) { return buf && buf.toString ? buf.toString() : '' };
++  const _enc = require("@exodus/bytes/encoding.js");
++  legacyHookDecode = _enc.legacyHookDecode || legacyHookDecode;
++} catch (e) {
++  // fallback for ESM-only @exodus/bytes
 +}
-*** End Patch
+ const { URL } = require("whatwg-url");
+ const { MIMEType } = require("whatwg-mimetype");
+ const { getGlobalDispatcher } = require("undici");
+diff --git a/node_modules/jsdom/lib/jsdom/living/file-api/FileReader-impl.js b/node_modules/jsdom/lib/jsdom/living/file-api/FileReader-impl.js
+index b6b24a4..d668a93 100644
+--- a/node_modules/jsdom/lib/jsdom/living/file-api/FileReader-impl.js
++++ b/node_modules/jsdom/lib/jsdom/living/file-api/FileReader-impl.js
+@@ -1,7 +1,21 @@
+ "use strict";
+ 
+-const { labelToName, legacyHookDecode } = require("@exodus/bytes/encoding.js");
+-const { toBase64 } = require("@exodus/bytes/base64.js");
++let labelToName = (v) => v;
++let legacyHookDecode = (buf) => (buf && buf.toString ? buf.toString() : "");
++try {
++  const _enc = require("@exodus/bytes/encoding.js");
++  labelToName = _enc.labelToName || labelToName;
++  legacyHookDecode = _enc.legacyHookDecode || legacyHookDecode;
++} catch (e) {
++  // fallback
++}
++let toBase64 = (buf) => (Buffer.isBuffer(buf) ? buf.toString('base64') : Buffer.from(String(buf)).toString('base64'));
++try {
++  const _b = require("@exodus/bytes/base64.js");
++  toBase64 = _b.toBase64 || toBase64;
++} catch (e) {
++  // fallback
++}
+ const { MIMEType } = require("whatwg-mimetype");
+ const DOMException = require("../generated/DOMException");
+ const EventTargetImpl = require("../events/EventTarget-impl").implementation;

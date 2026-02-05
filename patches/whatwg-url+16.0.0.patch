@@ -1,22 +1,19 @@
-*** Begin Patch
-*** Update File: lib/url-state-machine.js
-@@
--"use strict";
+diff --git a/node_modules/whatwg-url/lib/url-state-machine.js b/node_modules/whatwg-url/lib/url-state-machine.js
+index dd92fd0..6098900 100644
+--- a/node_modules/whatwg-url/lib/url-state-machine.js
++++ b/node_modules/whatwg-url/lib/url-state-machine.js
+@@ -1,6 +1,12 @@
+ "use strict";
 -require("@exodus/bytes/encoding.js"); // for legacy multi-byte encodings
 -const { percentEncodeAfterEncoding } = require("@exodus/bytes/whatwg.js");
-+"use strict";
-+let exodusEncoding;
++try { require("@exodus/bytes/encoding.js"); } catch (e) { /* ignore if ESM-only */ }
++let percentEncodeAfterEncoding = (input) => input;
 +try {
-+  // Try to require legacy CJS export
-+  exodusEncoding = require("@exodus/bytes/encoding.js"); // for legacy multi-byte encodings
-+} catch (err) {
-+  // provide safe fallback so tests don't crash when package is ESM-only
-+  exodusEncoding = {}
++  const _what = require("@exodus/bytes/whatwg.js");
++  percentEncodeAfterEncoding = _what.percentEncodeAfterEncoding || percentEncodeAfterEncoding;
++} catch (e) {
++  // fallback to identity
 +}
-+let percentEncodeAfterEncoding;
-+try {
-+  percentEncodeAfterEncoding = require("@exodus/bytes/whatwg.js").percentEncodeAfterEncoding;
-+} catch (err) {
-+  percentEncodeAfterEncoding = function (input, encoding) { return input }
-+}
-*** End Patch
+ const tr46 = require("tr46");
+ 
+ const infra = require("./infra");

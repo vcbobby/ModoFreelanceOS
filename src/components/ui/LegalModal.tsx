@@ -40,7 +40,9 @@ export const LegalModal: React.FC<LegalModalProps> = ({
                 </div>
 
                 <div className="p-6 overflow-y-auto custom-scrollbar text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
-                    {content}
+                    {content.split(/\r?\n/).map((line, i) => (
+                        <p key={i}>{line}</p>
+                    ))}
                 </div>
 
                 <div className="p-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 flex justify-end shrink-0">

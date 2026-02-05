@@ -26,7 +26,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                     <span className="text-xs font-bold uppercase tracking-wide">
                         Notificaciones ({notifications.length})
                     </span>
-                    <button onClick={onClose}>
+                    <button onClick={onClose} aria-label="X">
                         <X className="w-4 h-4" />
                     </button>
                 </div>

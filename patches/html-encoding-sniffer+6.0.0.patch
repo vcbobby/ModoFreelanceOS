@@ -1,18 +1,19 @@
-*** Begin Patch
-*** Update File: lib/html-encoding-sniffer.js
-@@
--"use strict";
+diff --git a/node_modules/html-encoding-sniffer/lib/html-encoding-sniffer.js b/node_modules/html-encoding-sniffer/lib/html-encoding-sniffer.js
+index 08a92d3..47770a7 100644
+--- a/node_modules/html-encoding-sniffer/lib/html-encoding-sniffer.js
++++ b/node_modules/html-encoding-sniffer/lib/html-encoding-sniffer.js
+@@ -1,5 +1,13 @@
+ "use strict";
 -const { getBOMEncoding, labelToName } = require("@exodus/bytes/encoding-lite.js");
-+"use strict";
-+let getBOMEncoding, labelToName;
++let getBOMEncoding = () => null;
++let labelToName = (v) => v;
 +try {
-+  // Try to require the legacy CJS export
-+  const enc = require("@exodus/bytes/encoding-lite.js");
-+  getBOMEncoding = enc.getBOMEncoding;
-+  labelToName = enc.labelToName;
-+} catch (err) {
-+  // If the package is ESM-only, provide safe fallbacks for the few functions we need
-+  getBOMEncoding = function () { return null }
-+  labelToName = function (label) { if (!label) return null; return String(label) }
++  const _enc = require("@exodus/bytes/encoding-lite.js");
++  getBOMEncoding = _enc.getBOMEncoding || getBOMEncoding;
++  labelToName = _enc.labelToName || labelToName;
++} catch (e) {
++  // Fallback for ESM-only environments — keep behavior minimal and safe
 +}
-*** End Patch
+ 
+ // https://html.spec.whatwg.org/#encoding-sniffing-algorithm
+ module.exports = (uint8Array, { xml = false, transportLayerEncodingLabel, defaultEncoding } = {}) => {

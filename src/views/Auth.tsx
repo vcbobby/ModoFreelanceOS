@@ -254,12 +254,14 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1 ml-1">
+                        <label htmlFor="email" className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1 ml-1">
                             Email
                         </label>
                         <div className="relative">
                             <Mail className="absolute left-3 top-3 text-slate-400 w-5 h-5" />
                             <input
+                                id="email"
+                                aria-label="Email"
                                 type="email"
                                 required
                                 className="w-full pl-10 p-3 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none transition-all bg-white dark:bg-slate-900 dark:text-white"
@@ -273,7 +275,7 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
                     {viewState !== 'forgot' && (
                         <div>
                             <div className="flex justify-between items-center mb-1">
-                                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase ml-1">
+                                <label htmlFor="password" className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase ml-1">
                                     Contraseña
                                 </label>
                                 {viewState === 'login' && (
@@ -292,6 +294,8 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
                             <div className="relative">
                                 <Lock className="absolute left-3 top-3 text-slate-400 w-5 h-5" />
                                 <input
+                                    id="password"
+                                    aria-label="Password"
                                     type="password"
                                     required
                                     className="w-full pl-10 p-3 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none transition-all bg-white dark:bg-slate-900 dark:text-white"
