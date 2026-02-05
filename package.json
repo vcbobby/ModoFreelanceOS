@@ -4,6 +4,9 @@
     "homepage": "./",
     "private": true,
     "version": "2.0.0",
+    "engines": {
+        "node": ">=24.13.0"
+    },
     "description": "El Sistema Operativo para Freelancers",
     "author": "ModoFreelance",
     "type": "module",
@@ -12,6 +15,11 @@
         "build": "vite build",
         "test": "vitest",
         "postinstall": "patch-package",
+        "prepare": "husky install",
+        "lint": "eslint 'src/**/*.{ts,tsx,js,jsx}' --max-warnings 0",
+        "lint:fix": "eslint --fix 'src/**/*.{ts,tsx,js,jsx}'",
+        "format": "prettier --write .",
+        "check": "npm run lint && npm run test:run",
         "test:run": "cross-env NODE_OPTIONS=--require ./test/setup-early.cjs vitest run",
         "test:ui": "vitest --ui",
         "preview": "vite preview",
@@ -50,18 +58,40 @@
         "@testing-library/react": "^14.3.1",
         "@testing-library/user-event": "^14.4.3",
         "@types/node": "^22.14.0",
+        "@typescript-eslint/eslint-plugin": "^8.54.0",
+        "@typescript-eslint/parser": "^8.54.0",
         "@vitejs/plugin-react": "^5.0.0",
         "concurrently": "^9.2.1",
         "cross-env": "^7.0.3",
         "electron": "^39.2.6",
         "electron-builder": "^26.0.12",
+        "eslint": "^9.39.2",
+        "eslint-config-prettier": "^10.1.8",
+        "eslint-plugin-react": "^7.37.5",
+        "eslint-plugin-react-hooks": "^7.0.1",
+        "eslint-plugin-vitest": "^0.5.4",
+        "husky": "^9.1.7",
         "jsdom": "^28.0.0",
+        "lint-staged": "^16.2.7",
         "parse5": "6.0.1",
         "patch-package": "^8.0.1",
+        "prettier": "^3.8.1",
         "typescript": "~5.8.2",
         "vite": "^6.4.1",
         "vitest": "^1.6.1",
         "wait-on": "^9.0.3"
+    },
+    "husky": {
+        "hooks": {
+            "pre-commit": "npx --no-install lint-staged"
+        }
+    },
+    "lint-staged": {
+        "src/**/*.{ts,tsx,js,jsx,json,md}": [
+            "npm run format",
+            "npm run lint:fix",
+            "git add"
+        ]
     },
     "overrides": {
         "parse5": "6.0.1"
