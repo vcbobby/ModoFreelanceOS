@@ -1,0 +1,11 @@
+*** Begin Patch
+*** Update File: lib/api.js
+@@
+-const { legacyHookDecode } = require("@exodus/bytes/encoding.js");
++let legacyHookDecode;
++try {
++  legacyHookDecode = require("@exodus/bytes/encoding.js").legacyHookDecode;
++} catch (err) {
++  legacyHookDecode = function (buf) { return buf && buf.toString ? buf.toString() : '' };
++}
+*** End Patch

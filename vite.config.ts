@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import path from 'path'
+import * as path from 'path'
 
 export default defineConfig({
     plugins: [react()],
@@ -15,6 +15,11 @@ export default defineConfig({
             '@config': path.resolve(__dirname, './src/config'),
             '@types': path.resolve(__dirname, './src/types'),
             '@context': path.resolve(__dirname, './src/context'),
+            // Alias for test-time mock to avoid requiring ESM-only dependency
+            'html-encoding-sniffer': path.resolve(
+                __dirname,
+                './test/mocks/html-encoding-sniffer.cjs',
+            ),
         },
     },
 })

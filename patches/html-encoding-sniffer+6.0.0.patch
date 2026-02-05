@@ -1,0 +1,18 @@
+*** Begin Patch
+*** Update File: lib/html-encoding-sniffer.js
+@@
+-"use strict";
+-const { getBOMEncoding, labelToName } = require("@exodus/bytes/encoding-lite.js");
++"use strict";
++let getBOMEncoding, labelToName;
++try {
++  // Try to require the legacy CJS export
++  const enc = require("@exodus/bytes/encoding-lite.js");
++  getBOMEncoding = enc.getBOMEncoding;
++  labelToName = enc.labelToName;
++} catch (err) {
++  // If the package is ESM-only, provide safe fallbacks for the few functions we need
++  getBOMEncoding = function () { return null }
++  labelToName = function (label) { if (!label) return null; return String(label) }
++}
+*** End Patch

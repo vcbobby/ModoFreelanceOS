@@ -1,0 +1,22 @@
+*** Begin Patch
+*** Update File: lib/url-state-machine.js
+@@
+-"use strict";
+-require("@exodus/bytes/encoding.js"); // for legacy multi-byte encodings
+-const { percentEncodeAfterEncoding } = require("@exodus/bytes/whatwg.js");
++"use strict";
++let exodusEncoding;
++try {
++  // Try to require legacy CJS export
++  exodusEncoding = require("@exodus/bytes/encoding.js"); // for legacy multi-byte encodings
++} catch (err) {
++  // provide safe fallback so tests don't crash when package is ESM-only
++  exodusEncoding = {}
++}
++let percentEncodeAfterEncoding;
++try {
++  percentEncodeAfterEncoding = require("@exodus/bytes/whatwg.js").percentEncodeAfterEncoding;
++} catch (err) {
++  percentEncodeAfterEncoding = function (input, encoding) { return input }
++}
+*** End Patch

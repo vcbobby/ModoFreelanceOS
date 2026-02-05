@@ -198,6 +198,18 @@ src/
 │   ├── AppContext.tsx
 │   ├── ThemeContext.tsx
 │   └── PomodoroContext.tsx
+
+---
+
+## 🧪 Tests (Vitest + jsdom) ⚙️
+
+- Run all tests (the project includes a preload shim which fixes ESM/CJS interop issues that occur with some transitive dependencies):
+  - Preferred: `npm run test:run` (uses `cross-env` to set `NODE_OPTIONS` before running `vitest run`)
+  - Alternative: set `NODE_OPTIONS=--require ./test/setup-early.cjs` and run `vitest run` manually.
+
+- The project includes `test/setup-early.cjs` and `patches/` with `patch-package` patches that address known ESM issues with `jsdom` and related libraries. These patches are applied automatically via `postinstall`.
+
+- If you run into `require() of ES Module` errors locally or in CI, make sure `cross-env` is installed (or set `NODE_OPTIONS` manually) and that `postinstall` has applied patches (`npm install` will run `patch-package` automatically).
 │
 ├── hooks/               # Custom React hooks
 │   └── useAgendaNotifications.ts

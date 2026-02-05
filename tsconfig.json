@@ -1,7 +1,12 @@
 {
     "compilerOptions": {
-        "baseUrl": ".",
+        "target": "ES2022",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "esModuleInterop": true,
+        "skipLibCheck": true,
         "strict": true,
+        "baseUrl": ".",
         "paths": {
             "@/*": ["./src/*"],
             "@components/*": ["./src/components/*"],
@@ -12,8 +17,8 @@
             "@config/*": ["./src/config/*"],
             "@types/*": ["./src/types/*"],
             "@context/*": ["./src/context/*"]
-        }, // <--- FÍJATE EN ESTA COMA Y ESTA LLAVE DE CIERRE
-
-        "jsx": "react-jsx" // <--- PONLO AQUÍ, FUERA DE "paths"
+        },
+        "jsx": "react-jsx",
+        "allowJs": true
     }
 }
