@@ -5,6 +5,7 @@ export default defineConfig({
     test: {
         environment: 'jsdom',
         globals: true,
+        threads: false,
         setupFiles: 'src/setupTests.ts',
         deps: {
             inline: ['html-encoding-sniffer'],
