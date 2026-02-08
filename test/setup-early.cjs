@@ -11,7 +11,8 @@ process.env.VITE_FIREBASE_STORAGE_BUCKET =
   process.env.VITE_FIREBASE_STORAGE_BUCKET || 'test-project.appspot.com';
 process.env.VITE_FIREBASE_MESSAGING_SENDER_ID =
   process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '000000000000';
-process.env.VITE_FIREBASE_APP_ID = process.env.VITE_FIREBASE_APP_ID || '1:000000000000:web:deadbeef';
+process.env.VITE_FIREBASE_APP_ID =
+  process.env.VITE_FIREBASE_APP_ID || '1:000000000000:web:deadbeef';
 
 Module._load = function (request, parent, isMain) {
   // Provide lightweight stubs for modules that are ESM-only and cause require() failures
