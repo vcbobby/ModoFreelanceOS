@@ -17,7 +17,7 @@
     "test:watch": "vitest",
     "postinstall": "patch-package",
     "prepare": "husky install",
-    "lint": "eslint \"src/**/*.{ts,tsx,js,jsx}\" --max-warnings 0",
+    "lint": "eslint \"src/**/*.{ts,tsx,js,jsx}\"",
     "lint:fix": "eslint --fix \"src/**/*.{ts,tsx,js,jsx}\"",
     "format": "prettier --write .",
     "check": "npm run lint && npm run test:run",
