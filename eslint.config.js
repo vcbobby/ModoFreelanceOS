@@ -44,6 +44,7 @@ export default [
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       'no-shadow-restricted-names': 'warn',
       'react/no-unescaped-entities': 'warn',
+      'react/jsx-no-comment-textnodes': 'warn',
       'react-hooks/set-state-in-effect': 'warn',
     },
   }),
