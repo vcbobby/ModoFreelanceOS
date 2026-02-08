@@ -6,28 +6,28 @@ Plataforma all-in-one con IA integrada para gestionar todos los aspectos de tu n
 
 ## ✨ Nuevas Características v2.0
 
--   🎨 **Nueva Landing Page Moderna** con animaciones y diseño profesional
--   🤖 **Asistente IA Mejorado** con Google Gemini 2.0
--   📊 **Dashboard de Analíticas** para trackear tu productividad
--   🎯 **Generación de Propuestas Optimizadas** por plataforma (Upwork, Freelancer, Workana)
--   🖼️ **Generador de Logos con IA** usando modelos Flux
--   📄 **Creador de CV Profesionales** con múltiples plantillas
--   💰 **Gestión Financiera Completa** con gráficas y reportes
--   📱 **PWA con Soporte Offline** funciona sin internet
--   🌙 **Modo Oscuro Nativo** con persistencia
--   🔔 **Notificaciones Inteligentes** para deadlines y eventos
--   📧 **Sistema de Email Integrado** para clientes
--   🎓 **Academia Freelance** con recursos y tips
--   🔍 **Buscador de Trabajos** en múltiples plataformas
+- 🎨 **Nueva Landing Page Moderna** con animaciones y diseño profesional
+- 🤖 **Asistente IA Mejorado** con Google Gemini 2.0
+- 📊 **Dashboard de Analíticas** para trackear tu productividad
+- 🎯 **Generación de Propuestas Optimizadas** por plataforma (Upwork, Freelancer, Workana)
+- 🖼️ **Generador de Logos con IA** usando modelos Flux
+- 📄 **Creador de CV Profesionales** con múltiples plantillas
+- 💰 **Gestión Financiera Completa** con gráficas y reportes
+- 📱 **PWA con Soporte Offline** funciona sin internet
+- 🌙 **Modo Oscuro Nativo** con persistencia
+- 🔔 **Notificaciones Inteligentes** para deadlines y eventos
+- 📧 **Sistema de Email Integrado** para clientes
+- 🎓 **Academia Freelance** con recursos y tips
+- 🔍 **Buscador de Trabajos** en múltiples plataformas
 
 ## 🚀 Quick Start
 
 ### Prerrequisitos
 
--   **Node.js** 18 o superior
--   **npm** o **pnpm** (recomendado)
--   Proyecto de **Firebase** configurado
--   Cuenta de **Google Gemini** para funciones de IA
+- **Node.js** 18 o superior
+- **npm** o **pnpm** (recomendado)
+- Proyecto de **Firebase** configurado
+- Cuenta de **Google Gemini** para funciones de IA
 
 ### Instalación
 
@@ -53,19 +53,19 @@ Editar `src/config/firebase.ts` con tus credenciales de Firebase:
 
 ```typescript
 const firebaseConfig = {
-    apiKey: 'TU_API_KEY',
-    authDomain: 'TU_AUTH_DOMAIN',
-    projectId: 'TU_PROJECT_ID',
-    storageBucket: 'TU_STORAGE_BUCKET',
-    messagingSenderId: 'TU_MESSAGING_SENDER_ID',
-    appId: 'TU_APP_ID',
-    measurementId: 'TU_MEASUREMENT_ID',
-}
+  apiKey: 'TU_API_KEY',
+  authDomain: 'TU_AUTH_DOMAIN',
+  projectId: 'TU_PROJECT_ID',
+  storageBucket: 'TU_STORAGE_BUCKET',
+  messagingSenderId: 'TU_MESSAGING_SENDER_ID',
+  appId: 'TU_APP_ID',
+  measurementId: 'TU_MEASUREMENT_ID',
+};
 ```
 
 Obtén estas credenciales en:
 
--   Firebase Console → Configuración del Proyecto → Tus apps → SDK Setup
+- Firebase Console → Configuración del Proyecto → Tus apps → SDK Setup
 
 4. **Configurar variables de entorno (opcional):**
 
@@ -128,9 +128,9 @@ npx cap open android
 
 **Requisitos:**
 
--   Android Studio instalado
--   JDK 11+
--   Android SDK configurado
+- Android Studio instalado
+- JDK 11+
+- Android SDK configurado
 
 ### iOS (Solo en Mac)
 
@@ -144,8 +144,8 @@ npx cap open ios
 
 **Requisitos:**
 
--   Xcode 14+
--   Cuenta de Apple Developer
+- Xcode 14+
+- Cuenta de Apple Developer
 
 ### Desktop (Electron)
 
@@ -156,48 +156,70 @@ npm run electron:build
 # El instalador se generará en dist/
 ```
 
+## ⚡ Performance y Bundle
+
+### Analisis de bundle
+
+```bash
+# Genera el reporte en bundle-report.html
+npm run analyze
+
+# Genera el reporte y valida budgets
+npm run analyze:budget
+```
+
+Los budgets se configuran en:
+
+- scripts/check-bundle-budget.cjs
+
+### Lighthouse (local)
+
+```bash
+# Servir en dev
+npm run dev
+
+# En otra terminal (ejemplo)
+npx lighthouse http://127.0.0.1:5173 --only-categories=performance
+```
+
 ## 📁 Estructura del Proyecto
 
 ```
 src/
-├── components/           # Componentes reutilizables
-│   ├── ui/              # UI components base
-│   │   ├── BaseModal.tsx
-│   │   ├── ConfirmationModal.tsx
-│   │   ├── LegalModal.tsx
-│   │   └── NotificationModal.tsx
-│   ├── AIAssistant.tsx
-│   ├── SupportWidget.tsx
-│   ├── UpdateChecker.tsx
-│   └── Dashboard*.tsx   # Componentes del dashboard
-│
-├── views/               # Páginas/vistas principales
-│   ├── LandingModern.tsx      # Nueva landing v2.0
-│   ├── Auth.tsx               # Login/Register
-│   ├── ProposalTool.tsx       # Generador de propuestas
-│   ├── LogoTool.tsx           # Generador de logos
-│   ├── CVBuilder.tsx          # Creador de CVs
-│   ├── InvoiceTool.tsx        # Generador de facturas
-│   ├── BriefingTool.tsx       # Creador de briefings
-│   ├── PortfolioTool.tsx      # Gestor de portafolios
-│   ├── WebsiteBuilder.tsx     # Constructor de sitios
-│   ├── QRTool.tsx             # Generador de QR codes
-│   ├── FiverrTool.tsx         # Optimizador de Fiverr
-│   ├── AnalyzerTool.tsx       # Analizador de imágenes
-│   ├── OptimizerTool.tsx      # Optimizador de contenido
-│   ├── PomodoroTool.tsx       # Timer Pomodoro
-│   ├── FinanceView.tsx        # Gestión financiera
-│   ├── NotesView.tsx          # Notas y recordatorios
-│   ├── JobsView.tsx           # Búsqueda de trabajos
-│   ├── AcademyView.tsx        # Academia/recursos
-│   ├── HistoryView.tsx        # Historial
-│   ├── AdminDashboard.tsx     # Panel admin
-│   └── PublicPortfolioViewer.tsx
-│
+├── app/                 # App shell y rutas
+├── features/            # Feature-first (por dominio)
+│   ├── shared/          # Compartido entre features
+│   │   ├── ui/          # UI base (modales, botones, cards)
+│   │   ├── widgets/     # Widgets globales (Support, AI, Update)
+│   │   ├── dashboard/   # Cards del dashboard
+│   │   ├── services/    # Servicios compartidos (IA, etc)
+│   │   └── utils/       # Utilidades compartidas
+│   ├── auth/
+│   ├── landing/
+│   ├── public-portfolio/
+│   ├── analyzer/
+│   ├── proposals/
+│   ├── invoices/
+│   ├── cv-builder/
+│   ├── logos/
+│   ├── website-builder/
+│   ├── optimizer/
+│   ├── pomodoro/
+│   ├── finance/
+│   ├── notes/
+│   ├── jobs/
+│   ├── academy/
+│   ├── history/
+│   └── admin/
 ├── context/             # Context API para estado global
-│   ├── AppContext.tsx
-│   ├── ThemeContext.tsx
-│   └── PomodoroContext.tsx
+├── config/              # Configuracion (Firebase, features)
+├── data/                # Data estatica
+├── lib/                 # Librerias internas
+├── types/               # Types compartidos
+├── App.tsx
+├── main.tsx
+└── setupTests.ts
+```
 
 ---
 
@@ -210,38 +232,39 @@ src/
 - The project includes `test/setup-early.cjs` and `patches/` with `patch-package` patches that address known ESM issues with `jsdom` and related libraries. These patches are applied automatically via `postinstall`.
 
 - If you run into `require() of ES Module` errors locally or in CI, make sure `cross-env` is installed (or set `NODE_OPTIONS` manually) and that `postinstall` has applied patches (`npm install` will run `patch-package` automatically).
-│
-├── hooks/               # Custom React hooks
-│   └── useAgendaNotifications.ts
-│
-├── services/            # Servicios externos
-│   └── geminiService.ts
-│
-├── utils/               # Funciones auxiliares
-│   ├── downloadUtils.ts
-│   ├── filesystem.ts
-│   ├── notifications.ts
-│   ├── pdfUtils.ts
-│   └── platform.ts
-│
-├── lib/                 # Librerías y configuraciones
-│   └── api/
-│       └── client.ts    # Cliente API
-│
-├── config/              # Configuraciones
-│   ├── firebase.ts
-│   └── features.ts
-│
-├── types/               # TypeScript types
-│   └── index.ts
-│
-├── data/                # Data estática
-│   ├── tips.ts
-│   └── legalTexts.ts
-│
-├── App.tsx              # Componente raíz
-└── main.tsx             # Entry point
-```
+  │
+  ├── hooks/ # Custom React hooks
+  │ └── useAgendaNotifications.ts
+  │
+  ├── services/ # Servicios externos
+  │ └── geminiService.ts
+  │
+  ├── utils/ # Funciones auxiliares
+  │ ├── downloadUtils.ts
+  │ ├── filesystem.ts
+  │ ├── notifications.ts
+  │ ├── pdfUtils.ts
+  │ └── platform.ts
+  │
+  ├── lib/ # Librerías y configuraciones
+  │ └── api/
+  │ └── client.ts # Cliente API
+  │
+  ├── config/ # Configuraciones
+  │ ├── firebase.ts
+  │ └── features.ts
+  │
+  ├── types/ # TypeScript types
+  │ └── index.ts
+  │
+  ├── data/ # Data estática
+  │ ├── tips.ts
+  │ └── legalTexts.ts
+  │
+  ├── App.tsx # Componente raíz
+  └── main.tsx # Entry point
+
+````
 
 ## 🛠️ Stack Tecnológico
 
@@ -302,7 +325,7 @@ npm run electron:build   # Build instalador Windows
 npx cap sync             # Sincronizar código con apps nativas
 npx cap open android     # Abrir en Android Studio
 npx cap open ios         # Abrir en Xcode
-```
+````
 
 ## 🧪 Testing (En desarrollo)
 
@@ -325,11 +348,11 @@ Editar colores en `src/context/ThemeContext.tsx`:
 
 ```typescript
 const lightTheme = {
-    background: '#ffffff',
-    text: '#1a1a1a',
-    primary: '#10b981',
-    // ...
-}
+  background: '#ffffff',
+  text: '#1a1a1a',
+  primary: '#10b981',
+  // ...
+};
 ```
 
 ### Features Flags
@@ -338,11 +361,11 @@ Activar/desactivar características en `src/config/features.ts`:
 
 ```typescript
 export const features = {
-    aiAssistant: true,
-    logoGenerator: true,
-    cvBuilder: true,
-    // ...
-}
+  aiAssistant: true,
+  logoGenerator: true,
+  cvBuilder: true,
+  // ...
+};
 ```
 
 ## 🔐 Autenticación y Seguridad
@@ -351,9 +374,9 @@ export const features = {
 
 Métodos soportados:
 
--   ✅ Email/Password
--   ✅ Google OAuth
--   🚧 GitHub OAuth (próximamente)
+- ✅ Email/Password
+- ✅ Google OAuth
+- 🚧 GitHub OAuth (próximamente)
 
 ### Reglas de Seguridad Firestore
 
@@ -383,7 +406,7 @@ service cloud.firestore {
 
 Instalado automáticamente. Ver métricas en:
 
--   Dashboard de Vercel → Analytics
+- Dashboard de Vercel → Analytics
 
 ### Sentry (Error Tracking)
 
@@ -399,17 +422,17 @@ VITE_SENTRY_DSN=https://...@sentry.io/...
 
 Idiomas planeados:
 
--   Español (ES) - Actual
--   English (EN)
--   Português (PT)
+- Español (ES) - Actual
+- English (EN)
+- Português (PT)
 
 ## ♿ Accesibilidad
 
--   ✅ Navegación por teclado
--   ✅ ARIA labels
--   ✅ Alto contraste
--   ✅ Screen reader friendly
--   ⚠️ Mejoras continuas
+- ✅ Navegación por teclado
+- ✅ ARIA labels
+- ✅ Alto contraste
+- ✅ Screen reader friendly
+- ⚠️ Mejoras continuas
 
 ## 🐛 Troubleshooting
 
@@ -458,17 +481,17 @@ Verificar que `http://localhost:5173` esté en ALLOWED_ORIGINS del backend
 
 ### Documentación Oficial
 
--   [React 19 Docs](https://react.dev/)
--   [TypeScript Handbook](https://www.typescriptlang.org/docs/)
--   [Vite Guide](https://vitejs.dev/guide/)
--   [Firebase Docs](https://firebase.google.com/docs)
--   [Capacitor Docs](https://capacitorjs.com/docs)
+- [React 19 Docs](https://react.dev/)
+- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
+- [Vite Guide](https://vitejs.dev/guide/)
+- [Firebase Docs](https://firebase.google.com/docs)
+- [Capacitor Docs](https://capacitorjs.com/docs)
 
 ### Tutoriales Internos
 
--   📝 Cómo crear una nueva herramienta
--   📝 Guía de contribución al proyecto
--   📝 Mejores prácticas de código
+- 📝 Cómo crear una nueva herramienta
+- 📝 Guía de contribución al proyecto
+- 📝 Mejores prácticas de código
 
 ## 🤝 Contribuir
 
@@ -482,31 +505,31 @@ Este es un proyecto privado. Para colaborar:
 
 ### Guía de Estilo
 
--   Usar TypeScript estricto
--   Componentes funcionales con hooks
--   Nombres descriptivos en inglés
--   Comentarios en español cuando sean necesarios
--   Formatear con Prettier antes de commit
+- Usar TypeScript estricto
+- Componentes funcionales con hooks
+- Nombres descriptivos en inglés
+- Comentarios en español cuando sean necesarios
+- Formatear con Prettier antes de commit
 
 ## 🗺️ Roadmap
 
 ### Q1 2025
 
--   ✅ Lanzamiento v2.0.0
--   ⏳ Tests E2E con Playwright
--   ⏳ Modo colaborativo (múltiples usuarios)
+- ✅ Lanzamiento v2.0.0
+- ⏳ Tests E2E con Playwright
+- ⏳ Modo colaborativo (múltiples usuarios)
 
 ### Q2 2025
 
--   ⏳ Internacionalización completa
--   ⏳ Marketplace de plantillas
--   ⏳ Integración con Stripe para pagos
+- ⏳ Internacionalización completa
+- ⏳ Marketplace de plantillas
+- ⏳ Integración con Stripe para pagos
 
 ### Q3 2025
 
--   ⏳ App móvil nativa (React Native)
--   ⏳ Extensión de Chrome
--   ⏳ API pública para integraciones
+- ⏳ App móvil nativa (React Native)
+- ⏳ Extensión de Chrome
+- ⏳ API pública para integraciones
 
 ## 📝 Changelog
 
@@ -520,12 +543,12 @@ Este software es propietario y confidencial. No se permite la distribución, mod
 
 ## 📧 Contacto y Soporte
 
--   **Email:** castillovictor2461@gmail.com
--   **Website:** [modofreelanceos.vercel.app](https://modofreelanceos.com)
+- **Email:** castillovictor2461@gmail.com
+- **Website:** [modofreelanceos.vercel.app](https://modofreelanceos.com)
 
 ## 👨‍💻 Equipo de Desarrollo
 
--   **Víctor Castillo** - Fundador & Lead Developer
+- **Víctor Castillo** - Fundador & Lead Developer
 
 ---
 
