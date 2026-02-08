@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 // Using fireEvent instead of user-event to avoid extra dependency
 import userEvent from '@testing-library/user-event';
-import { SupportWidget } from '..';
+import { SupportWidget } from '../SupportWidget';
 
 describe('SupportWidget', () => {
   it('opens widget and switches tabs', async () => {

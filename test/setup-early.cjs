@@ -2,6 +2,17 @@
 const Module = require('module');
 const origLoad = Module._load;
 
+// Provide dummy Firebase env vars for tests that import Firebase config.
+process.env.VITE_FIREBASE_API_KEY = process.env.VITE_FIREBASE_API_KEY || 'AIzaTestKeyForCI';
+process.env.VITE_FIREBASE_AUTH_DOMAIN =
+  process.env.VITE_FIREBASE_AUTH_DOMAIN || 'test.firebaseapp.com';
+process.env.VITE_FIREBASE_PROJECT_ID = process.env.VITE_FIREBASE_PROJECT_ID || 'test-project';
+process.env.VITE_FIREBASE_STORAGE_BUCKET =
+  process.env.VITE_FIREBASE_STORAGE_BUCKET || 'test-project.appspot.com';
+process.env.VITE_FIREBASE_MESSAGING_SENDER_ID =
+  process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '000000000000';
+process.env.VITE_FIREBASE_APP_ID = process.env.VITE_FIREBASE_APP_ID || '1:000000000000:web:deadbeef';
+
 Module._load = function (request, parent, isMain) {
   // Provide lightweight stubs for modules that are ESM-only and cause require() failures
   if (request === 'html-encoding-sniffer') {
