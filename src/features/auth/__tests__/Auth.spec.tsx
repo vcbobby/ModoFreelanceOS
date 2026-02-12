@@ -8,8 +8,8 @@ const signInWithEmail = vi.fn().mockResolvedValue({});
 const createUserWithEmail = vi.fn().mockResolvedValue({});
 vi.mock('firebase/auth', () => ({
   getAuth: () => ({}),
-  signInWithEmailAndPassword: (...args: any[]) => signInWithEmail(...args),
-  createUserWithEmailAndPassword: (...args: any[]) => createUserWithEmail(...args),
+  signInWithEmailAndPassword: (...args: unknown[]) => signInWithEmail(...args),
+  createUserWithEmailAndPassword: (...args: unknown[]) => createUserWithEmail(...args),
   sendPasswordResetEmail: () => Promise.resolve(),
 }));
 vi.mock('@config/firebase', () => ({ auth: {}, db: {} }));

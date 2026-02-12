@@ -1,6 +1,9 @@
+export { generateProposals } from './geminiService';
 export {
   analyzeDocument,
   analyzeFinancialHealth,
   chatWithAssistant,
-  generateProposals,
-} from './geminiService';
+  ingestAssistantDocuments,
+} from './aiBackendService';
+export { logHistory } from './historyService';
+export { processTransaction } from './financeService';

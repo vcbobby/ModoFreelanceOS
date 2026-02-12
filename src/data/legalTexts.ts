@@ -7,7 +7,7 @@ Fecha de última actualización: ${new Date().toLocaleDateString()}
 Bienvenido a ModoFreelanceOS. Al acceder y utilizar nuestra aplicación web, aceptas cumplir los siguientes términos y condiciones. Si no estás de acuerdo con alguna parte de estos términos, no debes utilizar nuestros servicios.
 
 2. DESCRIPCIÓN DEL SERVICIO
-ModoFreelanceOS es una plataforma SaaS (Software as a Service) diseñada para freelancers que ofrece herramientas potenciadas por Inteligencia Artificial, incluyendo pero no limitado a: generación de propuestas comerciales, diseño de logotipos, creación de facturas y gestión de notas.
+ModoFreelanceOS es una plataforma SaaS diseñada para freelancers con herramientas potenciadas por IA, incluyendo generación de propuestas, análisis, asistente contextual, creación de logos, generación de cursos, briefs, CV, facturas, portafolios, notas y gestión de agenda.
 
 3. CUENTAS Y REGISTRO
 Para utilizar ciertas funciones, debes registrarte creando una cuenta. Eres responsable de mantener la confidencialidad de tu contraseña. Nos reservamos el derecho de suspender cuentas que violen estos términos o hagan un uso fraudulento del sistema.
@@ -18,7 +18,7 @@ Para utilizar ciertas funciones, debes registrarte creando una cuenta. Eres resp
 - Política de Reembolsos: Al tratarse de un producto digital con acceso inmediato a herramientas de IA, no ofrecemos reembolsos una vez que se ha hecho uso de los servicios PRO, salvo excepciones requeridas por la ley.
 
 5. USO DE INTELIGENCIA ARTIFICIAL
-ModoFreelanceOS utiliza APIs de terceros (como Google Gemini y Pollinations.ai) para generar contenido.
+ModoFreelanceOS utiliza APIs de terceros (como Google Gemini y Pollinations) para generar contenido.
 - No garantizamos la exactitud, originalidad o unicidad del contenido generado por la IA.
 - El usuario es responsable de revisar y editar las propuestas, facturas y logos antes de enviarlos a sus clientes.
 - No nos hacemos responsables por pérdidas de negocios derivadas del uso de textos generados por nuestra herramienta.
@@ -27,12 +27,22 @@ ModoFreelanceOS utiliza APIs de terceros (como Google Gemini y Pollinations.ai) 
 - La aplicación, código fuente y diseño son propiedad de ModoFreelanceOS.
 - Los contenidos generados por ti (propuestas, logos) son de tu propiedad para uso comercial o personal.
 
-7. LIMITACIÓN DE RESPONSABILIDAD
+7. CONTENIDO DEL USUARIO Y RESPONSABILIDAD
+- Eres responsable del contenido que ingresas o generas, incluyendo su legalidad y derechos de uso.
+- No utilices la plataforma para contenido ilegal, difamatorio, fraudulento o que viole derechos de terceros.
+
+8. LIMITACIÓN DE RESPONSABILIDAD
 ModoFreelanceOS se proporciona "tal cual". No garantizamos que el servicio sea ininterrumpido o libre de errores. No seremos responsables por daños indirectos, incidentales o consecuentes derivados del uso de la aplicación.
 
-8. CONTACTO
-Para cualquier duda legal o soporte, puedes contactarnos al WhatsApp: +584144515357.
-`
+9. CAMBIOS Y DISPONIBILIDAD
+Podemos modificar, suspender o descontinuar funciones por mantenimiento, mejoras o razones operativas. Cuando sea razonable, notificaremos cambios relevantes dentro de la app.
+
+10. LEY APLICABLE Y RESOLUCIÓN DE DISPUTAS
+Estos términos se rigen por las leyes de la República Bolivariana de Venezuela. Si surge una disputa, intentaremos resolverla de forma amistosa por correo electrónico antes de acudir a tribunales.
+
+11. CONTACTO
+Para cualquier duda legal o soporte, puedes escribir a modofreelancedev@gmail.com.
+`;
 
 export const PRIVACY_POLICY = `
 POLÍTICA DE PRIVACIDAD - MODOFREELANCEOS
@@ -41,8 +51,8 @@ Fecha de última actualización: ${new Date().toLocaleDateString()}
 
 1. INFORMACIÓN QUE RECOPILAMOS
 - Información de Cuenta: Correo electrónico y nombre (proveído por Google Auth o registro manual).
-- Datos de Uso: Historial de propuestas, logos generados y facturas creadas.
-- Datos de Pago: Nosotros NO almacenamos datos de tarjetas de crédito. Los pagos son procesados de forma segura por Gumroad o Stripe.
+- Datos de Uso: Historial, notas, agenda, finanzas, documentos generados y preferencia de uso.
+- Datos de Pago: Nosotros NO almacenamos datos de tarjetas. Los pagos son procesados por Gumroad o Stripe.
 
 2. CÓMO USAMOS TU INFORMACIÓN
 - Para proveer y mantener el servicio.
@@ -57,7 +67,8 @@ Tus datos se almacenan de forma segura en los servidores de Google Firebase. Imp
 No vendemos ni alquilamos tus datos personales a terceros.
 Compartimos datos estrictamente necesarios con proveedores de servicios:
 - Google Firebase (Alojamiento y Base de Datos).
-- Proveedores de IA (Solo se envían los "prompts" o textos de las propuestas para generar el contenido, sin datos personales identificables).
+- Cloudinary (Almacenamiento de archivos multimedia, si usas la subida de archivos).
+- Proveedores de IA (se envian prompts o textos necesarios para generar contenido).
 
 5. TUS DERECHOS
 Tienes derecho a acceder, rectificar o eliminar tu información personal. Puedes solicitar la eliminación completa de tu cuenta y datos contactando a soporte.
@@ -67,7 +78,10 @@ Utilizamos "LocalStorage" y tecnologías similares para mantener tu sesión inic
 
 7. CAMBIOS A ESTA POLÍTICA
 Podemos actualizar esta política ocasionalmente. Te notificaremos cualquier cambio significativo a través de la aplicación.
-`
+
+8. CONTACTO
+Si tienes preguntas sobre esta política, contáctanos en modofreelancedev@gmail.com.
+`;
 export const TERMS_AND_CONDITIONS2 = `
 Términos y Condiciones de Uso
 
@@ -85,23 +99,32 @@ Todo el contenido generado por ti (portafolios, datos) es de tu propiedad. El so
 
 5. Limitación de Responsabilidad
 ModoFreelanceOS no se hace responsable por pérdidas de oportunidades laborales o problemas con clientes derivados del uso de la plataforma.
-`
+
+6. Contenido del Usuario
+No subas contenido ilegal o que viole derechos de terceros. Puedes solicitar eliminación de datos por soporte.
+
+7. Ley Aplicable
+Estos términos se rigen por las leyes de la República Bolivariana de Venezuela.
+`;
 
 export const PRIVACY_POLICY2 = `
 Política de Privacidad
 
 1. Datos que Recopilamos
-Recopilamos tu correo electrónico, nombre y datos de uso de la aplicación para mejorar el servicio. No almacenamos datos de tarjetas de crédito (son manejados por Gumroad).
+Recopilamos tu correo electrónico, nombre y datos de uso para operar el servicio. No almacenamos datos de tarjetas (son manejados por Gumroad).
 
 2. Uso de la Información
 Utilizamos tu información para proporcionarte las herramientas de IA, guardar tu historial y procesar tu suscripción.
 
 3. Compartir Información
-No vendemos tus datos a terceros. Compartimos datos estrictamente necesarios con proveedores de servicios (Google Cloud, Cloudinary) para el funcionamiento de la app.
+No vendemos tus datos a terceros. Compartimos datos necesarios con proveedores (Firebase, Cloudinary, proveedores de IA) para el funcionamiento de la app.
 
 4. Seguridad
 Tus datos están protegidos en servidores seguros de Google Firebase.
 
 5. Tus Derechos
 Puedes solicitar la eliminación de tu cuenta y todos tus datos en cualquier momento desde el panel de soporte.
-`
+
+6. Contacto
+Para solicitudes de privacidad, escribe a modofreelancedev@gmail.com.
+`;

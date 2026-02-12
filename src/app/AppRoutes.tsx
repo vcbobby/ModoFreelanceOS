@@ -1,16 +1,16 @@
 import React, { Suspense, useEffect } from 'react';
-import { Check, CheckCircle, Monitor, Pause, PenLine, Play } from 'lucide-react';
+import { Check, CheckCircle, Monitor, Pause, PenLine, Play, Zap } from 'lucide-react';
 import { AppView, UserState } from '@types';
 import { useAppDispatch, useAppSelector } from '@/app/hooks/storeHooks';
 import { toggleTimer } from '@/app/slices/pomodoroSlice';
 import { DashboardTips } from '@features/shared/dashboard';
 import { loadHtml2Pdf } from '@features/shared/utils/html2pdf';
 import { preloadPdfJs } from '@features/shared/utils/pdfUtils';
+import { CreditPackageCard, CREDIT_PACKAGES } from '@features/shared/ui';
 
 const ProposalTool = React.lazy(() => import('@features/proposals'));
 const FinanceView = React.lazy(() => import('@features/finance'));
 const HistoryView = React.lazy(() => import('@features/history'));
-const LogoTool = React.lazy(() => import('@features/logos'));
 const InvoiceTool = React.lazy(() => import('@features/invoices'));
 const NotesView = React.lazy(() => import('@features/notes'));
 const QRTool = React.lazy(() => import('@features/qr'));
@@ -25,6 +25,7 @@ const JobsView = React.lazy(() => import('@features/jobs'));
 const AcademyView = React.lazy(() => import('@features/academy'));
 const AdminDashboard = React.lazy(() => import('@features/admin'));
 const WebsiteBuilder = React.lazy(() => import('@features/website-builder'));
+const AnalyticsView = React.lazy(() => import('@features/analytics'));
 const DashboardPinnedNotes = React.lazy(async () => {
   const mod = await import('@features/shared/dashboard');
   return { default: mod.DashboardPinnedNotes };
@@ -41,9 +42,7 @@ const LoadingFallback = () => (
 );
 
 const DashboardSectionFallback = () => (
-  <div className="flex items-center justify-center py-8 text-slate-400">
-    Cargando seccion...
-  </div>
+  <div className="flex items-center justify-center py-8 text-slate-400">Cargando seccion...</div>
 );
 
 const DashboardPomodoroWidget = ({ onGoToPomodoro }: { onGoToPomodoro: () => void }) => {
@@ -63,9 +62,8 @@ const DashboardPomodoroWidget = ({ onGoToPomodoro }: { onGoToPomodoro: () => voi
     <div className="mb-6 bg-slate-900 dark:bg-slate-800 text-white p-4 rounded-xl shadow-lg flex items-center justify-between border-l-4 border-brand-500 animate-in slide-in-from-top-2">
       <div className="flex items-center gap-3">
         <div
-          className={`w-3 h-3 rounded-full animate-pulse ${
-            mode === 'work' ? 'bg-red-500' : 'bg-green-500'
-          }`}
+          className={`w-3 h-3 rounded-full animate-pulse ${mode === 'work' ? 'bg-red-500' : 'bg-green-500'
+            }`}
         ></div>
         <div>
           <p className="text-xs font-bold uppercase opacity-70">
@@ -148,8 +146,6 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         return <InvoiceTool onUsage={handleFeatureUsage} userId={userId} />;
       case AppView.HISTORY:
         return <HistoryView userId={userId} />;
-      case AppView.LOGOS:
-        return <LogoTool onUsage={handleFeatureUsage} userId={userId} />;
       case AppView.NOTES:
         return <NotesView userId={userId} autoOpenAgenda={autoOpenAgenda} />;
       case AppView.QR:
@@ -160,6 +156,8 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         return <AnalyzerTool onUsage={handleFeatureUsage} userId={userId} />;
       case AppView.FINANCES:
         return <FinanceView userId={userId} />;
+      case AppView.ANALYTICS:
+        return <AnalyticsView userId={userId} />;
       case AppView.PORTFOLIO:
         return <PortfolioTool onUsage={handleFeatureUsage} userId={userId} />;
       case AppView.BRIEFING:
@@ -276,6 +274,31 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                 </div>
               </div>
             </div>
+            {!userState.isSubscribed && (
+              <div className="mb-10">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                    <Zap className="w-5 h-5 text-brand-500 fill-current" />
+                    Paquetes de Créditos
+                  </h3>
+                  <span className="text-xs font-bold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 px-2 py-1 rounded-lg uppercase">
+                    Oferta de Lanzamiento 🚀
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {CREDIT_PACKAGES.map((pkg) => (
+                    <CreditPackageCard
+                      key={pkg.credits}
+                      credits={pkg.credits}
+                      price={pkg.price}
+                      oldPrice={pkg.oldPrice}
+                      buyUrl={pkg.buyUrl}
+                      highlighted={pkg.highlighted}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
             <DashboardPomodoroWidget onGoToPomodoro={() => setCurrentView(AppView.POMODORO)} />
             {userId && (
               <Suspense fallback={<DashboardSectionFallback />}>

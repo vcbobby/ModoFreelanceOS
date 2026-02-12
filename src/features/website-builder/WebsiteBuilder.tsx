@@ -4,28 +4,22 @@ import {
   Eye,
   Monitor,
   Palette,
-  Image as ImageIcon,
   Plus,
   Trash2,
   Smartphone,
   Layout,
   Briefcase,
-  Link as LinkIcon,
   Video,
-  Paperclip,
-  FileText,
   Loader2,
   Share2,
-  Globe,
-  Facebook,
-  Youtube,
-  Twitch,
   FileDown,
 } from 'lucide-react';
 import { Button, Card, ConfirmationModal } from '@features/shared/ui';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '@config/firebase';
 import { downloadFile, loadHtml2Pdf } from '@features/shared/utils';
+import { getBackendURL } from '@config/features';
+import { getAuthHeaders } from '@/services/backend/authHeaders';
 interface WebsiteBuilderProps {
   onUsage: (cost: number) => Promise<boolean>;
   userId?: string;
@@ -149,9 +143,73 @@ const LAYOUTS = [
   },
 ];
 
-export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage, userId }) => {
+export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsage, userId }) => {
   const isE2E = import.meta.env.VITE_E2E === 'true';
-  const [siteData, setSiteData] = useState({
+
+  type ProjectAsset = {
+    url: string;
+    type: string;
+    name: string;
+  };
+
+  type Project = {
+    id: number;
+    title: string;
+    desc: string;
+    link: string;
+    tags: string;
+    cover: string;
+    gallery: ProjectAsset[];
+    documents: ProjectAsset[];
+  };
+
+  type Experience = {
+    id: number;
+    role: string;
+    company: string;
+    year: string;
+    desc: string;
+  };
+
+  type Education = {
+    id: number;
+    degree: string;
+    school: string;
+    year: string;
+  };
+
+  type SiteData = {
+    slug: string;
+    name: string;
+    role: string;
+    bio: string;
+    email: string;
+    whatsapp: string;
+    linkedin: string;
+    instagram: string;
+    twitter: string;
+    github: string;
+    behance: string;
+    kick: string;
+    twitch: string;
+    youtube: string;
+    patreon: string;
+    facebook: string;
+    upwork: string;
+    freelancer: string;
+    workana: string;
+    fiverr: string;
+    layoutId: string;
+    color: string;
+    theme: 'dark' | 'light';
+    photo: string;
+    skills: string;
+    projects: Project[];
+    experience: Experience[];
+    education: Education[];
+  };
+
+  const defaultSiteData: SiteData = {
     slug: '',
     name: '',
     role: '',
@@ -177,10 +235,30 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage, userId 
     theme: 'dark',
     photo: '',
     skills: '',
-    projects: [] as any[],
-    experience: [] as any[],
-    education: [] as any[],
-  });
+    projects: [],
+    experience: [],
+    education: [],
+  };
+
+  const getE2eKey = (id?: string) => `e2e_portfolio_${id || 'anon'}`;
+  const loadE2eSite = (): SiteData | null => {
+    if (!userId) return null;
+    try {
+      const raw = localStorage.getItem(getE2eKey(userId));
+      return raw ? (JSON.parse(raw) as SiteData) : null;
+    } catch (error) {
+      void error;
+      return null;
+    }
+  };
+  const saveE2eSite = (nextData: SiteData) => {
+    if (!userId) return;
+    localStorage.setItem(getE2eKey(userId), JSON.stringify(nextData));
+  };
+
+  const [siteData, setSiteData] = useState<SiteData>(() =>
+    isE2E && userId ? loadE2eSite() || defaultSiteData : defaultSiteData
+  );
 
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -201,43 +279,21 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage, userId 
     tempName: '',
   });
 
-  const getE2eKey = (id?: string) => `e2e_portfolio_${id || 'anon'}`;
-  const loadE2eSite = () => {
-    if (!userId) return null;
-    try {
-      const raw = localStorage.getItem(getE2eKey(userId));
-      return raw ? (JSON.parse(raw) as typeof siteData) : null;
-    } catch (error) {
-      console.error('Error leyendo sitio E2E', error);
-      return null;
-    }
-  };
-  const saveE2eSite = (nextData: typeof siteData) => {
-    if (!userId) return;
-    localStorage.setItem(getE2eKey(userId), JSON.stringify(nextData));
-  };
-
-  const BACKEND_URL = import.meta.env.PROD
-    ? 'https://backend-freelanceos.onrender.com'
-    : 'http://localhost:8000';
+  const BACKEND_URL = getBackendURL();
 
   useEffect(() => {
     if (!userId) return;
-    if (isE2E) {
-      const cached = loadE2eSite();
-      if (cached) setSiteData((prev) => ({ ...prev, ...cached }));
-      return;
-    }
+    if (isE2E) return;
     const load = async () => {
       try {
         const snap = await getDoc(doc(db, 'users', userId, 'portfolio', 'site_config'));
         if (snap.exists()) setSiteData((prev) => ({ ...prev, ...snap.data() }));
       } catch (e) {
-        console.error(e);
+        void e;
       }
     };
     load();
-  }, [userId]);
+  }, [isE2E, userId]);
 
   const handleExportPDF = async () => {
     await handleSave();
@@ -263,7 +319,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage, userId 
     try {
       // --- PASO CLAVE PARA ANDROID ---
       // En lugar de .save(), usamos .outputPdf('datauristring')
-      // @ts-ignore
+      // @ts-expect-error html2pdf lacks outputPdf typings.
       const html2pdf = await loadHtml2Pdf();
       const pdfDataUri = await html2pdf().set(opt).from(element).outputPdf('datauristring');
 
@@ -271,7 +327,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage, userId 
       // downloadFile ya sabe si estás en Android o PC y guarda el archivo correctamente
       await downloadFile(pdfDataUri, opt.filename);
     } catch (e) {
-      console.error(e);
+      void e;
       setModal({
         isOpen: true,
         title: 'Error',
@@ -288,8 +344,10 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage, userId 
     formData.append('file', file);
     formData.append('userId', userId || 'anon');
 
+    const authHeaders = await getAuthHeaders();
     const res = await fetch(`${BACKEND_URL}/api/upload-asset`, {
       method: 'POST',
+      headers: authHeaders,
       body: formData,
     });
     const data = await res.json();
@@ -298,16 +356,17 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage, userId 
   };
 
   const handleFileUpload = async (
-    e: any,
+    e: React.ChangeEvent<HTMLInputElement>,
     callback: (url: string, type: string, name: string) => void
   ) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
     try {
       const data = await uploadFileToBackend(file);
       callback(data.url, data.type, data.name);
     } catch (error) {
+      void error;
       setModal({
         isOpen: true,
         title: 'Error',
@@ -319,8 +378,8 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage, userId 
   };
 
   // MANEJO DE DOCUMENTOS (Paso intermedio para pedir nombre)
-  const handleDocSelect = (e: any, projIndex: number) => {
-    const file = e.target.files[0];
+  const handleDocSelect = (e: React.ChangeEvent<HTMLInputElement>, projIndex: number) => {
+    const file = e.target.files?.[0];
     if (file) {
       setDocModal({
         isOpen: true,
@@ -341,6 +400,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage, userId 
       // Agregamos al proyecto con el nombre personalizado
       addToDocs(docModal.projectIndex, data.url, 'raw', docModal.tempName);
     } catch (error) {
+      void error;
       setModal({
         isOpen: true,
         title: 'Error',
@@ -362,16 +422,16 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage, userId 
     setLoading(true);
     try {
       // Limpieza de datos
-      const cleanProjects = (siteData.projects || []).map((p: any) => ({
+      const cleanProjects = (siteData.projects || []).map((p) => ({
         ...p,
         // Aseguramos IDs únicos si no tienen
         id: p.id || Date.now() + Math.random(),
-        gallery: (p.gallery || []).map((g: any) => ({
+        gallery: (p.gallery || []).map((g) => ({
           url: g.url || '',
           type: g.type || 'image',
           name: g.name || 'Archivo',
         })),
-        documents: (p.documents || []).map((d: any) => ({
+        documents: (p.documents || []).map((d) => ({
           url: d.url || '',
           type: d.type || 'raw',
           name: d.name || 'Doc',
@@ -396,18 +456,20 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage, userId 
         title: '¡Publicado!',
         message: 'Tu sitio web ha sido actualizado.',
       });
-    } catch (e: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error desconocido';
       setModal({
         isOpen: true,
         title: 'Error',
-        message: `No se pudo guardar: ${e.message}`,
+        message: `No se pudo guardar: ${message}`,
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const update = (field: string, val: any) => setSiteData((p) => ({ ...p, [field]: val }));
+  const update = <K extends keyof SiteData>(field: K, val: SiteData[K]) =>
+    setSiteData((p) => ({ ...p, [field]: val }));
 
   // CRUD Proyectos (CORREGIDO ERROR DE KEYS)
   const addProject = () =>
@@ -425,7 +487,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage, userId 
       },
     ]);
 
-  const updateProject = (i: number, f: string, v: any) => {
+  const updateProject = <K extends keyof Project>(i: number, f: K, v: Project[K]) => {
     const p = [...(siteData.projects || [])];
     p[i] = { ...p[i], [f]: v };
     update('projects', p);
@@ -444,7 +506,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage, userId 
   };
   const removeFromGallery = (pIdx: number, gIdx: number) => {
     const p = [...siteData.projects];
-    p[pIdx].gallery = p[pIdx].gallery.filter((_: any, i: number) => i !== gIdx);
+    p[pIdx].gallery = p[pIdx].gallery.filter((_, i) => i !== gIdx);
     update('projects', p);
   };
 
@@ -456,7 +518,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage, userId 
   };
   const removeFromDocs = (pIdx: number, dIdx: number) => {
     const p = [...siteData.projects];
-    p[pIdx].documents = p[pIdx].documents.filter((_: any, i: number) => i !== dIdx);
+    p[pIdx].documents = p[pIdx].documents.filter((_, i) => i !== dIdx);
     update('projects', p);
   };
 
@@ -624,7 +686,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage, userId 
           ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id as typeof activeSection)}
               className={`w-full text-left p-4 rounded-xl border transition-all flex items-center gap-3 ${
                 activeSection === tab.id
                   ? 'bg-slate-900 text-white border-slate-900 dark:bg-brand-600'
@@ -971,7 +1033,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage, userId 
                               />
                             </label>
                             <div className="flex flex-wrap gap-2">
-                              {proj.gallery?.map((item: any, idx: number) => (
+                              {proj.gallery?.map((item: ProjectAsset, idx: number) => (
                                 <div
                                   key={idx}
                                   className="relative group w-14 h-14 border dark:border-slate-600 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center overflow-hidden"
@@ -1006,7 +1068,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage, userId 
                               />
                             </label>
                             <div className="space-y-1">
-                              {proj.documents?.map((d: any, idx: number) => (
+                              {proj.documents?.map((d: ProjectAsset, idx: number) => (
                                 <div
                                   key={idx}
                                   className="flex justify-between items-center text-xs p-2 bg-slate-50 dark:bg-slate-900 border dark:border-slate-600 rounded mb-1"
@@ -1097,7 +1159,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage, userId 
                       <Plus className="w-4 h-4 mr-1" /> Agregar
                     </Button>
                   </div>
-                  {siteData.education?.map((edu: any, i: number) => (
+                  {siteData.education?.map((edu: Education, i: number) => (
                     <div
                       key={edu.id}
                       className="relative p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 mb-4"
@@ -1277,7 +1339,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage, userId 
                         </p>
 
                         <div className="grid grid-cols-2 gap-3">
-                          {siteData.projects[0].gallery.map((img: any, idx: number) => {
+                          {siteData.projects[0].gallery.map((img: ProjectAsset, idx: number) => {
                             if (!img.type?.includes('image')) return null;
 
                             return (
@@ -1302,7 +1364,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage, userId 
 
                 {/* RESTO DE PROYECTOS */}
                 <div className="space-y-8">
-                  {siteData.projects.slice(1).map((proj: any, i: number) => {
+                  {siteData.projects.slice(1).map((proj: Project, i: number) => {
                     const isLast = i === siteData.projects.slice(1).length - 1;
 
                     return (
@@ -1364,7 +1426,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage, userId 
                             </p>
 
                             <div className="grid grid-cols-2 gap-3">
-                              {proj.gallery.map((img: any, idx: number) => {
+                              {proj.gallery.map((img: ProjectAsset, idx: number) => {
                                 if (!img.type?.includes('image')) return null;
 
                                 return (
@@ -1404,7 +1466,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage, userId 
                   <h3 className="text-lg font-bold uppercase mb-4 pb-2 border-b border-slate-200 text-slate-800">
                     Experiencia
                   </h3>
-                  {siteData.experience.map((exp: any, i: number) => (
+                  {siteData.experience.map((exp: Experience, i: number) => (
                     <div key={i} className="mb-4">
                       <h4 className="font-bold text-sm text-slate-900">{exp.role}</h4>
                       <p className="text-xs font-bold text-slate-500 mb-1">
@@ -1431,7 +1493,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage, userId 
                     <h3 className="text-base font-bold uppercase mb-3 pb-1 border-b border-slate-200 text-slate-800">
                       Educación
                     </h3>
-                    {siteData.education.map((edu: any, i: number) => (
+                    {siteData.education.map((edu: Education, i: number) => (
                       <div key={i} className="mb-3">
                         <h4 className="font-bold text-xs text-slate-900">{edu.degree}</h4>
                         <p className="text-[10px] text-slate-500">

@@ -12,7 +12,14 @@ export const DashboardUpcomingEvents: React.FC<DashboardUpcomingEventsProps> = (
   userId,
   onGoToAgenda,
 }) => {
-  const [events, setEvents] = useState<any[]>([]);
+  type UpcomingEvent = {
+    id: string;
+    title: string;
+    date: string;
+    time?: string;
+  };
+
+  const [events, setEvents] = useState<UpcomingEvent[]>([]);
 
   useEffect(() => {
     if (!userId) return;

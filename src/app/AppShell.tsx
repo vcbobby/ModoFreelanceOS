@@ -7,7 +7,6 @@ import {
   LogOut,
   User as UserIcon,
   History,
-  Palette,
   FileText,
   StickyNote,
   Bell,
@@ -26,9 +25,12 @@ import {
   Radar,
   ShieldAlert,
   Monitor,
+  BarChart3,
+  Settings,
 } from 'lucide-react';
 import { AppView, UserState } from '@types';
 import { NotificationModal } from '@features/shared/ui';
+import { UserProfileModal } from '@features/shared/widgets';
 
 interface AppShellProps {
   currentView: AppView;
@@ -37,7 +39,7 @@ interface AppShellProps {
   setIsMobileMenuOpen: (value: boolean) => void;
   toggleTheme: () => void;
   theme: 'light' | 'dark';
-  notifications: any[];
+  notifications: Array<Record<string, unknown>>;
   isNotifOpen: boolean;
   setIsNotifOpen: (value: boolean) => void;
   handleNotificationNavigation: (route: string) => void;
@@ -45,6 +47,7 @@ interface AppShellProps {
   handleBellClick: () => void;
   agendaAlerts: number;
   financeAlerts: number;
+  pomodoroBadge?: number;
   userState: UserState;
   userEmail?: string | null;
   userDisplayName?: string;
@@ -52,19 +55,30 @@ interface AppShellProps {
   handleLogout: () => void;
   setIsPricingOpen: (value: boolean) => void;
   children: React.ReactNode;
+  // Prop drill setDisplayName for profile updates
+  setDisplayName?: (name: string) => void;
+  userPhoneNumber?: string;
+  setPhoneNumber?: (phone: string) => void;
 }
 
-const NavItem = ({ icon, label, active, onClick, badge }: any) => (
+interface NavItemProps {
+  icon: React.ReactElement;
+  label: string;
+  active: boolean;
+  onClick: () => void;
+  badge?: number;
+}
+
+const NavItem = ({ icon, label, active, onClick, badge = 0 }: NavItemProps) => (
   <button
     onClick={(event) => {
       event.preventDefault();
       onClick();
     }}
-    className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-colors group ${
-      active
-        ? 'bg-brand-600 text-white shadow-md'
-        : 'hover:bg-slate-800 text-slate-400 hover:text-white'
-    }`}
+    className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-colors group ${active
+      ? 'bg-brand-600 text-white shadow-md'
+      : 'hover:bg-slate-800 text-slate-400 hover:text-white'
+      }`}
   >
     <div className="flex items-center space-x-3">
       {React.cloneElement(icon, { size: 20 })}
@@ -93,6 +107,7 @@ export const AppShell: React.FC<AppShellProps> = ({
   handleBellClick,
   agendaAlerts,
   financeAlerts,
+  pomodoroBadge = 0,
   userState,
   userEmail,
   userDisplayName,
@@ -100,9 +115,13 @@ export const AppShell: React.FC<AppShellProps> = ({
   handleLogout,
   setIsPricingOpen,
   children,
+  setDisplayName,
+  userPhoneNumber,
+  setPhoneNumber,
 }) => {
   const sidebarRef = useRef<HTMLElement>(null);
   const sidebarScrollPosition = useRef(0);
+  const [isProfileOpen, setIsProfileOpen] = React.useState(false);
 
   useLayoutEffect(() => {
     if (sidebarRef.current) {
@@ -204,12 +223,79 @@ export const AppShell: React.FC<AppShellProps> = ({
               setIsMobileMenuOpen(false);
             }}
           />
+          <div className="mt-4 px-4 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+            Operacion diaria
+          </div>
+          <NavItem
+            icon={<StickyNote />}
+            label="Agenda & Notas"
+            active={currentView === AppView.NOTES}
+            badge={agendaAlerts}
+            onClick={() => {
+              setCurrentView(AppView.NOTES);
+              setIsMobileMenuOpen(false);
+            }}
+          />
+          <NavItem
+            icon={<Timer />}
+            label="Pomodoro Focus"
+            active={currentView === AppView.POMODORO}
+            badge={pomodoroBadge}
+            onClick={() => {
+              setCurrentView(AppView.POMODORO);
+              setIsMobileMenuOpen(false);
+            }}
+          />
+          <NavItem
+            icon={<DollarSign />}
+            label="Finanzas"
+            active={currentView === AppView.FINANCES}
+            badge={financeAlerts}
+            onClick={() => {
+              if (userState.isSubscribed) {
+                setCurrentView(AppView.FINANCES);
+                setIsMobileMenuOpen(false);
+              } else {
+                setIsPricingOpen(true);
+              }
+            }}
+          />
+          <NavItem
+            icon={<FileText />}
+            label="Facturación"
+            active={currentView === AppView.INVOICES}
+            onClick={() => {
+              setCurrentView(AppView.INVOICES);
+              setIsMobileMenuOpen(false);
+            }}
+          />
+          <NavItem
+            icon={<History />}
+            label="Historial"
+            active={currentView === AppView.HISTORY}
+            onClick={() => {
+              setCurrentView(AppView.HISTORY);
+              setIsMobileMenuOpen(false);
+            }}
+          />
+          <div className="mt-4 px-4 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+            Impulso comercial
+          </div>
           <NavItem
             icon={<Monitor />}
             label="Web Builder"
             active={currentView === AppView.WEBSITE_BUILDER}
             onClick={() => {
               setCurrentView(AppView.WEBSITE_BUILDER);
+              setIsMobileMenuOpen(false);
+            }}
+          />
+          <NavItem
+            icon={<Briefcase />}
+            label="Creador Portafolio"
+            active={currentView === AppView.PORTFOLIO}
+            onClick={() => {
+              setCurrentView(AppView.PORTFOLIO);
               setIsMobileMenuOpen(false);
             }}
           />
@@ -232,66 +318,6 @@ export const AppShell: React.FC<AppShellProps> = ({
             }}
           />
           <NavItem
-            icon={<StickyNote />}
-            label="Agenda & Notas"
-            active={currentView === AppView.NOTES}
-            badge={agendaAlerts}
-            onClick={() => {
-              setCurrentView(AppView.NOTES);
-              setIsMobileMenuOpen(false);
-            }}
-          />
-          <NavItem
-            icon={<Timer />}
-            label="Pomodoro Focus"
-            active={currentView === AppView.POMODORO}
-            onClick={() => {
-              setCurrentView(AppView.POMODORO);
-              setIsMobileMenuOpen(false);
-            }}
-          />
-          <NavItem
-            icon={<DollarSign />}
-            label="Finanzas"
-            active={currentView === AppView.FINANCES}
-            badge={financeAlerts}
-            onClick={() => {
-              if (userState.isSubscribed) {
-                setCurrentView(AppView.FINANCES);
-                setIsMobileMenuOpen(false);
-              } else {
-                setIsPricingOpen(true);
-              }
-            }}
-          />
-          <NavItem
-            icon={<Radar />}
-            label="Buscar Trabajo"
-            active={currentView === AppView.JOBS}
-            onClick={() => {
-              setCurrentView(AppView.JOBS);
-              setIsMobileMenuOpen(false);
-            }}
-          />
-          <NavItem
-            icon={<GraduationCap />}
-            label="Academia Freelance"
-            active={currentView === AppView.ACADEMY}
-            onClick={() => {
-              setCurrentView(AppView.ACADEMY);
-              setIsMobileMenuOpen(false);
-            }}
-          />
-          <NavItem
-            icon={<Briefcase />}
-            label="Creador Portafolio"
-            active={currentView === AppView.PORTFOLIO}
-            onClick={() => {
-              setCurrentView(AppView.PORTFOLIO);
-              setIsMobileMenuOpen(false);
-            }}
-          />
-          <NavItem
             icon={<FileUser />}
             label="Constructor CV"
             active={currentView === AppView.CV_BUILDER}
@@ -310,23 +336,17 @@ export const AppShell: React.FC<AppShellProps> = ({
             }}
           />
           <NavItem
-            icon={<Palette />}
-            label="Generador Logos"
-            active={currentView === AppView.LOGOS}
+            icon={<BarChart3 />}
+            label="Analitica"
+            active={currentView === AppView.ANALYTICS}
             onClick={() => {
-              setCurrentView(AppView.LOGOS);
+              setCurrentView(AppView.ANALYTICS);
               setIsMobileMenuOpen(false);
             }}
           />
-          <NavItem
-            icon={<FileText />}
-            label="Facturación"
-            active={currentView === AppView.INVOICES}
-            onClick={() => {
-              setCurrentView(AppView.INVOICES);
-              setIsMobileMenuOpen(false);
-            }}
-          />
+          <div className="mt-4 px-4 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+            Herramientas rapidas
+          </div>
           <NavItem
             icon={<QrCode />}
             label="Generador QR"
@@ -354,12 +374,24 @@ export const AppShell: React.FC<AppShellProps> = ({
               setIsMobileMenuOpen(false);
             }}
           />
+          <div className="mt-4 px-4 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+            Oportunidades y aprendizaje
+          </div>
           <NavItem
-            icon={<History />}
-            label="Historial"
-            active={currentView === AppView.HISTORY}
+            icon={<Radar />}
+            label="Buscar Trabajo"
+            active={currentView === AppView.JOBS}
             onClick={() => {
-              setCurrentView(AppView.HISTORY);
+              setCurrentView(AppView.JOBS);
+              setIsMobileMenuOpen(false);
+            }}
+          />
+          <NavItem
+            icon={<GraduationCap />}
+            label="Academia Freelance"
+            active={currentView === AppView.ACADEMY}
+            onClick={() => {
+              setCurrentView(AppView.ACADEMY);
               setIsMobileMenuOpen(false);
             }}
           />
@@ -381,11 +413,20 @@ export const AppShell: React.FC<AppShellProps> = ({
 
         <div className="p-4 bg-slate-900 shrink-0 border-t border-slate-800">
           <div className="bg-slate-800 p-3 rounded-xl mb-3">
-            <div className="flex items-center gap-2 mb-2 text-white">
-              <UserIcon className="w-4 h-4" />
-              <span className="text-xs truncate max-w-[120px] font-medium">
-                {userDisplayName || userEmail?.split('@')[0]}
-              </span>
+            <div className="flex items-center gap-2 mb-2 text-white justify-between">
+              <div className="flex items-center gap-2">
+                <UserIcon className="w-4 h-4" />
+                <span className="text-xs truncate max-w-[100px] font-medium">
+                  {userDisplayName || userEmail?.split('@')[0]}
+                </span>
+              </div>
+              <button
+                onClick={() => setIsProfileOpen(true)}
+                className="p-1 hover:bg-slate-700 rounded-full transition-colors text-slate-400 hover:text-white"
+                title="Configuración de Cuenta"
+              >
+                <Settings className="w-3.5 h-3.5" />
+              </button>
             </div>
 
             <div className="flex justify-between items-center bg-slate-900 p-2 rounded-lg">
@@ -401,11 +442,10 @@ export const AppShell: React.FC<AppShellProps> = ({
 
             <button
               onClick={() => setIsPricingOpen(true)}
-              className={`w-full mt-2 py-1.5 text-[10px] font-bold rounded-lg transition-colors uppercase tracking-wide ${
-                userState.isSubscribed
-                  ? 'bg-slate-700 hover:bg-slate-600 text-slate-300 border border-slate-600'
-                  : 'bg-brand-600 hover:bg-brand-500 text-white shadow-lg shadow-brand-900/20'
-              }`}
+              className={`w-full mt-2 py-1.5 text-[10px] font-bold rounded-lg transition-colors uppercase tracking-wide ${userState.isSubscribed
+                ? 'bg-slate-700 hover:bg-slate-600 text-slate-300 border border-slate-600'
+                : 'bg-brand-600 hover:bg-brand-500 text-white shadow-lg shadow-brand-900/20'
+                }`}
             >
               {userState.isSubscribed ? 'Gestionar Plan' : 'Ser PRO ($10)'}
             </button>
@@ -434,6 +474,21 @@ export const AppShell: React.FC<AppShellProps> = ({
       <main className="flex-1 h-full overflow-y-auto overflow-x-hidden pt-16 md:pt-0 relative scroll-smooth overscroll-none">
         <div className="max-w-6xl mx-auto p-4 md:p-8 lg:p-12 pb-24">{children}</div>
       </main>
+      {isProfileOpen && (
+        <UserProfileModal
+          isOpen={isProfileOpen}
+          onClose={() => setIsProfileOpen(false)}
+          userState={userState}
+          displayName={userDisplayName || ''}
+          email={userEmail}
+          onUpdateName={async (name) => {
+            if (setDisplayName) setDisplayName(name);
+          }}
+          onSubscribe={() => setIsPricingOpen(true)}
+          userPhoneNumber={userPhoneNumber}
+          onUpdatePhone={setPhoneNumber}
+        />
+      )}
     </div>
   );
 };

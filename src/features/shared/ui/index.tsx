@@ -1,5 +1,6 @@
 import React from 'react';
 import { Loader2, X, Zap, Crown, Infinity, ShieldCheck, Check } from 'lucide-react';
+import { CreditPackageCard, CREDIT_PACKAGES } from './CreditPackageCard';
 
 // --- BUTTON ---
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -57,6 +58,8 @@ export { BaseModal } from './BaseModal';
 export { ConfirmationModal } from './ConfirmationModal';
 export { LegalModal } from './LegalModal';
 export { NotificationModal } from './NotificationModal';
+export { ToastProvider } from './ToastProvider';
+export { CreditPackageCard, CREDIT_PACKAGES } from './CreditPackageCard';
 
 // --- PRICING MODAL ---
 interface PricingModalProps {
@@ -89,11 +92,10 @@ export const PricingModal: React.FC<PricingModalProps> = ({
 
         {/* Header Premium */}
         <div
-          className={`p-8 text-center text-white relative overflow-hidden shrink-0 ${
-            isPro
-              ? 'bg-gradient-to-br from-green-600 to-emerald-800'
-              : 'bg-gradient-to-br from-slate-900 via-slate-800 to-brand-900'
-          }`}
+          className={`p-8 text-center text-white relative overflow-hidden shrink-0 ${isPro
+            ? 'bg-gradient-to-br from-green-600 to-emerald-800'
+            : 'bg-gradient-to-br from-slate-900 via-slate-800 to-brand-900'
+            }`}
         >
           <div className="relative z-10">
             <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg backdrop-blur-sm transform rotate-3">
@@ -181,6 +183,26 @@ export const PricingModal: React.FC<PricingModalProps> = ({
                   <ShieldCheck className="w-3 h-3" /> Procesado por Gumroad.
                 </p>
               </div>
+
+              <div className="mt-8 pt-8 border-t border-slate-100 dark:border-slate-700">
+                <div className="flex items-center justify-center gap-2 mb-6">
+                  <div className="h-px bg-slate-200 dark:bg-slate-700 flex-1"></div>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] px-2 whitespace-nowrap">O elige un paquete de créditos</span>
+                  <div className="h-px bg-slate-200 dark:bg-slate-700 flex-1"></div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {CREDIT_PACKAGES.map((pkg) => (
+                    <CreditPackageCard
+                      key={pkg.credits}
+                      {...pkg}
+                    />
+                  ))}
+                </div>
+                <p className="text-center text-[10px] text-slate-400 mt-4 italic">
+                  * Los créditos no caducan y se suman a tu balance actual.
+                </p>
+              </div>
             </>
           )}
         </div>
@@ -192,27 +214,24 @@ export const PricingModal: React.FC<PricingModalProps> = ({
 // Componente interno para lista de beneficios
 const BenefitItem = ({ text, highlighted = false }: { text: string; highlighted?: boolean }) => (
   <li
-    className={`flex items-start gap-3 ${
-      highlighted
-        ? 'bg-brand-50 dark:bg-brand-900/10 p-2 rounded-lg border border-brand-100 dark:border-brand-800'
-        : 'px-1'
-    }`}
+    className={`flex items-start gap-3 ${highlighted
+      ? 'bg-brand-50 dark:bg-brand-900/10 p-2 rounded-lg border border-brand-100 dark:border-brand-800'
+      : 'px-1'
+      }`}
   >
     <div
-      className={`mt-0.5 p-1 rounded-full ${
-        highlighted
-          ? 'bg-brand-500 text-white'
-          : 'bg-slate-100 dark:bg-slate-700 text-brand-600 dark:text-brand-400'
-      }`}
+      className={`mt-0.5 p-1 rounded-full ${highlighted
+        ? 'bg-brand-500 text-white'
+        : 'bg-slate-100 dark:bg-slate-700 text-brand-600 dark:text-brand-400'
+        }`}
     >
       <Check className="w-3 h-3" />
     </div>
     <span
-      className={`text-sm ${
-        highlighted
-          ? 'font-bold text-brand-900 dark:text-brand-100'
-          : 'text-slate-600 dark:text-slate-300 font-medium'
-      }`}
+      className={`text-sm ${highlighted
+        ? 'font-bold text-brand-900 dark:text-brand-100'
+        : 'text-slate-600 dark:text-slate-300 font-medium'
+        }`}
     >
       {text}
     </span>

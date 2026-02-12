@@ -21,23 +21,23 @@ export const SupportWidget = () => {
   const faqs = [
     {
       q: '¿Cómo funcionan los créditos?',
-      a: 'Los usuarios FREE reciben 3 créditos semanales. Costos: Propuestas (1), QR (1), Análisis (2), Logos (2), Optimización (3), Facturas (3).',
+      a: 'Los usuarios FREE reciben 3 créditos semanales. Cada herramienta muestra su costo antes de usarla. En PRO los créditos son ilimitados.',
     },
     {
       q: '¿Qué hace el Asistente IA (FreelanceBot)?',
-      a: "Es tu segundo cerebro. Está conectado a tu Agenda, Finanzas y Notas. Puedes preguntarle: '¿Tengo espacio hoy?', '¿Cómo va mi dinero este mes?' o '¿Qué deudas tengo pendientes?' y te responderá con datos reales.",
+      a: 'Es tu segundo cerebro: usa tu agenda, notas, finanzas e historial para darte respuestas contextualizadas. Puedes reindexar manualmente la memoria desde el botón de refrescar.',
     },
     {
       q: '¿Qué incluye el Plan PRO?',
-      a: 'Créditos ILIMITADOS en todas las herramientas, incluyendo la herramienta de Finanzas, acceso por todo un mes y soporte prioritario.',
+      a: 'Créditos ilimitados, acceso completo a todas las herramientas, y soporte prioritario.',
     },
     {
       q: '¿Por qué la IA escribe mal el nombre en mi logo?',
       a: "Las IAs generativas aún están aprendiendo a escribir. Si el texto sale deforme, te recomendamos marcar la casilla 'Solo Icono' y agregar el nombre luego usando herramientas como Canva.",
     },
     {
-      q: '¿Mis archivos y finanzas son privados?',
-      a: 'Absolutamente. Los archivos que subes (PDFs/Imágenes) se procesan en tu navegador y NO se guardan en nuestros servidores. Tus datos financieros solo son visibles para ti.',
+      q: '¿Mis datos y archivos son privados?',
+      a: 'Tus datos se almacenan en Firebase y tus archivos pueden subirse a Cloudinary si usas el cargador. Solo el propietario puede acceder, salvo contenido publico que tu publiques.',
     },
     {
       q: '¿Qué diferencia hay entre Flujo de Caja y Pendientes?',
@@ -49,11 +49,11 @@ export const SupportWidget = () => {
     },
     {
       q: '¿Puedo borrar mi historial?',
-      a: "Sí, puedes borrar elementos individuales o vaciar todo el historial desde la pestaña 'Historial' para mantener tu cuenta ordenada.",
+      a: "Sí, puedes borrar elementos individuales o vaciar todo el historial desde 'Historial'.",
     },
     {
-      q: '¿Cómo uso la Agenda?',
-      a: "Ve a 'Notas Rápidas'. Puedes agregar eventos con fecha/hora y enlaces a Zoom/Meet. Recibirás avisos visuales 1 hora antes.",
+      q: '¿La IA garantiza resultados?',
+      a: 'No. El contenido generado es una sugerencia y debes revisarlo antes de usarlo con clientes o en decisiones importantes.',
     },
   ];
 

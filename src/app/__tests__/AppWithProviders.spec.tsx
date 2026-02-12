@@ -3,7 +3,7 @@ import { render, act } from '@testing-library/react';
 import { AppProviders } from '@context';
 
 vi.mock('firebase/auth', () => ({
-  onAuthStateChanged: (auth: any, cb: any) => {
+  onAuthStateChanged: (auth: unknown, cb: (user: unknown) => void) => {
     cb(null);
     return () => {};
   },

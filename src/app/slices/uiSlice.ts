@@ -7,6 +7,14 @@ interface AlertModalState {
   message: string;
 }
 
+export interface Toast {
+  id: string;
+  title: string;
+  message: string;
+  type?: 'success' | 'info' | 'warning' | 'error';
+  duration?: number;
+}
+
 interface UiState {
   currentView: AppView;
   isMobileMenuOpen: boolean;
@@ -16,6 +24,7 @@ interface UiState {
   showSuccessMsg: boolean;
   isEditingName: boolean;
   alertModal: AlertModalState;
+  toasts: Toast[];
 }
 
 const initialState: UiState = {
@@ -31,6 +40,7 @@ const initialState: UiState = {
     title: '',
     message: '',
   },
+  toasts: [],
 };
 
 const uiSlice = createSlice({
@@ -67,6 +77,13 @@ const uiSlice = createSlice({
     closeAlertModal(state) {
       state.alertModal.isOpen = false;
     },
+    addToast(state, action: PayloadAction<Omit<Toast, 'id'>>) {
+      const id = Math.random().toString(36).substring(2, 9);
+      state.toasts.push({ ...action.payload, id });
+    },
+    removeToast(state, action: PayloadAction<string>) {
+      state.toasts = state.toasts.filter((t) => t.id !== action.payload);
+    },
   },
 });
 
@@ -81,6 +98,8 @@ export const {
   setIsEditingName,
   setAlertModal,
   closeAlertModal,
+  addToast,
+  removeToast,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

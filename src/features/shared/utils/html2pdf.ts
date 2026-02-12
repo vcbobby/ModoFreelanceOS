@@ -1,4 +1,12 @@
-let cachedHtml2Pdf: any | null = null;
+type Html2PdfFactory = () => {
+  set: (options: unknown) => {
+    from: (element: HTMLElement | null) => {
+      outputPdf: (mode: string) => Promise<string>;
+    };
+  };
+};
+
+let cachedHtml2Pdf: Html2PdfFactory | null = null;
 
 export const loadHtml2Pdf = async () => {
   if (cachedHtml2Pdf) {

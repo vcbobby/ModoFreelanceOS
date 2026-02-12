@@ -1,20 +1,12 @@
 import React, { useState } from 'react';
-import {
-  Upload,
-  Search,
-  AlertTriangle,
-  List,
-  CheckCircle,
-  FileSearch,
-  RefreshCw,
-} from 'lucide-react';
+import { Upload, AlertTriangle, List, CheckCircle, FileSearch, RefreshCw } from 'lucide-react';
 import { Button, Card } from '@features/shared/ui';
 import { extractTextFromPdf } from '@features/shared/utils';
 import { analyzeDocument } from '@features/shared/services';
 import ReactMarkdown from 'react-markdown';
-import { addDoc, collection } from 'firebase/firestore';
-import { db } from '@config/firebase';
+import { logHistory } from '@features/shared/services';
 import { ConfirmationModal } from '@features/shared/ui';
+import { runWithCredits } from '@/utils/credits';
 
 interface AnalyzerToolProps {
   onUsage: (cost: number) => Promise<boolean>;
@@ -26,6 +18,8 @@ export const AnalyzerTool: React.FC<AnalyzerToolProps> = ({ onUsage, userId }) =
   const [text, setText] = useState('');
   const [analysis, setAnalysis] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [extractStatus, setExtractStatus] = useState('');
   const [mode, setMode] = useState<'resumen' | 'riesgos' | 'accion' | 'mejora'>('resumen');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalConfig, setModalConfig] = useState({
@@ -50,11 +44,22 @@ export const AnalyzerTool: React.FC<AnalyzerToolProps> = ({ onUsage, userId }) =
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
+    if (selectedFile.size > 5 * 1024 * 1024) {
+      showModal(
+        'Archivo demasiado grande',
+        'El archivo supera 5MB. Intenta con un archivo mas liviano.',
+        () => {},
+        true
+      );
+      return;
+    }
     setFile(selectedFile);
     setAnalysis('');
     setText('');
     if (selectedFile.type === 'application/pdf') {
       try {
+        setIsExtracting(true);
+        setExtractStatus('Extrayendo texto del PDF...');
         const extracted = await extractTextFromPdf(selectedFile);
         setText(extracted);
       } catch (error) {
@@ -65,11 +70,25 @@ export const AnalyzerTool: React.FC<AnalyzerToolProps> = ({ onUsage, userId }) =
           () => {},
           true
         );
+      } finally {
+        setIsExtracting(false);
+        setExtractStatus('');
       }
     } else {
+      setIsExtracting(true);
+      setExtractStatus('Leyendo archivo...');
       const reader = new FileReader();
       reader.onload = (ev) => setText(ev.target?.result as string);
+      reader.onerror = () => {
+        showModal('Error de Lectura', 'No pudimos leer el archivo.', () => {}, true);
+        setIsExtracting(false);
+        setExtractStatus('');
+      };
       reader.readAsText(selectedFile);
+      reader.onloadend = () => {
+        setIsExtracting(false);
+        setExtractStatus('');
+      };
     }
   };
 
@@ -85,21 +104,27 @@ export const AnalyzerTool: React.FC<AnalyzerToolProps> = ({ onUsage, userId }) =
   };
 
   const executeAnalysis = async () => {
-    const canProceed = await onUsage(2);
-    if (!canProceed) return;
     setIsAnalyzing(true);
     try {
-      const result = await analyzeDocument(text, mode);
+      const usage = await runWithCredits(2, onUsage, async () => {
+        return analyzeDocument(text, mode);
+      });
+      if (!usage.ok || !usage.result) return;
+      const result = usage.result;
       setAnalysis(result);
       if (userId && file) {
-        addDoc(collection(db, 'users', userId, 'history'), {
-          createdAt: new Date().toISOString(),
-          category: 'proposal',
-          clientName: file.name,
-          platform: 'AI Analyzer',
-          type: mode.toUpperCase(),
-          content: result,
-        });
+        try {
+          await logHistory({
+            userId,
+            category: 'analyzer',
+            clientName: file.name,
+            platform: 'AI Analyzer',
+            type: mode.toUpperCase(),
+            content: result,
+          });
+        } catch (logError) {
+          console.error('Error guardando historial', logError);
+        }
       }
     } catch (error) {
       console.error(error);
@@ -179,10 +204,10 @@ export const AnalyzerTool: React.FC<AnalyzerToolProps> = ({ onUsage, userId }) =
           <Button
             onClick={handleAnalyzeClick}
             isLoading={isAnalyzing}
-            disabled={!text}
+            disabled={!text || isExtracting}
             className="w-full"
           >
-            {isAnalyzing ? 'Leyendo...' : 'Analizar Documento'}
+            {isExtracting ? 'Preparando...' : isAnalyzing ? 'Leyendo...' : 'Analizar Documento'}
           </Button>
         </Card>
       </div>
@@ -192,7 +217,7 @@ export const AnalyzerTool: React.FC<AnalyzerToolProps> = ({ onUsage, userId }) =
           {!analysis ? (
             <div className="h-full flex flex-col items-center justify-center text-slate-400 opacity-60 mt-20">
               <FileSearch className="w-16 h-16 mb-4" />
-              <p>El resultado aparecerá aquí.</p>
+              <p>{extractStatus || 'El resultado aparecerá aquí.'}</p>
             </div>
           ) : (
             <div className="prose prose-slate dark:prose-invert max-w-none text-sm text-slate-700 dark:text-slate-300">
@@ -222,7 +247,14 @@ export const AnalyzerTool: React.FC<AnalyzerToolProps> = ({ onUsage, userId }) =
   );
 };
 
-const ModeButton = ({ active, onClick, icon, label }: any) => (
+interface ModeButtonProps {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactElement;
+  label: string;
+}
+
+const ModeButton = ({ active, onClick, icon, label }: ModeButtonProps) => (
   <button
     onClick={onClick}
     className={`flex flex-col items-center justify-center gap-1 p-3 rounded-lg border text-xs font-medium transition-all ${

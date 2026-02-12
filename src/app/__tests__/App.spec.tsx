@@ -3,7 +3,7 @@ import { render } from '@testing-library/react';
 import { AppProviders } from '@context';
 
 vi.mock('firebase/auth', () => ({
-  onAuthStateChanged: (auth: any, cb: any) => {
+  onAuthStateChanged: (auth: unknown, cb: (user: unknown) => void) => {
     // Simulate not authenticated
     cb(null);
     return () => {};
@@ -34,4 +34,3 @@ describe('App smoke', () => {
     expect(document.body).toBeDefined();
   }, 10000);
 });
-

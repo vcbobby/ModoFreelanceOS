@@ -12,8 +12,16 @@ export const DashboardPinnedNotes: React.FC<DashboardPinnedNotesProps> = ({
   userId,
   onGoToNotes,
 }) => {
-  const [pinnedNotes, setPinnedNotes] = useState<any[]>([]);
-  const [selectedNote, setSelectedNote] = useState<any>(null);
+  type PinnedNote = {
+    id: string;
+    title?: string;
+    content: string;
+    color: string;
+    isPrivate?: boolean;
+  };
+
+  const [pinnedNotes, setPinnedNotes] = useState<PinnedNote[]>([]);
+  const [selectedNote, setSelectedNote] = useState<PinnedNote | null>(null);
 
   useEffect(() => {
     if (!userId) return;
@@ -25,7 +33,7 @@ export const DashboardPinnedNotes: React.FC<DashboardPinnedNotesProps> = ({
   }, [userId]);
 
   // --- LÓGICA DE TACHADO MEJORADA ---
-  const handleToggleCheck = async (note: any, lineIndex: number) => {
+  const handleToggleCheck = async (note: PinnedNote, lineIndex: number) => {
     if (!userId) return;
 
     // 1. Clonar el array de líneas para modificarlo
@@ -45,7 +53,7 @@ export const DashboardPinnedNotes: React.FC<DashboardPinnedNotesProps> = ({
     const newContent = lines.join('\n');
 
     // 2. Actualizar el estado local del MODAL para que se vea el cambio inmediatamente
-    setSelectedNote((prev: any) => ({ ...prev, content: newContent }));
+    setSelectedNote((prev) => (prev ? { ...prev, content: newContent } : prev));
 
     // 3. Actualizar la base de datos en segundo plano
     await updateDoc(doc(db, 'users', userId, 'notes', note.id), {

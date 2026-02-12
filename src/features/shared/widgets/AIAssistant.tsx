@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Bot,
   X,
   Send,
   Sparkles,
@@ -10,9 +9,7 @@ import {
   AlertTriangle,
   MessageSquare,
   Loader2,
-  Briefcase,
-  Palette,
-  GraduationCap,
+  RefreshCw,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import {
@@ -28,19 +25,21 @@ import {
   getDoc,
 } from 'firebase/firestore';
 import { db } from '@config/firebase';
-import { chatWithAssistant } from '@features/shared/services';
+import { chatWithAssistant, ingestAssistantDocuments } from '@features/shared/services';
+import { getBackendURL } from '@config/features';
+import { getAuthHeaders } from '@/services/backend/authHeaders';
+import { runWithCredits } from '@/utils/credits';
 
 // --- CONSTANTES ---
-const BACKEND_URL = import.meta.env.PROD
-  ? 'https://backend-freelanceos.onrender.com'
-  : 'http://localhost:8000';
+const BACKEND_URL = getBackendURL();
 
 const FREENCY_AVATAR =
   'https://api.dicebear.com/9.x/bottts-neutral/svg?seed=Freency&backgroundColor=6366f1&eyes=bulging&mouth=smile01';
 
+const INGEST_TTL_MS = 6 * 60 * 60 * 1000;
+
 const SUGGESTED_QUESTIONS = [
   '¿Cómo van mis finanzas?',
-  'Crea un logo minimalista para "TechCafe"',
   'Busca trabajos remotos de React',
   'Enséñame sobre Marketing Digital (Curso)',
 ];
@@ -109,6 +108,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ userId, onUsage }) => 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isReindexing, setIsReindexing] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const [messages, setMessages] = useState<{ role: 'user' | 'model'; text: string }[]>(() => {
@@ -122,6 +122,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ userId, onUsage }) => 
     notes: '',
     history: '',
     portfolio: '', // NUEVO: Datos del sitio web
+    knowledgeBase: '',
     currentTime: '',
     currentDate: '',
   });
@@ -130,20 +131,29 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ userId, onUsage }) => 
     if (userId) localStorage.setItem(`chat_history_${userId}`, JSON.stringify(messages));
   }, [messages, userId]);
 
-  useEffect(() => {
-    if (isOpen && userId) loadContext();
-  }, [isOpen, userId]);
-
   const confirmClearHistory = () => {
     setMessages([]);
     localStorage.removeItem(`chat_history_${userId}`);
   };
 
+  const buildIngestDocuments = useCallback(
+    (data: typeof contextData) =>
+      [
+        { id: 'context-finances', text: data.finances, source: 'finances' },
+        { id: 'context-agenda', text: data.agenda, source: 'agenda' },
+        { id: 'context-notes', text: data.notes, source: 'notes' },
+        { id: 'context-history', text: data.history, source: 'history' },
+        { id: 'context-portfolio', text: data.portfolio, source: 'portfolio' },
+        { id: 'context-knowledge', text: data.knowledgeBase, source: 'knowledge_base' },
+      ].filter((doc) => doc.text && doc.text.trim().length > 0),
+    []
+  );
+
   // --- CARGA DE CONTEXTO EXPANDIDA ---
-  const loadContext = async () => {
+  const loadContext = useCallback(async () => {
     if (!userId) return;
     try {
-      // 1. Finanzas (Igual que antes)
+      // 1. Finanzas
       const fQ = query(
         collection(db, 'users', userId, 'finances'),
         orderBy('date', 'desc'),
@@ -151,7 +161,6 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ userId, onUsage }) => 
       );
       const fSnap = await getDocs(fQ);
       const transactions = fSnap.docs.map((d) => d.data());
-      // ... (Cálculos financieros igual que antes, resumido para brevedad) ...
       const balance = transactions.reduce(
         (acc, t) => (t.type === 'income' ? acc + t.amount : acc - t.amount),
         0
@@ -160,7 +169,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ userId, onUsage }) => 
         2
       )} based on last 30 tx.`;
 
-      // 2. Agenda & Notas (Igual que antes)
+      // 2. Agenda & Notas
       const today = new Date().toISOString().split('T')[0];
       const aQ = query(
         collection(db, 'users', userId, 'agenda'),
@@ -195,21 +204,61 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ userId, onUsage }) => 
         })
         .join('\n');
 
-      // 4. NUEVO: Leer Portafolio / Configuración Web
+      // 4. Base de conocimiento
+      const kbQ = query(
+        collection(db, 'users', userId, 'knowledge_base'),
+        orderBy('updatedAt', 'desc'),
+        limit(10)
+      );
+      const kbSnap = await getDocs(kbQ);
+      const knowledgeBaseList = kbSnap.docs
+        .map((d) => {
+          const item = d.data();
+          const tags = Array.isArray(item.tags) ? item.tags.join(', ') : '';
+          return `- ${item.title}: ${item.summary}${tags ? ` (tags: ${tags})` : ''}`;
+        })
+        .join('\n');
+
+      // 5. NUEVO: Leer Portafolio / Configuración Web
       let portfolioContext = 'No tiene sitio web configurado.';
       try {
         const webDoc = await getDoc(doc(db, 'users', userId, 'portfolio', 'site_config'));
         if (webDoc.exists()) {
           const web = webDoc.data();
+          const services = (web.services || []) as Array<{ title?: string }>;
           portfolioContext = `
 WEB DEL USUARIO:
 - Título: ${web.heroTitle}
 - Sobre mí: ${web.aboutText}
-- Servicios: ${web.services?.map((s: any) => s.title).join(', ')}
+- Servicios: ${services.map((service) => service.title).join(', ')}
                     `.trim();
         }
-      } catch (e) {
-        console.log('No portfolio config');
+      } catch (error) {
+        void error;
+      }
+
+      const ingestKey = `assistant_ingest_${userId}`;
+      const lastIngest = Number(localStorage.getItem(ingestKey) || 0);
+      const shouldIngest = !lastIngest || Date.now() - lastIngest > INGEST_TTL_MS;
+      if (shouldIngest) {
+        const documents = buildIngestDocuments({
+          finances: financeContext,
+          agenda: agendaList,
+          notes: notesList,
+          history: historyList,
+          portfolio: portfolioContext,
+          knowledgeBase: knowledgeBaseList,
+          currentTime: '',
+          currentDate: '',
+        });
+        if (documents.length > 0) {
+          try {
+            await ingestAssistantDocuments(userId, documents, 'context');
+            localStorage.setItem(ingestKey, `${Date.now()}`);
+          } catch (error) {
+            void error;
+          }
+        }
       }
 
       setContextData({
@@ -217,14 +266,35 @@ WEB DEL USUARIO:
         agenda: agendaList,
         notes: notesList,
         history: historyList,
-        portfolio: portfolioContext, // Pasamos la info de la web
+        portfolio: portfolioContext,
+        knowledgeBase: knowledgeBaseList,
         currentTime: new Date().toLocaleTimeString(),
         currentDate: new Date().toLocaleDateString('en-CA'),
       });
-    } catch (e) {
-      console.error('Error cargando contexto', e);
+    } catch (error) {
+      void error;
     }
-  };
+  }, [buildIngestDocuments, userId]);
+
+  const handleReindex = useCallback(async () => {
+    if (!userId || isReindexing) return;
+    setIsReindexing(true);
+    try {
+      const documents = buildIngestDocuments(contextData);
+      if (documents.length > 0) {
+        await ingestAssistantDocuments(userId, documents, 'manual');
+        localStorage.setItem(`assistant_ingest_${userId}`, `${Date.now()}`);
+      }
+    } catch (error) {
+      void error;
+    } finally {
+      setIsReindexing(false);
+    }
+  }, [buildIngestDocuments, contextData, isReindexing, userId]);
+
+  useEffect(() => {
+    if (isOpen && userId) loadContext();
+  }, [isOpen, loadContext, userId]);
 
   // --- EJECUTOR DE ACCIONES (EL CEREBRO NUEVO) ---
   const executeAIAction = async (jsonString: string) => {
@@ -236,8 +306,6 @@ WEB DEL USUARIO:
         .replace(/```/g, '')
         .trim();
       const action = JSON.parse(cleanJson);
-      console.log('IA Action Triggered:', action);
-
       // 1. AGENDAR EVENTO
       if (action.action === 'create_event') {
         await addDoc(collection(db, 'users', userId, 'agenda'), {
@@ -264,45 +332,32 @@ WEB DEL USUARIO:
         return `✅ **Nota Guardada:** "${action.title}".`;
       }
 
-      // 3. GENERAR LOGO (Conecta con tu Backend)
-      if (action.action === 'generate_logo') {
-        // Cobrar créditos
-        if (!(await onUsage(2)))
-          return '❌ No tienes suficientes créditos para generar un logo (Costo: 2).';
-
-        const formData = new FormData();
-        formData.append('name', action.name);
-        formData.append('style', action.style || 'Minimalista');
-        formData.append('details', action.details || '');
-        formData.append('userId', userId);
-
-        // Llamada al Backend en segundo plano (para no bloquear el chat)
-        // Usamos fetch sin await para que el chat responda "Procesando..." mientras el server trabaja
-        fetch(`${BACKEND_URL}/api/generate-logo-backend`, {
-          method: 'POST',
-          body: formData,
-        }).catch((err) => console.error('Error logo background', err));
-
-        return `🎨 **Generando Logo:** He enviado la orden a "Logo Tool". El logo para "${action.name}" aparecerá en tu Historial y Galería en unos momentos.`;
-      }
-
-      // 4. BUSCAR TRABAJOS (Conecta con Job Hunter)
+      // 3. BUSCAR TRABAJOS (Conecta con Job Hunter)
       if (action.action === 'search_jobs') {
         const formData = new FormData();
         formData.append('search', action.query || '');
         formData.append('page', '1');
         formData.append('userId', userId);
 
-        const res = await fetch(`${BACKEND_URL}/api/get-jobs`, {
+        const authHeaders = await getAuthHeaders();
+        const res = await fetch(`${BACKEND_URL}/api/v1/jobs/search`, {
           method: 'POST',
+          headers: authHeaders,
           body: formData,
         });
         const data = await res.json();
 
         if (data.success && data.jobs.length > 0) {
-          const jobsText = data.jobs
+          const jobsText = (
+            data.jobs as Array<{
+              title: string;
+              link: string;
+              company: string;
+              date_str: string;
+            }>
+          )
             .slice(0, 3)
-            .map((j: any) => `- **[${j.title}](${j.link})** en ${j.company} (${j.date_str})`)
+            .map((j) => `- **[${j.title}](${j.link})** en ${j.company} (${j.date_str})`)
             .join('\n');
           return `🔎 **Empleos Encontrados:**\n${jobsText}\n\n*Puedes ver más en la sección "Buscar Trabajo".*`;
         }
@@ -311,26 +366,46 @@ WEB DEL USUARIO:
 
       // 5. CREAR CURSO (Conecta con Academy)
       if (action.action === 'create_course') {
-        if (!(await onUsage(3)))
-          return '❌ No tienes suficientes créditos para crear un curso (Costo: 3).';
+        try {
+          const usage = await runWithCredits(3, onUsage, async () => {
+            const formData = new FormData();
+            formData.append('topic', action.topic);
+            formData.append('level', action.level || 'Principiante');
+            formData.append('userId', userId);
 
-        const formData = new FormData();
-        formData.append('topic', action.topic);
-        formData.append('level', action.level || 'Principiante');
-        formData.append('userId', userId);
+            const authHeaders = await getAuthHeaders();
+            const res = await fetch(`${BACKEND_URL}/api/generate-course`, {
+              method: 'POST',
+              headers: authHeaders,
+              body: formData,
+            });
 
-        // Fetch asíncrono para UX rápida
-        fetch(`${BACKEND_URL}/api/generate-course`, {
-          method: 'POST',
-          body: formData,
-        }).catch((err) => console.error('Error course background', err));
+            if (!res.ok) {
+              let errMsg = 'Error en el servidor';
+              try {
+                const errData = await res.json();
+                errMsg = errData.detail || JSON.stringify(errData);
+              } catch (parseErr) {
+                void parseErr;
+              }
+              throw new Error(errMsg);
+            }
+          });
+
+          if (!usage.ok) {
+            return '❌ No tienes suficientes créditos para crear un curso (Costo: 3).';
+          }
+        } catch (error) {
+          void error;
+          return '⚠️ No se pudo crear el curso. Intenta de nuevo.';
+        }
 
         return `🎓 **Creando Curso:** Estoy diseñando el plan de estudios para "${action.topic}". Aparecerá en la sección "Academia" y en tu Historial en breve.`;
       }
 
       return 'Acción no reconocida, pero he tomado nota.';
-    } catch (e) {
-      console.error('Error ejecutando acción IA', e);
+    } catch (error) {
+      void error;
       return 'Hubo un error técnico al intentar ejecutar esa acción.';
     }
   };
@@ -339,16 +414,21 @@ WEB DEL USUARIO:
     const textToSend = overrideText || input;
     if (!textToSend.trim()) return;
 
-    // Cobro por mensaje simple
-    const canProceed = await onUsage(1);
-    if (!canProceed) return;
-
-    setInput('');
-    setMessages((prev) => [...prev, { role: 'user', text: textToSend }]);
-    setLoading(true);
-
     try {
-      const rawReply = await chatWithAssistant(textToSend, messages, contextData);
+      const usage = await runWithCredits(1, onUsage, async () => {
+        if (!userId) {
+          throw new Error('Falta userId para el asistente.');
+        }
+
+        setInput('');
+        setMessages((prev) => [...prev, { role: 'user', text: textToSend }]);
+        setLoading(true);
+
+        return chatWithAssistant(userId, textToSend, messages, contextData);
+      });
+
+      if (!usage.ok || !usage.result) return;
+      const rawReply = usage.result;
 
       // Detectar si la respuesta es un JSON de acción
       if (rawReply.trim().startsWith('{') || rawReply.trim().startsWith('```json')) {
@@ -359,11 +439,13 @@ WEB DEL USUARIO:
         setMessages((prev) => [...prev, { role: 'model', text: rawReply }]);
       }
     } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Error de conexión con el cerebro IA.';
       setMessages((prev) => [
         ...prev,
         {
           role: 'model',
-          text: '⚠️ Error de conexión con el cerebro IA.',
+          text: `⚠️ ${message}`,
         },
       ]);
     } finally {
@@ -419,6 +501,18 @@ WEB DEL USUARIO:
             {/* Botones de control (Minimizar, Cerrar, etc) se mantienen igual */}
             <div className="flex items-center gap-1">
               <button
+                onClick={handleReindex}
+                disabled={isReindexing}
+                className="hover:bg-white/10 p-1.5 rounded transition-colors text-indigo-100 hover:text-white disabled:opacity-50"
+                title="Reindexar memoria"
+              >
+                {isReindexing ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="w-4 h-4" />
+                )}
+              </button>
+              <button
                 onClick={() => setShowDeleteModal(true)}
                 className="hover:bg-white/10 p-1.5 rounded transition-colors text-indigo-100 hover:text-white"
                 title="Borrar chat"
@@ -443,7 +537,7 @@ WEB DEL USUARIO:
           {/* CHAT AREA */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50 dark:bg-slate-900 custom-scrollbar">
             {messages.length === 0 && (
-              <div className="flex flex-col items-center justify-center h-full text-center p-4 animate-in fade-in zoom-in duration-300">
+              <div className="flex flex-col items-center justify-center min-h-full text-center p-4 animate-in fade-in zoom-in duration-300">
                 {/* Círculo con efecto de respiración */}
                 <div
                   className="relative mb-4 group cursor-pointer"
@@ -491,7 +585,7 @@ WEB DEL USUARIO:
                 >
                   <ReactMarkdown
                     components={{
-                      a: ({ node, ...props }) => (
+                      a: ({ node: _node, ...props }) => (
                         <a
                           {...props}
                           className="text-indigo-400 underline font-bold"
@@ -521,7 +615,7 @@ WEB DEL USUARIO:
             <input
               type="text"
               className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder:text-slate-400 text-slate-800 dark:text-white"
-              placeholder="Ej: 'Genera un logo azul' o 'Busca trabajo de diseño'..."
+              placeholder="Ej: 'Busca trabajo de diseño' o 'Resume mis notas'..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}

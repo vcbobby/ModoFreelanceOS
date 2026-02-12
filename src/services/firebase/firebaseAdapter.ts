@@ -5,6 +5,8 @@ import { auth, db } from '@config/firebase';
 export interface FirebaseUserDocument {
   email?: string | null;
   displayName?: string;
+  phoneNumber?: string;
+  fcmTokens?: string[];
   credits?: number;
   isSubscribed?: boolean;
   subscriptionEnd?: number | null;

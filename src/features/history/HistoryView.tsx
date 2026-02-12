@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   collection,
   query,
@@ -8,6 +8,9 @@ import {
   doc,
   writeBatch,
   limit,
+  startAfter,
+  QueryDocumentSnapshot,
+  DocumentData,
 } from 'firebase/firestore';
 import { db } from '@config/firebase';
 import { HistoryItem } from '@types';
@@ -41,8 +44,12 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ userId }) => {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [timeFilter, setTimeFilter] = useState<'all' | '7d' | '30d' | '90d'>('all');
+  const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const fetchPageSize = 25;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalConfig, setModalConfig] = useState({
     title: '',
@@ -51,32 +58,58 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ userId }) => {
     isDanger: false,
   });
 
-  useEffect(() => {
-    const fetchHistory = async () => {
+  const fetchHistoryPage = useCallback(
+    async (
+      options: {
+        append?: boolean;
+        cursor?: QueryDocumentSnapshot<DocumentData> | null;
+      } = {}
+    ) => {
       if (!userId) return;
+      const shouldAppend = options.append ?? false;
+      if (shouldAppend) {
+        setIsLoadingMore(true);
+      } else {
+        setLoading(true);
+      }
       try {
-        const q = query(
-          collection(db, 'users', userId, 'history'),
-          orderBy('createdAt', 'desc'),
-          limit(100)
-        );
-        const querySnapshot = await getDocs(q);
-        const loadedHistory: HistoryItem[] = [];
-        querySnapshot.forEach((doc) => {
-          loadedHistory.push({
-            id: doc.id,
-            ...doc.data(),
-          } as HistoryItem);
-        });
-        setHistory(loadedHistory);
+        const historyRef = collection(db, 'users', userId, 'history');
+        const baseQuery = query(historyRef, orderBy('createdAt', 'desc'), limit(fetchPageSize));
+        const pageQuery =
+          shouldAppend && options.cursor
+            ? query(
+                historyRef,
+                orderBy('createdAt', 'desc'),
+                startAfter(options.cursor),
+                limit(fetchPageSize)
+              )
+            : baseQuery;
+
+        const querySnapshot = await getDocs(pageQuery);
+        const loadedHistory: HistoryItem[] = querySnapshot.docs.map((docSnap) => ({
+          id: docSnap.id,
+          ...docSnap.data(),
+        })) as HistoryItem[];
+
+        const newLastDoc = querySnapshot.docs[querySnapshot.docs.length - 1] || null;
+        setLastDoc(newLastDoc);
+        setHasMore(querySnapshot.docs.length === fetchPageSize);
+        setHistory((prev) => (shouldAppend ? [...prev, ...loadedHistory] : loadedHistory));
       } catch (error) {
         console.error('Error cargando historial', error);
       } finally {
         setLoading(false);
+        setIsLoadingMore(false);
       }
-    };
-    fetchHistory();
-  }, [userId]);
+    },
+    [fetchPageSize, userId]
+  );
+
+  useEffect(() => {
+    setLastDoc(null);
+    setHasMore(true);
+    fetchHistoryPage({ append: false });
+  }, [fetchHistoryPage, userId]);
 
   const handleDelete = (id: string) => {
     if (!userId) return;
@@ -119,22 +152,47 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ userId }) => {
     );
   };
 
+  const availableCategories = Array.from(
+    new Set(history.map((item) => item.category).filter(Boolean))
+  ) as string[];
+
+  const categoryLabels: Record<string, string> = {
+    briefing: 'Briefing',
+    proposal: 'Propuestas',
+    portfolio: 'Portafolio',
+    fiverr: 'Fiverr',
+    logo: 'Logos',
+    invoice: 'Facturas',
+    cv: 'CV',
+    analyzer: 'Analizador',
+    optimizer: 'Optimizador',
+    website: 'Web',
+    jobs: 'Empleos',
+    notes: 'Notas',
+    finance: 'Finanzas',
+    tool: 'Herramientas',
+    qr: 'QR',
+    assistant: 'Asistente',
+    history: 'Historial',
+    gig: 'Gig',
+    course: 'Curso',
+    academy: 'Academia',
+  };
+
   const filteredHistory = history.filter((item) => {
     const term = searchTerm.toLowerCase();
-    return (
+    const matchesSearch =
       item.clientName?.toLowerCase().includes(term) ||
       item.content?.toLowerCase().includes(term) ||
-      item.type?.toLowerCase().includes(term)
-    );
+      item.type?.toLowerCase().includes(term);
+    const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
+    if (!matchesSearch || !matchesCategory) return false;
+    if (timeFilter === 'all') return true;
+    const days = timeFilter === '7d' ? 7 : timeFilter === '30d' ? 30 : 90;
+    const createdAt = new Date(item.createdAt).getTime();
+    if (Number.isNaN(createdAt)) return false;
+    return createdAt >= Date.now() - days * 24 * 60 * 60 * 1000;
   });
-
-  const totalPages = Math.ceil(filteredHistory.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentItems = filteredHistory.slice(startIndex, startIndex + itemsPerPage);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm]);
 
   if (loading)
     return <div className="p-8 text-center text-slate-500 dark:text-slate-400">Cargando...</div>;
@@ -165,15 +223,43 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ userId }) => {
         </div>
       </div>
 
-      <div className="relative mb-6">
-        <Search className="absolute left-3 top-3 text-slate-400 w-5 h-5" />
-        <input
-          type="text"
-          placeholder="Buscar por cliente, contenido o tipo..."
-          className="w-full pl-10 p-3 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+        <div className="relative">
+          <Search className="absolute left-3 top-3 text-slate-400 w-5 h-5" />
+          <input
+            type="text"
+            placeholder="Buscar por cliente, contenido o tipo..."
+            className="w-full pl-10 p-3 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div>
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="w-full p-3 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm"
+          >
+            <option value="all">Todas las categorias</option>
+            {availableCategories.map((category) => (
+              <option key={category} value={category}>
+                {categoryLabels[category] || category}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <select
+            value={timeFilter}
+            onChange={(e) => setTimeFilter(e.target.value as typeof timeFilter)}
+            className="w-full p-3 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm"
+          >
+            <option value="all">Todo el tiempo</option>
+            <option value="7d">Ultimos 7 dias</option>
+            <option value="30d">Ultimos 30 dias</option>
+            <option value="90d">Ultimos 90 dias</option>
+          </select>
+        </div>
       </div>
 
       {filteredHistory.length === 0 && (
@@ -191,7 +277,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ userId }) => {
       )}
 
       <div className="space-y-4">
-        {currentItems.map((item) => {
+        {filteredHistory.map((item) => {
           // Si es cualquier tipo de imagen (Logo, QR, Fondo, Portafolio)
           if (
             item.category === 'logo' ||
@@ -222,26 +308,14 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ userId }) => {
         })}
       </div>
 
-      {filteredHistory.length > itemsPerPage && (
-        <div className="flex justify-center items-center gap-4 mt-8">
+      {hasMore && (
+        <div className="flex justify-center mt-6">
           <button
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={() => fetchHistoryPage({ append: true, cursor: lastDoc })}
+            disabled={isLoadingMore}
+            className="px-4 py-2 text-sm font-bold text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800 rounded-lg hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors"
           >
-            <ChevronLeft className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-          </button>
-
-          <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
-            Página {currentPage} de {totalPages}
-          </span>
-
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-            className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <ChevronRight className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+            {isLoadingMore ? 'Cargando...' : 'Cargar mas'}
           </button>
         </div>
       )}
@@ -320,8 +394,10 @@ const HistoryCard = ({ item, onDelete }: { item: HistoryItem; onDelete: () => vo
           {expanded ? (
             <ReactMarkdown
               components={{
-                p: ({ node, ...props }) => <p className="mb-2 whitespace-pre-wrap" {...props} />,
-                ul: ({ node, ...props }) => <ul className="list-disc pl-4" {...props} />,
+                p: ({ node: _node, ...props }) => (
+                  <p className="mb-2 whitespace-pre-wrap" {...props} />
+                ),
+                ul: ({ node: _node, ...props }) => <ul className="list-disc pl-4" {...props} />,
               }}
             >
               {item.content}
@@ -447,9 +523,9 @@ const LogoHistoryCard = ({ item, onDelete }: { item: HistoryItem; onDelete: () =
       const filename = `${prefix}-${Date.now()}.png`;
 
       await downloadFile(item.imageUrl, filename);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
-      setErrorMsg(error.message); // Guardamos el error
+      setErrorMsg(error instanceof Error ? error.message : 'Error desconocido');
     } finally {
       setIsDownloading(false);
     }
@@ -636,17 +712,25 @@ const InvoiceHistoryCard = ({ item, onDelete }: { item: HistoryItem; onDelete: (
     setIsDownloading(true);
     const data = item.invoiceData;
     if (!data) return;
+    const template = data.template || 'classic';
+    const fontFamily =
+      template === 'minimal'
+        ? 'Georgia, serif'
+        : template === 'bold'
+          ? 'Arial Black, Arial, sans-serif'
+          : 'Helvetica, sans-serif';
+    const borderColor = template === 'minimal' ? '#e2e8f0' : '#eee';
+    const titleColor = template === 'bold' ? '#0f172a' : '#444';
+    const accentColor = template === 'bold' ? '#0f172a' : '#16a34a';
+    const tableHeaderBg = template === 'minimal' ? '#f8fafc' : '#f8f8f8';
+    const tableHeaderBorder = template === 'bold' ? '#0f172a' : '#ddd';
     // (Lógica de HTML2PDF para facturas igual que antes)
-    const containerStyle =
-      "padding: 40px; font-family: 'Helvetica', sans-serif; color: #333; max-width: 800px; margin: 0 auto;";
-    const headerStyle =
-      'display: flex; justify-content: space-between; margin-bottom: 40px; border-bottom: 1px solid #eee; padding-bottom: 20px;';
-    const titleStyle =
-      'font-size: 32px; font-weight: bold; color: #444; text-transform: uppercase;';
+    const containerStyle = `padding: 40px; font-family: ${fontFamily}; color: #333; max-width: 800px; margin: 0 auto;`;
+    const headerStyle = `display: flex; justify-content: space-between; margin-bottom: 40px; border-bottom: 1px solid ${borderColor}; padding-bottom: 20px;`;
+    const titleStyle = `font-size: 32px; font-weight: bold; color: ${titleColor}; text-transform: uppercase;`;
     const labelStyle =
       'font-size: 10px; font-weight: bold; text-transform: uppercase; color: #888; margin-bottom: 4px;';
-    const tableHeaderStyle =
-      'text-align: left; padding: 10px; background-color: #f8f8f8; font-weight: bold; font-size: 12px; border-bottom: 2px solid #ddd;';
+    const tableHeaderStyle = `text-align: left; padding: 10px; background-color: ${tableHeaderBg}; font-weight: bold; font-size: 12px; border-bottom: 2px solid ${tableHeaderBorder};`;
     const cellStyle = 'padding: 10px; border-bottom: 1px solid #eee; font-size: 13px;';
     const content = document.createElement('div');
     content.innerHTML = `
@@ -656,7 +740,7 @@ const InvoiceHistoryCard = ({ item, onDelete }: { item: HistoryItem; onDelete: (
                         ${
                           data.logo
                             ? `<img src="${data.logo}" style="height: 60px; object-fit: contain; margin-bottom: 10px;" />`
-                            : `<h1 style="color: #16a34a; margin:0;">FACTURA</h1>`
+                            : `<h1 style="color: ${accentColor}; margin:0;">FACTURA</h1>`
                         }
                         <div style="font-size: 14px; line-height: 1.5;">
                             <strong>${data.sender.name || 'Emisor'}</strong><br/>
@@ -704,7 +788,7 @@ const InvoiceHistoryCard = ({ item, onDelete }: { item: HistoryItem; onDelete: (
                     <tbody>
                         ${data.items
                           .map(
-                            (i: any) => `
+                            (i: { desc: string; qty: number; price: number }) => `
                             <tr>
                                 <td style="${cellStyle}">${i.desc}</td>
                                 <td style="${cellStyle} text-align: right;">${i.qty}</td>
@@ -725,14 +809,19 @@ const InvoiceHistoryCard = ({ item, onDelete }: { item: HistoryItem; onDelete: (
                         <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee;">
                             <span>Subtotal:</span>
                             <span>${data.currency}${data.items
-                              .reduce((acc: number, item: any) => acc + item.qty * item.price, 0)
+                              .reduce(
+                                (acc: number, item: { qty: number; price: number }) =>
+                                  acc + item.qty * item.price,
+                                0
+                              )
                               .toFixed(2)}</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee;">
                             <span>Impuestos (${data.taxRate}%):</span>
                             <span>${data.currency}${(
                               (data.items.reduce(
-                                (acc: number, item: any) => acc + item.qty * item.price,
+                                (acc: number, item: { qty: number; price: number }) =>
+                                  acc + item.qty * item.price,
                                 0
                               ) *
                                 data.taxRate) /
@@ -766,9 +855,9 @@ const InvoiceHistoryCard = ({ item, onDelete }: { item: HistoryItem; onDelete: (
       const pdfDataUri = await html2pdf().set(opt).from(content).outputPdf('datauristring');
 
       await downloadFile(pdfDataUri, opt.filename);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
-      setErrorMsg(error.message); // Guardamos el error
+      setErrorMsg(error instanceof Error ? error.message : 'Error desconocido');
     } finally {
       setIsDownloading(false);
     }

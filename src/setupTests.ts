@@ -21,27 +21,26 @@ if (typeof window !== 'undefined') {
 }
 
 // Avoid parse5.serializeOuter errors inside jsdom serialization during tests.
-try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const serialization = require('jsdom/lib/jsdom/living/domparsing/serialization.js');
-  if (serialization && typeof serialization.fragmentSerialization === 'function') {
-    const original = serialization.fragmentSerialization;
-    serialization.fragmentSerialization = (node: any, opts: any) => {
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const parse5 = require('parse5');
-        if (!parse5 || typeof parse5.serializeOuter !== 'function') {
+void (async () => {
+  try {
+    const serialization = await import('jsdom/lib/jsdom/living/domparsing/serialization.js');
+    if (serialization && typeof serialization.fragmentSerialization === 'function') {
+      const original = serialization.fragmentSerialization;
+      serialization.fragmentSerialization = (node: unknown, opts: unknown) => {
+        try {
+          return original(node, opts);
+        } catch (error) {
+          if (error instanceof Error && error.message.includes('serializeOuter')) {
+            return '';
+          }
           return '';
         }
-      } catch (e) {
-        return '';
-      }
-      return original(node, opts);
-    };
+      };
+    }
+  } catch {
+    // ignore if jsdom internals change
   }
-} catch (e) {
-  // ignore if jsdom internals change
-}
+})();
 
 // Suppress known ESM/CJS interop errors coming from `html-encoding-sniffer` during tests
 // This prevents an unhandled exception that appears when some dependencies try to require an ESM-only file.
@@ -49,10 +48,10 @@ if (typeof process !== 'undefined' && process && typeof process.on === 'function
   // Prevent unexpected process.exit calls from failing the test runner.
   if (typeof process.exit === 'function') {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    process.exit = (() => {}) as any;
+    process.exit = (() => {}) as unknown as typeof process.exit;
   }
-  process.on('uncaughtException', (err: any) => {
-    const msg = err && err.message ? String(err.message) : '';
+  process.on('uncaughtException', (err: unknown) => {
+    const msg = err instanceof Error ? String(err.message) : '';
     if (
       msg.includes('encoding-lite') ||
       msg.includes('html-encoding-sniffer') ||
@@ -62,8 +61,8 @@ if (typeof process !== 'undefined' && process && typeof process.on === 'function
     // rethrow other errors so tests still fail on unexpected exceptions
     throw err;
   });
-  process.on('unhandledRejection', (reason: any) => {
-    const msg = reason && reason.message ? String(reason.message) : String(reason);
+  process.on('unhandledRejection', (reason: unknown) => {
+    const msg = reason instanceof Error ? String(reason.message) : String(reason);
     if (
       msg.includes('encoding-lite') ||
       msg.includes('html-encoding-sniffer') ||
@@ -76,9 +75,9 @@ if (typeof process !== 'undefined' && process && typeof process.on === 'function
 }
 
 // Provide minimal DOM globals used by some libraries (pdfjs-dist expects DOMMatrix)
-if (typeof (globalThis as any).DOMMatrix === 'undefined') {
+if (typeof (globalThis as { DOMMatrix?: typeof DOMMatrix }).DOMMatrix === 'undefined') {
   // Minimal stub sufficient for tests
-  (globalThis as any).DOMMatrix = class DOMMatrixStub {
+  (globalThis as { DOMMatrix?: typeof DOMMatrix }).DOMMatrix = class DOMMatrixStub {
     constructor() {}
   };
 }

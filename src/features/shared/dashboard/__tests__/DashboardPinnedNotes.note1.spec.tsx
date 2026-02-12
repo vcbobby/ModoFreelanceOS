@@ -8,7 +8,7 @@ vi.mock('firebase/firestore', () => ({
   collection: () => {},
   query: () => {},
   where: () => {},
-  onSnapshot: (q: any, cb: any) => {
+  onSnapshot: (_q: unknown, cb: (snap: { docs: Array<{ id: string; data: () => unknown }> }) => void) => {
     cb({
       docs: [
         {

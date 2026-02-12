@@ -7,19 +7,24 @@ import {
   GoogleAuthProvider,
   sendPasswordResetEmail,
   signInWithCredential,
+  type User,
 } from 'firebase/auth';
-import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth'; // <--- NUEVO IMPORT
+import { GoogleAuth } from '@southdevs/capacitor-google-auth';
 import { Capacitor } from '@capacitor/core'; // <--- NUEVO IMPORT
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { User, Mail, Lock, ArrowRight, Loader2, Chrome, KeyRound } from 'lucide-react';
+import { User as UserIcon, Mail, Lock, ArrowRight, Loader2, Chrome, KeyRound } from 'lucide-react';
+import { getBackendURL } from '@config/features';
+import { getAuthHeaders } from '@/services/backend/authHeaders';
 
 interface AuthProps {
   onLoginSuccess: () => void;
   onBack: () => void;
 }
 
-export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
+export const AuthView = ({ onLoginSuccess, onBack: _onBack }: AuthProps) => {
   const isE2E = import.meta.env.VITE_E2E === 'true';
+  const hasE2EAuthFlag = import.meta.env.DEV && localStorage.getItem('e2e_auth') !== null;
+  const isE2EEnabled = import.meta.env.DEV || isE2E || hasE2EAuthFlag;
   const [viewState, setViewState] = useState<'login' | 'register' | 'forgot'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -28,9 +33,7 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
   const [loading, setLoading] = useState(false);
 
   // URL DE TU BACKEND (Cámbialo al subir a producción)
-  const BACKEND_URL = import.meta.env.PROD
-    ? 'https://backend-freelanceos.onrender.com'
-    : 'http://localhost:8000';
+  const BACKEND_URL = getBackendURL();
 
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
@@ -48,17 +51,19 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
     try {
       const formData = new FormData();
       formData.append('email', userEmail);
+      const authHeaders = await getAuthHeaders();
       // No usamos await aquí para no bloquear la UI si el backend falla
       fetch(`${BACKEND_URL}/api/notify-signup`, {
         method: 'POST',
+        headers: authHeaders,
         body: formData,
       });
     } catch (e) {
-      console.error('No se pudo notificar al backend', e);
+      void e;
     }
   };
 
-  const handleUserInDb = async (user: any) => {
+  const handleUserInDb = async (user: User) => {
     const docRef = doc(db, 'users', user.uid);
     const docSnap = await getDoc(docRef);
 
@@ -98,12 +103,13 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
         setLoading(false);
         return;
       }
-    } catch (err: any) {
-      console.error(err);
-      if (err.code === 'auth/email-already-in-use') setError('Este correo ya está registrado.');
-      else if (err.code === 'auth/wrong-password') setError('Contraseña incorrecta.');
-      else if (err.code === 'auth/user-not-found') setError('No existe cuenta con este correo.');
-      else if (err.code === 'auth/invalid-credential') setError('Credenciales inválidas.');
+    } catch (err: unknown) {
+      void err;
+      const code = (err as { code?: string }).code;
+      if (code === 'auth/email-already-in-use') setError('Este correo ya está registrado.');
+      else if (code === 'auth/wrong-password') setError('Contraseña incorrecta.');
+      else if (code === 'auth/user-not-found') setError('No existe cuenta con este correo.');
+      else if (code === 'auth/invalid-credential') setError('Credenciales inválidas.');
       else setError('Ocurrió un error. Intenta nuevamente.');
     } finally {
       if (viewState !== 'forgot') setLoading(false);
@@ -118,7 +124,6 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
 
       if (Capacitor.isNativePlatform()) {
         // --- MODO NATIVO (ANDROID) ---
-        console.log('Usando Login Nativo Android');
         const googleUser = await GoogleAuth.signIn();
         // Crear credencial de Firebase con el token nativo
         const credential = GoogleAuthProvider.credential(googleUser.authentication.idToken);
@@ -126,18 +131,19 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
         userResult = await signInWithCredential(auth, credential);
       } else {
         // --- MODO WEB (PC) ---
-        console.log('Usando Login Web Popup');
         const provider = new GoogleAuthProvider();
         userResult = await signInWithPopup(auth, provider);
       }
 
       await handleUserInDb(userResult.user);
       onLoginSuccess();
-    } catch (err: any) {
-      console.error(err);
-      const code = err?.code as string | undefined;
+    } catch (err: unknown) {
+      void err;
+      const code = (err as { code?: string })?.code as string | undefined;
       if (code === 'auth/unauthorized-domain') {
-        setError('Dominio no autorizado. Agrega este host en Firebase Auth > Dominios autorizados.');
+        setError(
+          'Dominio no autorizado. Agrega este host en Firebase Auth > Dominios autorizados.'
+        );
       } else if (code === 'auth/popup-blocked') {
         setError('El navegador bloqueó el popup. Permite popups e intenta de nuevo.');
       } else if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
@@ -152,24 +158,11 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
       setLoading(false);
     }
   };
-  const handleBack = () => {
-    // Detectamos si estamos en Electron mirando el "User Agent"
-    const isElectron = navigator.userAgent.toLowerCase().includes(' electron/');
-
-    if (isElectron) {
-      // Opción A: Si es la app de escritorio, quizás solo quieras ir al Login
-      // o abrir el navegador externo si es un link a tu web comercial.
-      // Aquí asumimos que quieres abrir tu web externa:
-      window.open('http://modofreelanceos.com/', '_blank');
-    } else {
-      // Comportamiento normal en web
-      onBack();
-    }
-  };
 
   const handleE2ELogin = () => {
     localStorage.setItem('e2e_auth', 'true');
     onLoginSuccess();
+    window.location.reload();
   };
 
   return (
@@ -190,7 +183,7 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
       </button>
 
       <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-100 dark:border-slate-700">
-        {isE2E && (
+        {isE2EEnabled && (
           <div className="mb-4">
             <button
               type="button"
@@ -207,7 +200,7 @@ export const AuthView = ({ onLoginSuccess, onBack }: AuthProps) => {
             {viewState === 'forgot' ? (
               <KeyRound className="w-8 h-8 text-brand-600 dark:text-brand-400" />
             ) : (
-              <User className="w-8 h-8 text-brand-600 dark:text-brand-400" />
+              <UserIcon className="w-8 h-8 text-brand-600 dark:text-brand-400" />
             )}
           </div>
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">

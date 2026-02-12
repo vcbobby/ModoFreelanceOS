@@ -32,7 +32,9 @@ export const extractTextFromPdf = async (file: File): Promise<string> => {
       const textContent = await page.getTextContent();
 
       // Unimos las palabras de la pagina
-      const pageText = textContent.items.map((item: any) => item.str).join(' ');
+      const pageText = textContent.items
+        .map((item: { str?: string }) => item.str ?? '')
+        .join(' ');
 
       fullText += pageText + '\n\n';
     }

@@ -1,6 +1,5 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { Analytics } from '@vercel/analytics/react';
 import * as Sentry from '@sentry/react';
 // import './index.css'
 
@@ -17,11 +16,6 @@ const root = ReactDOM.createRoot(rootElement);
 // 1. Detección robusta del entorno
 const hostname = window.location.hostname;
 const pathname = window.location.pathname;
-
-// 'hostname' NO incluye el puerto (ej: localhost), 'host' sí (ej: localhost:5173)
-const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
-
-const isAppDomain = hostname === 'app.modofreelanceos.com' || isLocal; // Tratamos localhost como si fuera la App
 
 const isLandingDomain =
   hostname === 'modofreelanceos.com' || hostname === 'www.modofreelanceos.com';
@@ -95,7 +89,10 @@ const bootstrap = async () => {
     return;
   }
 
-  if (isLandingDomain) {
+  const searchParams = new URLSearchParams(window.location.search);
+  const isForcedLanding = searchParams.has('landing');
+
+  if (isLandingDomain || isForcedLanding) {
     // Caso 2: Es el dominio principal -> Landing Page
     const { LandingModern } = await import('@features/landing');
     root.render(

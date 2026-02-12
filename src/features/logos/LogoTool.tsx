@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import { Button, Card, ConfirmationModal } from '@features/shared/ui';
 import { downloadFile } from '@features/shared/utils';
+import { getBackendURL } from '@config/features';
+import { runWithCredits } from '@/utils/credits';
 
 // Interfaz para el objeto de logo
 interface LogoItem {
@@ -39,9 +41,7 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
     message: '',
   });
 
-  const BACKEND_URL = import.meta.env.PROD
-    ? 'https://backend-freelanceos.onrender.com'
-    : 'http://localhost:8000';
+  const BACKEND_URL = getBackendURL();
 
   const styles = [
     'Minimalista',
@@ -53,41 +53,74 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
     'Lujo',
   ];
 
+  const LOGO_TIMEOUT_MS = 180000;
+
+  const fetchWithTimeout = async (
+    url: string,
+    options: RequestInit,
+    timeoutMs = LOGO_TIMEOUT_MS
+  ): Promise<{ res: Response; timedOut: boolean }> => {
+    let timeoutId: number | undefined;
+    const requestPromise = fetch(url, options).then((res) => {
+      if (timeoutId) window.clearTimeout(timeoutId);
+      return { res, timedOut: false };
+    });
+    const timeoutPromise = new Promise<{ timedOut: boolean }>((resolve) => {
+      timeoutId = window.setTimeout(() => resolve({ timedOut: true }), timeoutMs);
+    });
+
+    const raceResult = await Promise.race([requestPromise, timeoutPromise]);
+    if ('timedOut' in raceResult && raceResult.timedOut) {
+      const { res } = await requestPromise;
+      return { res, timedOut: true };
+    }
+
+    return raceResult as { res: Response; timedOut: boolean };
+  };
+
   const handleGenerate = async () => {
     if (!name) return;
-
-    const canProceed = await onUsage(2);
-    if (!canProceed) return;
 
     setIsGenerating(true);
 
     try {
-      const formData = new FormData();
-      formData.append('name', name);
-      formData.append('details', details);
-      formData.append('style', style);
-      formData.append('userId', userId || 'anon');
+      const usage = await runWithCredits(2, onUsage, async () => {
+        const payload = {
+          name,
+          details,
+          style,
+          userId: userId || 'anon',
+        };
 
-      const res = await fetch(`${BACKEND_URL}/api/generate-logo-backend`, {
-        method: 'POST',
-        body: formData,
+        const { res, timedOut } = await fetchWithTimeout(`${BACKEND_URL}/api/v1/logos/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        if (timedOut) {
+          setModal({
+            isOpen: true,
+            title: 'Servidor lento',
+            message: 'La generacion sigue en curso. Se mostrara cuando este lista.',
+          });
+        }
+
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) throw new Error(data.detail || 'Error servidor');
+        if (!data.success || !data.previewUrl) throw new Error('Error de generación');
+        return data.previewUrl as string;
       });
 
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.detail || 'Error servidor');
-
-      if (data.success) {
-        // Creamos un objeto con ID único
-        const newLogo: LogoItem = {
-          id: Date.now().toString(),
-          url: data.url,
-        };
-        setGeneratedLogos((prev) => [newLogo, ...prev]);
-      }
-    } catch (error: any) {
+      if (!usage.ok || !usage.result) return;
+      const newLogo: LogoItem = {
+        id: Date.now().toString(),
+        url: usage.result,
+      };
+      setGeneratedLogos((prev) => [newLogo, ...prev]);
+    } catch (error: unknown) {
       console.error(error);
-      await onUsage(-2); // Reembolso
       setModal({
         isOpen: true,
         title: 'Error',
@@ -221,6 +254,41 @@ export const LogoTool: React.FC<LogoToolProps> = ({ onUsage, userId }) => {
 const LogoCard = ({ url, index, name }: { url: string; index: number; name: string }) => {
   const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
   const [downloading, setDownloading] = useState(false);
+  const [previewLoaded, setPreviewLoaded] = useState(false);
+  const [fullLoaded, setFullLoaded] = useState(false);
+
+  const buildPreviewUrl = (src: string) => {
+    if (!src) return src;
+    const hasQuery = src.includes('?');
+    const suffix = 'width=384&height=384&nologo=true';
+    return `${src}${hasQuery ? '&' : '?'}${suffix}`;
+  };
+
+  const previewUrl = buildPreviewUrl(url);
+  const [currentSrc, setCurrentSrc] = useState(previewUrl);
+
+  React.useEffect(() => {
+    setStatus('loading');
+    setPreviewLoaded(false);
+    setFullLoaded(false);
+    setCurrentSrc(previewUrl);
+
+    const img = new Image();
+    img.src = url;
+    img.onload = () => {
+      setFullLoaded(true);
+      setCurrentSrc(url);
+      setStatus('loaded');
+    };
+    img.onerror = () => {
+      setStatus('error');
+    };
+
+    return () => {
+      img.onload = null;
+      img.onerror = null;
+    };
+  }, [url, previewUrl]);
 
   // Función segura de descarga (Blob)
   const handleDownload = async () => {
@@ -244,7 +312,7 @@ const LogoCard = ({ url, index, name }: { url: string; index: number; name: stri
     <div className="group relative bg-white dark:bg-slate-800 p-2 rounded-xl shadow-md border border-slate-200 dark:border-slate-700 animate-in zoom-in-50 duration-300 slide-in-from-bottom-4">
       <div className="aspect-square rounded-lg overflow-hidden relative bg-slate-100 dark:bg-slate-900 flex items-center justify-center">
         {/* ESTADO DE CARGA (SKELETON) */}
-        {status === 'loading' && (
+        {status === 'loading' && !previewLoaded && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900 z-10 p-6 text-center">
             <Loader2 className="w-10 h-10 text-brand-500 animate-spin mb-3" />
             <span className="text-sm font-bold text-slate-700 dark:text-slate-300 animate-pulse">
@@ -270,24 +338,38 @@ const LogoCard = ({ url, index, name }: { url: string; index: number; name: stri
 
         {/* IMAGEN REAL */}
         <img
-          src={url}
+          src={currentSrc}
           alt={`Logo generado ${index}`}
           className={`w-full h-full object-contain transition-opacity duration-500 ${
-            status === 'loaded' ? 'opacity-100' : 'opacity-0'
+            previewLoaded || status === 'loaded' ? 'opacity-100' : 'opacity-0'
           }`}
-          onLoad={() => setStatus('loaded')}
+          onLoad={() => {
+            if (currentSrc === previewUrl) {
+              setPreviewLoaded(true);
+            } else {
+              setFullLoaded(true);
+              setStatus('loaded');
+            }
+          }}
           onError={() => {
             // A veces da error 404 momentáneo, reintentamos en 3 segs
             setTimeout(() => {
               const img = new Image();
-              img.src = url;
-              img.onload = () => setStatus('loaded');
+              img.src = currentSrc;
+              img.onload = () => {
+                if (currentSrc === previewUrl) {
+                  setPreviewLoaded(true);
+                } else {
+                  setFullLoaded(true);
+                  setStatus('loaded');
+                }
+              };
             }, 3000);
           }}
         />
 
         {/* OVERLAY DE DESCARGA (Solo visible al cargar) */}
-        {status === 'loaded' && (
+        {status === 'loaded' && fullLoaded && (
           <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center z-20 backdrop-blur-[2px]">
             <button
               onClick={handleDownload}

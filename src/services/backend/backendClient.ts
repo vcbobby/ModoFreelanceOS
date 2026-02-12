@@ -1,7 +1,10 @@
 import { getBackendURL } from '@config/features';
 
 export class BackendError extends Error {
-  constructor(message: string, public status: number) {
+  constructor(
+    message: string,
+    public status: number
+  ) {
     super(message);
   }
 }
@@ -51,7 +54,7 @@ export const createBackendClient = ({
           try {
             const errorBody = await response.json();
             errorMessage = errorBody?.detail || errorBody?.message || errorMessage;
-          } catch (error) {
+          } catch {
             // Ignore JSON parse errors for non-JSON responses.
           }
           throw new BackendError(errorMessage, response.status);

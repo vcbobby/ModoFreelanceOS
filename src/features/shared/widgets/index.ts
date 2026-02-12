@@ -1,3 +1,4 @@
-export { SupportWidget } from './SupportWidget';
-export { AIAssistant } from './AIAssistant';
-export { UpdateChecker } from './UpdateChecker';
+export * from './AIAssistant';
+export * from './SupportWidget';
+export * from './UpdateChecker';
+export * from './UserProfileModal';

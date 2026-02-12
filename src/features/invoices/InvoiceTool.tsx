@@ -1,9 +1,14 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Download, Plus, Trash2, FileText, Upload } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Plus, Trash2, FileText, Upload } from 'lucide-react';
 import { Button, Card, ConfirmationModal } from '@features/shared/ui';
-import { collection, addDoc, doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { auth } from '@config/firebase';
 import { db } from '@config/firebase';
 import { downloadFile, loadHtml2Pdf } from '@features/shared/utils';
+import { logHistory } from '@features/shared/services';
+import { runWithCredits } from '@/utils/credits';
+import { useAppDispatch } from '@/app/hooks/storeHooks';
+import { addToast } from '@/app/slices/uiSlice';
 
 interface InvoiceToolProps {
   onUsage: (cost: number) => Promise<boolean>;
@@ -11,11 +16,14 @@ interface InvoiceToolProps {
 }
 
 export const InvoiceTool: React.FC<InvoiceToolProps> = ({ onUsage, userId }) => {
+  const dispatch = useAppDispatch();
   const isE2E = import.meta.env.VITE_E2E === 'true';
   const [invoiceNumber, setInvoiceNumber] = useState('001');
   const [invoiceSequence, setInvoiceSequence] = useState(1);
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [currency, setCurrency] = useState('$');
+  const [invoicePrefix, setInvoicePrefix] = useState('INV-');
+  const [template, setTemplate] = useState<'classic' | 'minimal' | 'bold'>('classic');
 
   const [sender, setSender] = useState({
     name: '',
@@ -46,6 +54,7 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({ onUsage, userId }) => 
   const subtotal = items.reduce((acc, item) => acc + item.qty * item.price, 0);
   const taxAmount = (subtotal * taxRate) / 100;
   const total = subtotal + taxAmount;
+  const fullInvoiceNumber = `${invoicePrefix}${invoiceNumber}`;
   const [modal, setModal] = useState({
     isOpen: false,
     title: '',
@@ -80,11 +89,11 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({ onUsage, userId }) => 
           }
         }
       } catch (error) {
-        console.error('Error sequence', error);
+        void error;
       }
     };
     fetchInvoiceData();
-  }, [userId]);
+  }, [isE2E, userId]);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -97,82 +106,96 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({ onUsage, userId }) => 
 
   const addItem = () => setItems([...items, { id: Date.now(), desc: '', qty: 1, price: 0 }]);
   const removeItem = (id: number) => setItems(items.filter((i) => i.id !== id));
-  const updateItem = (id: number, field: string, value: any) =>
+  const updateItem = (id: number, field: string, value: string | number) =>
     setItems(items.map((i) => (i.id === id ? { ...i, [field]: value } : i)));
 
   const handleDownload = async () => {
-    const canProceed = await onUsage(3);
-    if (!canProceed) return;
-
     setIsDownloading(true);
-
-    if (userId && !isE2E) {
-      try {
-        await addDoc(collection(db, 'users', userId, 'history'), {
-          createdAt: new Date().toISOString(),
-          category: 'invoice',
-          clientName: client.name || 'Cliente Desconocido',
-          platform: 'Invoice Generator',
-          type: 'Factura PDF',
-          content: `Factura #${invoiceNumber} por ${currency}${total.toFixed(2)}`,
-          invoiceData: {
-            invoiceNumber,
-            date,
-            currency,
-            sender,
-            client,
-            items,
-            taxRate,
-            notes,
-            logo,
-            total,
-          },
-        });
-
-        await setDoc(
-          doc(db, 'users', userId),
-          { lastInvoiceSequence: invoiceSequence },
-          { merge: true }
-        );
-        const nextOne = invoiceSequence + 1;
-        setInvoiceSequence(nextOne);
-      } catch (e) {
-        console.error('Error guardando datos', e);
-      }
-    } else if (userId && isE2E) {
-      const nextOne = invoiceSequence + 1;
-      localStorage.setItem(getE2eKey(userId), `${nextOne}`);
-      setInvoiceSequence(nextOne);
-      setInvoiceNumber(nextOne.toString().padStart(3, '0'));
-    }
-
-    const element = invoiceRef.current;
-    if (!element) {
-      setIsDownloading(false);
-      return;
-    }
-
-    const opt = {
-      margin: 0,
-      filename: `factura-${invoiceNumber}-${client.name}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: {
-        scale: 2,
-        useCORS: true,
-        scrollY: 0,
-        windowWidth: 1200,
-      },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    };
-
     try {
-      const html2pdf = await loadHtml2Pdf();
-      const pdfDataUri = await html2pdf().set(opt).from(element).outputPdf('datauristring');
-      await downloadFile(pdfDataUri, opt.filename);
-    } catch (error: any) {
+      const usage = await runWithCredits(3, onUsage, async () => {
+        const realUid = auth.currentUser?.uid;
+        if (realUid && !isE2E) {
+          try {
+            await logHistory({
+              userId: realUid,
+              category: 'invoice',
+              clientName: client.name || 'Cliente Desconocido',
+              platform: 'Invoice Generator',
+              type: 'Factura PDF',
+              content: `Factura #${fullInvoiceNumber} por ${currency}${total.toFixed(2)}`,
+              invoiceData: {
+                invoiceNumber: fullInvoiceNumber,
+                date,
+                currency,
+                sender,
+                client,
+                items,
+                taxRate,
+                notes,
+                logo,
+                total,
+                template,
+              },
+            });
+          } catch (logError) {
+            void logError;
+          }
+
+          try {
+            await setDoc(
+              doc(db, 'users', realUid),
+              { lastInvoiceSequence: invoiceSequence },
+              { merge: true }
+            );
+            const nextOne = invoiceSequence + 1;
+            setInvoiceSequence(nextOne);
+            setInvoiceNumber(nextOne.toString().padStart(3, '0'));
+          } catch (e) {
+            console.error('Error guardando datos', e);
+          }
+        } else if (realUid && isE2E) {
+          // E2E modo local
+          const nextOne = invoiceSequence + 1;
+          localStorage.setItem(getE2eKey(realUid), `${nextOne}`);
+          setInvoiceSequence(nextOne);
+          setInvoiceNumber(nextOne.toString().padStart(3, '0'));
+        }
+
+        const element = invoiceRef.current;
+        if (!element) {
+          throw new Error('No se encontro el contenido de la factura.');
+        }
+
+        const opt = {
+          margin: 0,
+          filename: `factura-${fullInvoiceNumber}-${client.name}.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: {
+            scale: 2,
+            useCORS: true,
+            scrollY: 0,
+            windowWidth: 1200,
+          },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        };
+
+        const html2pdf = await loadHtml2Pdf();
+        const pdfDataUri = await html2pdf().set(opt).from(element).outputPdf('datauristring');
+        await downloadFile(pdfDataUri, opt.filename);
+
+        dispatch(addToast({
+          title: '✅ Factura Lista',
+          message: `La factura ${fullInvoiceNumber} se ha generado y descargado.`,
+          type: 'success'
+        }));
+      });
+
+      if (!usage.ok) return;
+    } catch (error: unknown) {
       console.error(error);
       // --- AQUÍ USAMOS EL MODAL ---
-      showError(`No se pudo generar la factura. ${error.message || ''}`);
+      const message = error instanceof Error ? error.message : '';
+      showError(`No se pudo generar la factura. ${message}`);
     } finally {
       setIsDownloading(false);
     }
@@ -204,6 +227,33 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({ onUsage, userId }) => 
         </div>
 
         <Card className="p-6 shadow-md space-y-6">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
+                Prefijo
+              </label>
+              <input
+                type="text"
+                value={invoicePrefix}
+                onChange={(e) => setInvoicePrefix(e.target.value)}
+                className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 dark:text-white"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
+                Plantilla
+              </label>
+              <select
+                value={template}
+                onChange={(e) => setTemplate(e.target.value as typeof template)}
+                className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 dark:text-white"
+              >
+                <option value="classic">Clasica</option>
+                <option value="minimal">Minimal</option>
+                <option value="bold">Bold</option>
+              </select>
+            </div>
+          </div>
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
@@ -481,7 +531,8 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({ onUsage, userId }) => 
           <div
             id="invoice-preview"
             ref={invoiceRef}
-            className="bg-white shadow-xl w-full max-w-[210mm] min-h-[197mm] overflow-x-auto p-8 md:p-12 text-slate-800 flex flex-col justify-between"
+            className={`bg-white shadow-xl w-full max-w-[210mm] min-h-[197mm] overflow-x-auto p-8 md:p-12 text-slate-800 flex flex-col justify-between ${template === 'minimal' ? 'border border-slate-200' : ''
+              } ${template === 'bold' ? 'border-2 border-slate-900' : ''}`}
             style={{ fontSize: '14px' }}
           >
             <div>
@@ -490,7 +541,10 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({ onUsage, userId }) => 
                   {logo ? (
                     <img src={logo} alt="Logo" className="h-14 object-contain mb-2" />
                   ) : (
-                    <h1 className="text-2xl font-bold text-brand-600 uppercase tracking-widest">
+                    <h1
+                      className={`text-2xl font-bold uppercase tracking-widest ${template === 'bold' ? 'text-slate-900' : 'text-brand-600'
+                        }`}
+                    >
                       Factura
                     </h1>
                   )}
@@ -503,9 +557,14 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({ onUsage, userId }) => 
                   </div>
                 </div>
                 <div className="text-right">
-                  <h2 className="text-3xl font-light text-slate-200">INVOICE</h2>
+                  <h2
+                    className={`text-3xl font-light ${template === 'bold' ? 'text-slate-500' : 'text-slate-200'
+                      }`}
+                  >
+                    INVOICE
+                  </h2>
                   <div className="mt-2">
-                    <p className="font-bold text-slate-700 text-sm">#{invoiceNumber}</p>
+                    <p className="font-bold text-slate-700 text-sm">#{fullInvoiceNumber}</p>
                     <p className="text-xs text-slate-500">{date}</p>
                   </div>
                 </div>
@@ -526,7 +585,9 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({ onUsage, userId }) => 
 
               <table className="w-full mb-8">
                 <thead>
-                  <tr className="border-b-2 border-slate-800">
+                  <tr
+                    className={`border-b-2 ${template === 'minimal' ? 'border-slate-300' : 'border-slate-800'}`}
+                  >
                     <th className="text-left py-2 font-bold uppercase text-[10px]">Descripción</th>
                     <th className="text-right py-2 font-bold uppercase text-[10px] w-12">Cant.</th>
                     <th className="text-right py-2 font-bold uppercase text-[10px] w-20">Precio</th>

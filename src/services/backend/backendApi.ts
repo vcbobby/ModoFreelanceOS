@@ -6,7 +6,8 @@ import {
   fetchBaseQuery,
   retry,
 } from '@reduxjs/toolkit/query/react';
-import { getBackendURL } from '@config/features';
+import { getBackendURL, shouldUseBackendV2 } from '@config/features';
+import { auth } from '@config/firebase';
 
 interface CheckStatusRequest {
   platform: string;
@@ -34,10 +35,20 @@ const baseQueryWithTimeout: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQu
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 5000);
 
+  let headers = new Headers(typeof args === 'string' ? undefined : args.headers);
+  try {
+    const token = await auth.currentUser?.getIdToken();
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+  } catch {
+    // Ignore auth header failures; backend will reject if required.
+  }
+
   const requestArgs =
     typeof args === 'string'
-      ? { url: args, signal: controller.signal }
-      : { ...args, signal: controller.signal };
+      ? { url: args, signal: controller.signal, headers }
+      : { ...args, signal: controller.signal, headers };
 
   const result = await rawBaseQuery(requestArgs, api, extraOptions);
   clearTimeout(timeoutId);
@@ -55,8 +66,11 @@ export const backendApi = createApi({
         const formData = new FormData();
         formData.append('platform', platform);
         formData.append('userId', userId);
+        const statusPath = shouldUseBackendV2()
+          ? '/api/v1/users/check-status'
+          : '/api/check-status';
         return {
-          url: '/api/check-status',
+          url: statusPath,
           method: 'POST',
           body: formData,
         };

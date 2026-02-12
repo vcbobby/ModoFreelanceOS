@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '@config/firebase';
 import { LocalNotifications } from '@capacitor/local-notifications';
@@ -16,8 +16,6 @@ export interface AppNotification {
 
 export const useAgendaNotifications = (userId: string | undefined) => {
   const isE2E = import.meta.env.VITE_E2E === 'true';
-  const [notifications, setNotifications] = useState<AppNotification[]>([]);
-
   // Estados internos para separar las fuentes de datos
   const [agendaNotifs, setAgendaNotifs] = useState<AppNotification[]>([]);
   const [financeNotifs, setFinanceNotifs] = useState<AppNotification[]>([]);
@@ -55,19 +53,12 @@ export const useAgendaNotifications = (userId: string | undefined) => {
         });
       }
     } catch (e) {
-      console.error('Error notif nativa', e);
+      void e;
     }
   };
 
   useEffect(() => {
-    if (isE2E) {
-      setNotifications([]);
-      return;
-    }
-    if (!userId) {
-      setNotifications([]);
-      return;
-    }
+    if (isE2E || !userId) return;
 
     const today = new Date();
     // Ajustar a medianoche para comparar fechas string correctamente
@@ -152,14 +143,10 @@ export const useAgendaNotifications = (userId: string | undefined) => {
   }, [isE2E, userId]);
 
   // --- UNIFICACIÓN DE ESTADOS ---
-  useEffect(() => {
-    // Unimos ambas listas y ordenamos por fecha
-    const combined = [...agendaNotifs, ...financeNotifs].sort((a, b) =>
-      a.date.localeCompare(b.date)
-    );
-    setNotifications(combined);
-  }, [agendaNotifs, financeNotifs]);
+  const combined = useMemo(() => {
+    if (isE2E || !userId) return [];
+    return [...agendaNotifs, ...financeNotifs].sort((a, b) => a.date.localeCompare(b.date));
+  }, [agendaNotifs, financeNotifs, isE2E, userId]);
 
-  return notifications;
+  return combined;
 };
-

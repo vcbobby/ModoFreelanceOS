@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, render, screen, fireEvent } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { DashboardPinnedNotes } from '..';
 
 vi.mock('firebase/firestore', () => ({
@@ -7,7 +7,7 @@ vi.mock('firebase/firestore', () => ({
   collection: () => {},
   query: () => {},
   where: () => {},
-  onSnapshot: (q: any, cb: any) => {
+  onSnapshot: (_q: unknown, cb: (snap: { docs: Array<{ id: string; data: () => unknown }> }) => void) => {
     cb({
       docs: [
         {

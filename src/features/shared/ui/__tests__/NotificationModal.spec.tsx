@@ -2,13 +2,14 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NotificationModal } from '..';
+import type { AppNotification } from '@/app/hooks/useAgendaNotifications';
 
 describe('NotificationModal', () => {
   it('renders empty state and handles navigation click', async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
     const onNavigate = vi.fn();
-    const notifications = [
+    const notifications: AppNotification[] = [
       {
         id: '1',
         type: 'agenda',
@@ -22,7 +23,7 @@ describe('NotificationModal', () => {
       <NotificationModal
         isOpen={true}
         onClose={onClose}
-        notifications={notifications as any}
+        notifications={notifications}
         onNavigate={onNavigate}
       />
     );

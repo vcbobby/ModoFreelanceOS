@@ -44,8 +44,13 @@ const pomodoroSlice = createSlice({
     stopTimer(state) {
       state.isActive = false;
     },
+    resumeTimer(state, action: PayloadAction<{ timeLeft: number; mode: PomodoroMode }>) {
+      state.timeLeft = action.payload.timeLeft;
+      state.mode = action.payload.mode;
+      state.isActive = true;
+    },
   },
 });
 
-export const { toggleTimer, switchMode, resetTimer, tick, stopTimer } = pomodoroSlice.actions;
+export const { toggleTimer, switchMode, resetTimer, tick, stopTimer, resumeTimer } = pomodoroSlice.actions;
 export default pomodoroSlice.reducer;

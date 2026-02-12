@@ -1,10 +1,12 @@
 import React, { useState, useRef } from 'react';
 import QRCode from 'react-qr-code';
 import { QrCode, Link } from 'lucide-react';
-import { addDoc, collection } from 'firebase/firestore';
-import { db } from '@config/firebase';
+import { logHistory } from '@features/shared/services';
 import { downloadFile } from '@features/shared/utils';
 import { Button, Card, ConfirmationModal } from '@features/shared/ui';
+import { runWithCredits } from '@/utils/credits';
+import { useAppDispatch } from '@/app/hooks/storeHooks';
+import { addToast } from '@/app/slices/uiSlice';
 
 interface QRToolProps {
   onUsage: (cost: number) => Promise<boolean>;
@@ -12,6 +14,7 @@ interface QRToolProps {
 }
 
 export const QRTool: React.FC<QRToolProps> = ({ onUsage, userId }) => {
+  const dispatch = useAppDispatch();
   const [text, setText] = useState('');
   const [fgColor, setFgColor] = useState('#000000');
   const qrRef = useRef<HTMLDivElement>(null);
@@ -22,59 +25,71 @@ export const QRTool: React.FC<QRToolProps> = ({ onUsage, userId }) => {
   });
   const handleDownload = async () => {
     if (!text) return;
-    const canProceed = await onUsage(1);
-    if (!canProceed) return;
     try {
-      const svg = qrRef.current?.querySelector('svg');
-      if (svg) {
+      const usage = await runWithCredits(1, onUsage, async () => {
+        const svg = qrRef.current?.querySelector('svg');
+        if (!svg) {
+          throw new Error('No se encontró el elemento QR.');
+        }
+
         const svgData = new XMLSerializer().serializeToString(svg);
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         const img = new Image();
 
-        img.onload = async () => {
-          canvas.width = 512;
-          canvas.height = 512;
-          if (ctx) {
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 0, 0, 512, 512);
-            const pngUrl = canvas.toDataURL('image/png');
-            if (userId) {
-              try {
-                await addDoc(collection(db, 'users', userId, 'history'), {
-                  createdAt: new Date().toISOString(),
-                  category: 'logo',
-                  clientName: 'Código QR',
-                  platform: 'QR Generator',
-                  type: 'QR Code',
-                  content: `Enlace: ${text}`,
-                  imageUrl: pngUrl,
-                });
-              } catch (e) {
-                console.error('Error guardando historial', e);
-              }
-            }
+        await new Promise<void>((resolve, reject) => {
+          img.onload = () => {
+            resolve();
+          };
+          img.onerror = () => {
+            reject(new Error('No se pudo procesar el código QR.'));
+          };
+          img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
+        });
 
-            await downloadFile(pngUrl, `qr-${Date.now()}.png`);
+        canvas.width = 512;
+        canvas.height = 512;
+        if (!ctx) {
+          throw new Error('No se pudo procesar el código QR.');
+        }
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, 512, 512);
+        const pngUrl = canvas.toDataURL('image/png');
+
+        if (userId) {
+          try {
+            await logHistory({
+              userId,
+              category: 'qr',
+              clientName: 'Código QR',
+              platform: 'QR Generator',
+              type: 'QR Code',
+              content: `Enlace: ${text}`,
+              imageUrl: pngUrl,
+            });
+          } catch (e) {
+            console.error('Error guardando historial', e);
           }
-        };
-        img.onerror = () => {
-          setModal({
-            isOpen: true,
-            title: 'Error',
-            message: 'No se pudo procesar el código QR.',
-          });
-        };
-        img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
-      } else {
-        throw new Error('No se encontró el elemento QR.');
-      }
-    } catch (error: any) {
+        }
+
+        await downloadFile(pngUrl, `qr-${Date.now()}.png`);
+
+        dispatch(addToast({
+          title: '✅ Código QR Listo',
+          message: 'Tu código QR se ha descargado correctamente.',
+          type: 'success'
+        }));
+
+        return true;
+      });
+
+      if (!usage.ok) return;
+    } catch (error: unknown) {
       setModal({
         isOpen: true,
         title: 'Error',
-        message: error.message || 'Error desconocido',
+        message: error instanceof Error ? error.message : 'Error desconocido',
       });
     }
   };

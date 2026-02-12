@@ -13,7 +13,13 @@ export interface GeminiClient {
     mode: 'resumen' | 'riesgos' | 'accion' | 'mejora'
   ) => Promise<string>;
   analyzeFinancialHealth: (
-    transactions: any[],
+    transactions: Array<{
+      date: string;
+      type: 'income' | 'expense';
+      status: 'paid' | 'pending';
+      amount: number;
+      description: string;
+    }>,
     summary: { income: number; expense: number; balance: number },
     pending: { toCollect: number; toPay: number }
   ) => Promise<string>;
@@ -188,10 +194,10 @@ export const createGeminiClient = ({
       .replace(/```/g, '')
       .trim();
     const parsed = JSON.parse(text);
-    let finalProposals = parsed.proposals || parsed;
+    let finalProposals = (parsed.proposals || parsed) as Proposal[];
 
     if (platform === 'Workana') {
-      finalProposals = finalProposals.map((proposal: any) => ({
+      finalProposals = finalProposals.map((proposal) => ({
         ...proposal,
         content: sanitizeWorkanaContent(proposal.content),
       }));

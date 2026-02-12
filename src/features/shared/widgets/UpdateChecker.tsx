@@ -30,8 +30,6 @@ export const UpdateChecker = () => {
 
     const checkVersion = async () => {
       try {
-        console.log('Verificando actualizaciones en:', `${APP_DOMAIN}/version.json`);
-
         // Petición a Internet (Tu dominio real)
         const res = await fetch(`${APP_DOMAIN}/version.json?t=${Date.now()}`);
 
@@ -40,18 +38,16 @@ export const UpdateChecker = () => {
         const data: VersionData = await res.json();
         const currentVersion = packageJson.version;
 
-        console.log(`Versión App: ${currentVersion} | Versión Nube: ${data.version}`);
-
         if (currentVersion !== data.version) {
           setUpdateAvailable(data);
         }
       } catch (error) {
-        console.error('Error UpdateChecker:', error);
+        void error;
       }
     };
 
     checkVersion();
-  }, []);
+  }, [isAndroid, isElectron]);
 
   const handleDownload = () => {
     if (!updateAvailable) return;

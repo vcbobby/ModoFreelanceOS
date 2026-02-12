@@ -1,20 +1,12 @@
-import React, { useEffect, useState, useRef } from 'react'
-import {
-    motion,
-    useScroll,
-    useTransform,
-    useSpring,
-    useMotionValue,
-} from 'framer-motion'
+import React, { useEffect, useState } from 'react'
+import { motion, useTransform, useSpring, useMotionValue } from 'framer-motion'
 import {
     ArrowRight,
     CheckCircle,
     Zap,
-    Shield,
     Smartphone,
     Monitor,
     Globe,
-    PlayCircle,
     Menu,
     X,
     Instagram,
@@ -27,15 +19,12 @@ import {
     Radar,
     FileText,
     Check,
-    ChevronDown,
     Twitter,
     Facebook,
-    MessageCircle,
     Briefcase,
-    BarChart,
     Search,
 } from 'lucide-react'
-import { Button, ConfirmationModal } from '@features/shared/ui'
+import { Button } from '@features/shared/ui'
 import { TERMS_AND_CONDITIONS2, PRIVACY_POLICY2 } from '@/data/legalTexts' // Asegúrate de tener este archivo (te lo doy abajo)
 import { createPortal } from 'react-dom'
 
@@ -108,7 +97,7 @@ const HeroBackground = () => {
         }
         window.addEventListener('mousemove', handleMouseMove)
         return () => window.removeEventListener('mousemove', handleMouseMove)
-    }, [])
+    }, [mouseX, mouseY])
 
     return (
         <div className="absolute inset-0 overflow-hidden -z-10 pointer-events-none">
@@ -150,45 +139,6 @@ const HeroBackground = () => {
 
             {/* Grid Overlay - Optimizado con translateZ(0) */}
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03] transform-gpu"></div>
-        </div>
-    )
-}
-
-const FAQItem = ({
-    question,
-    answer,
-}: {
-    question: string
-    answer: string
-}) => {
-    const [isOpen, setIsOpen] = useState(false)
-    return (
-        <div className="border-b border-slate-200 dark:border-slate-800">
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="w-full py-6 flex justify-between items-center text-left hover:text-brand-600 transition-colors group"
-            >
-                <span className="font-bold text-lg text-slate-800 dark:text-white group-hover:text-brand-600 pr-4">
-                    {question}
-                </span>
-                <ChevronDown
-                    className={`w-5 h-5 text-slate-400 transition-transform ${
-                        isOpen ? 'rotate-180' : ''
-                    } shrink-0`}
-                />
-            </button>
-            <motion.div
-                initial={false}
-                animate={{
-                    height: isOpen ? 'auto' : 0,
-                    opacity: isOpen ? 1 : 0,
-                }}
-                className="overflow-hidden"
-            >
-                <p className="pb-6 text-slate-600 dark:text-slate-400 leading-relaxed text-sm">
-                    {answer}
-                </p>
-            </motion.div>
         </div>
     )
 }
@@ -371,33 +321,46 @@ export const LandingModern: React.FC = () => {
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                         </span>
-                        Nueva Versión 1.3.7
+                        Nueva Versión 2.0.0
                     </motion.div>
 
-                    <h1 className="text-6xl md:text-8xl lg:text-9xl font-black mb-8 leading-[1] tracking-tighter text-slate-900 dark:text-white drop-shadow-sm">
-                        Tu carrera freelance,
+                    <h1 className="relative z-20 text-6xl md:text-8xl lg:text-9xl font-black mb-8 leading-[1] tracking-tighter text-slate-900 dark:text-white drop-shadow-sm">
+                        Tu oficina virtual,
                         <br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-emerald-400">
-                            en Autopiloto.
+                            Potenciada por IA.
                         </span>
                     </h1>
 
                     <p className="text-xl md:text-2xl text-slate-600 dark:text-slate-400 mb-12 max-w-3xl mx-auto leading-relaxed font-medium">
-                        La única herramienta que combina{' '}
-                        <strong>Inteligencia Artificial</strong> con gestión de
-                        negocio. Consigue clientes, crea contratos, gestiona tu
-                        dinero y construye tu marca personal.
+                        La navaja suiza para el freelancer moderno. **ModoFreelanceOS V2** combina gestión de proyectos, finanzas inteligentes e inteligencia artificial para escalar tu carrera al siguiente nivel.
                     </p>
 
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full max-w-md mx-auto sm:max-w-none mb-24">
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full max-w-md mx-auto sm:max-w-none mb-12">
                         <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={handleLogin}
                             className="h-14 px-10 w-full sm:w-auto text-lg bg-brand-600 text-white hover:bg-brand-500 font-bold rounded-full shadow-xl shadow-brand-600/40 flex items-center justify-center gap-2"
                         >
-                            Comenzar Gratis <ArrowRight className="w-5 h-5" />
+                            Comenzar Ahora - 3 Créditos Gratis <ArrowRight className="w-5 h-5" />
                         </motion.button>
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => scrollTo('features')}
+                            className="h-14 px-10 w-full sm:w-auto text-lg bg-white/10 dark:bg-white/5 text-slate-900 dark:text-white border border-slate-200 dark:border-white/10 font-bold rounded-full backdrop-blur-md hover:bg-white/20 transition-all flex items-center justify-center gap-2"
+                        >
+                            Ver Funcionalidades
+                        </motion.button>
+                    </div>
+
+
+                    <div className="flex flex-wrap justify-center gap-6 md:gap-12 opacity-50 grayscale hover:grayscale-0 transition-all duration-500 mb-12">
+                        <div className="flex items-center gap-2 text-xs font-bold tracking-widest uppercase">
+                            {/* Todas las herramientas que necesitas para gestionar tu negocio */}
+                        </div>
+
                     </div>
 
                     {/* ELEMENTOS FLOTANTES (DECORACIÓN) */}
@@ -502,72 +465,133 @@ export const LandingModern: React.FC = () => {
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {[
-                            {
-                                icon: <PenTool />,
-                                title: 'Redactor IA',
-                                desc: 'Genera propuestas persuasivas en segundos.',
-                                color: 'text-blue-500',
-                                bg: 'bg-blue-100 dark:bg-blue-900/30',
-                            },
-                            {
-                                icon: <DollarSign />,
-                                title: 'Finanzas',
-                                desc: 'Control total de ingresos y gastos.',
-                                color: 'text-green-500',
-                                bg: 'bg-green-100 dark:bg-green-900/30',
-                            },
-                            {
-                                icon: <Monitor />,
-                                title: 'Web Builder',
-                                desc: 'Portafolio profesional con dominio propio.',
-                                color: 'text-purple-500',
-                                bg: 'bg-purple-100 dark:bg-purple-900/30',
-                            },
-                            {
-                                icon: <Radar />,
-                                title: 'Job Hunter',
-                                desc: 'Buscador de trabajos remotos en tiempo real.',
-                                color: 'text-pink-500',
-                                bg: 'bg-pink-100 dark:bg-pink-900/30',
-                            },
-                            {
-                                icon: <GraduationCap />,
-                                title: 'Academia IA',
-                                desc: 'Cursos personalizados al instante.',
-                                color: 'text-orange-500',
-                                bg: 'bg-orange-100 dark:bg-orange-900/30',
-                            },
-                            {
-                                icon: <FileText />,
-                                title: 'Legal & Briefs',
-                                desc: 'Contratos y checklists automáticos.',
-                                color: 'text-teal-500',
-                                bg: 'bg-teal-100 dark:bg-teal-900/30',
-                            },
-                        ].map((f, i) => (
-                            <motion.div
-                                key={i}
-                                whileInView={{ opacity: 1, y: 0 }} // Se hace visible al entrar
-                                viewport={{ once: true, margin: '-50px' }} // ¡IMPORTANTE! once: true evita que se repita/borre
-                                transition={{ duration: 0.5, delay: i * 0.1 }} // Pequeño delay escalonado
-                                whileHover={{ y: -5 }}
-                                className="p-8 rounded-3xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:shadow-lg transition-all will-change-transform"
-                            >
-                                <div
-                                    className={`w-12 h-12 rounded-xl flex items-center justify-center mb-6 ${f.bg} ${f.color}`}
-                                >
-                                    {f.icon}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {/* Pilar 1: AI Content Studio */}
+                        <div className="lg:col-span-2 p-8 rounded-3xl bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/30">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="p-3 bg-blue-600 rounded-2xl text-white">
+                                    <PenTool className="w-6 h-6" />
                                 </div>
-                                <h3 className="text-xl font-bold mb-3">
-                                    {f.title}
-                                </h3>
-                                <p className="text-slate-500 dark:text-slate-400">
-                                    {f.desc}
-                                </p>
-                            </motion.div>
-                        ))}
+                                <div>
+                                    <h3 className="text-2xl font-bold">AI Content Studio</h3>
+                                    <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">Persuasión y Redacción Instantánea</p>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <h4 className="font-bold flex items-center gap-2"><Zap className="w-4 h-4 text-brand-600" /> Redactor de Propuestas</h4>
+                                    <p className="text-sm text-slate-500">Crea propuestas ganadoras para Fiverr o Upwork en segundos usando IA.</p>
+                                </div>
+                                <div className="space-y-2">
+                                    <h4 className="font-bold flex items-center gap-2"><ArrowRight className="w-4 h-4 text-brand-600" /> Optimizador de Mensajes</h4>
+                                    <p className="text-sm text-slate-500">Refina tus correos y chats para sonar más profesional y cerrar más tratos.</p>
+                                </div>
+                                <div className="space-y-2">
+                                    <h4 className="font-bold flex items-center gap-2"><FileText className="w-4 h-4 text-brand-600" /> Constructor de CV IA</h4>
+                                    <p className="text-sm text-slate-500">Adapta tu perfil profesional según el proyecto al que apliques automáticamente.</p>
+                                </div>
+                                <div className="space-y-2">
+                                    <h4 className="font-bold flex items-center gap-2"><CheckCircle className="w-4 h-4 text-brand-600" /> Analizador de Gigs</h4>
+                                    <p className="text-sm text-slate-500">Recibe feedback instantáneo sobre cómo mejorar tus servicios publicados.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Pilar 2: Business Engine */}
+                        <div className="p-8 rounded-3xl bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800/30">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="p-3 bg-emerald-600 rounded-2xl text-white">
+                                    <DollarSign className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h3 className="text-2xl font-bold">Business Engine</h3>
+                                    <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">Gestión Financiera</p>
+                                </div>
+                            </div>
+                            <div className="space-y-6">
+                                <div className="space-y-1">
+                                    <h4 className="font-bold">Finanzas Inteligentes</h4>
+                                    <p className="text-sm text-slate-500">Controla cobros, pagos y estados de cuenta sin hojas de Excel complejas.</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <h4 className="font-bold">Generador de Facturas</h4>
+                                    <p className="text-sm text-slate-500">Crea invoices profesionales en PDF listas para enviar a tus clientes.</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <h4 className="font-bold">Analíticas de Negocio</h4>
+                                    <p className="text-sm text-slate-500">Visualiza el crecimiento de tus ingresos y detecta tus mejores meses.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Pilar 3: Digital Presence */}
+                        <div className="p-8 rounded-3xl bg-purple-50/50 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-800/30">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="p-3 bg-purple-600 rounded-2xl text-white">
+                                    <Globe className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h3 className="text-2xl font-bold">Digital Identity</h3>
+                                    <p className="text-sm text-purple-600 dark:text-purple-400 font-medium">Tu vitrina al mundo</p>
+                                </div>
+                            </div>
+                            <div className="space-y-6">
+                                <div className="space-y-1">
+                                    <h4 className="font-bold">Portfolio V-Card</h4>
+                                    <p className="text-sm text-slate-500">Una tarjeta de presentación digital interactiva con todos tus enlaces.</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <h4 className="font-bold">Constructor de Sitios</h4>
+                                    <p className="text-sm text-slate-500">Publica tu landing page personal en minutos sin saber programar.</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <h4 className="font-bold">Generador QR Dinámico</h4>
+                                    <p className="text-sm text-slate-500">QR personalizados para que los clientes accedan a tu perfil con un tap.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Pilar 4: Automation Hub & Growth Academy */}
+                        <div className="lg:col-span-2 p-8 rounded-3xl bg-orange-50/50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-800/30">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                <div>
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="p-3 bg-orange-600 rounded-2xl text-white">
+                                            <Radar className="w-6 h-6" />
+                                        </div>
+                                        <h3 className="text-2xl font-bold">Automation Hub</h3>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <div className="p-4 bg-white/50 dark:bg-black/20 rounded-xl border border-orange-200">
+                                            <h4 className="font-bold text-sm">Jobs Radar</h4>
+                                            <p className="text-xs text-slate-500">Buscador global de trabajos remotos en tiempo real.</p>
+                                        </div>
+                                        <div className="p-4 bg-white/50 dark:bg-black/20 rounded-xl border border-orange-200">
+                                            <h4 className="font-bold text-sm">Notificaciones Inteligentes</h4>
+                                            <p className="text-xs text-slate-500">Alertas de cobros pendientes y recordatorios de tareas.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="p-3 bg-brand-600 rounded-2xl text-white">
+                                            <GraduationCap className="w-6 h-6" />
+                                        </div>
+                                        <h3 className="text-2xl font-bold">Growth Academy</h3>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <div className="p-4 bg-white/50 dark:bg-black/20 rounded-xl border border-brand-200">
+                                            <h4 className="font-bold text-sm">Academia IA</h4>
+                                            <p className="text-xs text-slate-500">Aprende nuevas habilidades con cursos generados por IA.</p>
+                                        </div>
+                                        <div className="p-4 bg-white/50 dark:bg-black/20 rounded-xl border border-brand-200">
+                                            <h4 className="font-bold text-sm">Knowledge Base</h4>
+                                            <p className="text-xs text-slate-500">Tu segundo cerebro para guardar notas y recursos clave.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -588,35 +612,35 @@ export const LandingModern: React.FC = () => {
                         </p>
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-8 items-center max-w-4xl mx-auto">
+                    <div className="grid md:grid-cols-2 gap-8 items-stretch max-w-5xl mx-auto">
                         <motion.div
                             initial={{ opacity: 0, x: -20 }}
                             whileInView={{ opacity: 1, x: 0 }}
-                            viewport={{ once: true }} // <--- ESTO EVITA EL PARPADEO
+                            viewport={{ once: true }}
                             transition={{ duration: 0.5 }}
-                            className="p-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:shadow-xl transition-shadow"
+                            className="flex flex-col p-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm"
                         >
-                            <h3 className="text-xl font-bold mb-2">
-                                Freelancer Starter
-                            </h3>
+                            <h3 className="text-xl font-bold mb-2">Freelancer Starter</h3>
+                            <p className="text-sm text-slate-500 mb-6">Lo esencial para despegar.</p>
                             <div className="text-4xl font-black mb-6">
-                                $0{' '}
-                                <span className="text-lg font-normal text-slate-500">
-                                    /mes
-                                </span>
+                                $0 <span className="text-lg font-normal text-slate-500">gratis por siempre</span>
                             </div>
-                            <ul className="space-y-4 mb-8 text-sm text-slate-600 dark:text-slate-300">
+                            <ul className="space-y-4 mb-8 text-sm text-slate-600 dark:text-slate-300 flex-grow">
                                 <li className="flex gap-2">
-                                    <Check className="w-5 h-5 text-green-500" />{' '}
-                                    3 Créditos IA Semanales
+                                    <Check className="w-5 h-5 text-green-500 shrink-0" />
+                                    <span>**3 Créditos IA Semanales** (Se renuevan cada lunes)</span>
                                 </li>
                                 <li className="flex gap-2">
-                                    <Check className="w-5 h-5 text-green-500" />{' '}
-                                    Buscador de Trabajo (Retraso 24h)
+                                    <Check className="w-5 h-5 text-green-500 shrink-0" />
+                                    <span>Buscador de Trabajo (Lento - 24h de retraso)</span>
                                 </li>
                                 <li className="flex gap-2">
-                                    <Check className="w-5 h-5 text-green-500" />{' '}
-                                    Generador de CV Básico
+                                    <Check className="w-5 h-5 text-green-500 shrink-0" />
+                                    <span>Gestión Financiera Básica</span>
+                                </li>
+                                <li className="flex gap-2 opacity-40">
+                                    <X className="w-5 h-5 text-slate-400 shrink-0" />
+                                    <span>Portafolio Publicado</span>
                                 </li>
                             </ul>
                             <Button
@@ -624,53 +648,79 @@ export const LandingModern: React.FC = () => {
                                 variant="outline"
                                 className="w-full border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
                             >
-                                Crear Cuenta Gratis
+                                Empezar Ahora
                             </Button>
                         </motion.div>
+
                         <motion.div
                             initial={{ opacity: 0, x: 20 }}
                             whileInView={{ opacity: 1, x: 0 }}
-                            viewport={{ once: true }} // <--- ESTO EVITA EL PARPADEO
+                            viewport={{ once: true }}
                             transition={{ duration: 0.5, delay: 0.2 }}
-                            className="p-8 rounded-3xl border-2 border-brand-500 bg-white dark:bg-slate-900 relative shadow-2xl transform md:scale-105"
+                            className="flex flex-col p-8 rounded-3xl border-2 border-brand-500 bg-white dark:bg-slate-900 relative shadow-2xl transform md:scale-105"
                         >
                             <div className="absolute top-0 right-0 bg-brand-500 text-white text-xs font-bold px-3 py-1 rounded-bl-xl">
-                                MÁS POPULAR
+                                RECOMENDADO
                             </div>
-                            <h3 className="text-xl font-bold mb-2">
-                                Freelancer PRO
-                            </h3>
+                            <h3 className="text-xl font-bold mb-2 text-brand-600">Freelancer PRO</h3>
+                            <p className="text-sm text-slate-500 mb-6">Tu carrera en esteroides.</p>
                             <div className="text-4xl font-black mb-6">
-                                $10{' '}
-                                <span className="text-lg font-normal text-slate-500">
-                                    /mes
-                                </span>
+                                $10 <span className="text-lg font-normal text-slate-500">/ mes</span>
                             </div>
-                            <ul className="space-y-4 mb-8 text-sm font-medium">
+                            <ul className="space-y-4 mb-8 text-sm font-medium flex-grow">
                                 <li className="flex gap-2">
-                                    <CheckCircle className="w-5 h-5 text-brand-500" />{' '}
-                                    <strong>Créditos IA ILIMITADOS</strong>
+                                    <Zap className="w-5 h-5 text-brand-500 shrink-0" />
+                                    <span>**Créditos IA ILIMITADOS**</span>
                                 </li>
                                 <li className="flex gap-2">
-                                    <CheckCircle className="w-5 h-5 text-brand-500" />{' '}
-                                    Ofertas de Trabajo en Tiempo Real
+                                    <Zap className="w-5 h-5 text-brand-500 shrink-0" />
+                                    <span>Jobs Radar en Tiempo Real</span>
                                 </li>
                                 <li className="flex gap-2">
-                                    <CheckCircle className="w-5 h-5 text-brand-500" />{' '}
-                                    Web Builder (Portafolio Online)
+                                    <Zap className="w-5 h-5 text-brand-500 shrink-0" />
+                                    <span>**Website Builder Incluido** (Tu propia web)</span>
                                 </li>
                                 <li className="flex gap-2">
-                                    <CheckCircle className="w-5 h-5 text-brand-500" />{' '}
-                                    Asistente Personal 24/7
+                                    <Zap className="w-5 h-5 text-brand-500 shrink-0" />
+                                    <span>Generador de Facturas Ilimitado</span>
+                                </li>
+                                <li className="flex gap-2">
+                                    <Zap className="w-5 h-5 text-brand-500 shrink-0" />
+                                    <span>Soporte Prioritario</span>
                                 </li>
                             </ul>
                             <Button
                                 onClick={handleLogin}
                                 className="w-full bg-brand-600 hover:bg-brand-500 text-white font-bold h-12 shadow-lg shadow-brand-500/20"
                             >
-                                Comenzar Prueba
+                                Volverse PRO
                             </Button>
                         </motion.div>
+                    </div>
+
+                    {/* Credit Packages Section */}
+                    <div className="mt-20 text-center">
+                        <div className="inline-block p-1 px-4 bg-brand-50 dark:bg-brand-900/20 border border-brand-100 rounded-full text-xs font-bold text-brand-600 mb-6 uppercase tracking-widest">
+                            ¿Solo necesitas unos pocos?
+                        </div>
+                        <h3 className="text-2xl font-bold mb-4">Paquetes de Créditos</h3>
+                        <p className="text-slate-500 mb-10 max-w-xl mx-auto">
+                            Si el plan PRO no es para ti, puedes comprar créditos adicionales que **nunca mueren**.
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                            <div className="p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl">
+                                <div className="text-xl font-bold">10 Créditos</div>
+                                <div className="text-brand-600 font-bold">$0.99</div>
+                            </div>
+                            <div className="p-6 bg-brand-50/50 dark:bg-brand-900/10 border-2 border-brand-200 rounded-2xl scale-105">
+                                <div className="text-xl font-bold">30 Créditos</div>
+                                <div className="text-brand-600 font-bold">$2.49</div>
+                            </div>
+                            <div className="p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl">
+                                <div className="text-xl font-bold">60 Créditos</div>
+                                <div className="text-brand-600 font-bold">$4.99</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -724,86 +774,72 @@ export const LandingModern: React.FC = () => {
                 </div>
             </section>
 
-            {/* FOOTER */}
-            <footer className="py-16 border-t border-slate-200 dark:border-white/10 bg-white dark:bg-black text-sm text-slate-500">
-                <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between gap-10">
-                    <div>
-                        <div className="flex items-center gap-2 font-bold text-lg text-slate-900 dark:text-white mb-4">
-                            <div className="w-6 h-6 bg-brand-600 rounded flex items-center justify-center text-white">
-                                <Zap className="w-4 h-4" />
+            {/* HOW IT WORKS */}
+            <section className="py-24 px-6 bg-slate-900 text-white relative overflow-hidden">
+                <div className="container mx-auto max-w-6xl relative z-10">
+                    <div className="text-center mb-16">
+                        <h2 className="text-4xl font-bold mb-4">¿Cómo funciona?</h2>
+                        <p className="text-slate-400">Escala tu negocio en 4 simples pasos.</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                        {[
+                            { step: "01", title: "Regístrate", desc: "Crea tu cuenta gratis y recibe tus primeros 3 créditos IA." },
+                            { step: "02", title: "Configura", desc: "Activa tu portafolio y conecta tus herramientas de finanzas." },
+                            { step: "03", title: "Automatiza", desc: "Encuentra trabajos y genera propuestas con nuestra IA." },
+                            { step: "04", title: "Escala", desc: "Construye una marca personal sólida y atrae clientes directos." }
+                        ].map((s, i) => (
+                            <div key={i} className="relative p-6 bg-white/5 border border-white/10 rounded-2xl">
+                                <div className="text-4xl font-black text-brand-600/50 mb-4">{s.step}</div>
+                                <h4 className="text-xl font-bold mb-2">{s.title}</h4>
+                                <p className="text-sm text-slate-400">{s.desc}</p>
                             </div>
-                            ModoFreelance
-                            <span className="text-brand-600">OS</span>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* DOWNLOAD (Already present, skipping replacement of it if possible but keeping context) */}
+
+            {/* FOOTER */}
+            <footer className="py-20 border-t border-slate-200 dark:border-white/10 bg-white dark:bg-black text-sm text-slate-500">
+                <div className="container mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12">
+                    <div className="col-span-1 md:col-span-2">
+                        <div className="flex items-center gap-2 font-bold text-xl text-slate-900 dark:text-white mb-6">
+                            <span className="text-brand-600">ModoFreelance</span>OS
                         </div>
-                        <p className="max-w-xs mb-6">
-                            Herramientas inteligentes para la nueva generación
-                            de trabajadores remotos.
+                        <p className="max-w-sm mb-8 leading-relaxed">
+                            Diseñado por y para freelancers en Latinoamérica. ModoFreelanceOS es tu oficina virtual de nueva generación, simplificando la burocracia para que tú te enfoques en crear.
                         </p>
                         <div className="flex gap-4">
-                            <a
-                                href="https://www.instagram.com/modofreelance/"
-                                className="hover:text-brand-600 transition-colors"
-                            >
-                                <Instagram className="w-5 h-5" />
-                            </a>
-                            <a
-                                href="https://www.linkedin.com/showcase/modofreelancedev"
-                                className="hover:text-brand-600 transition-colors"
-                            >
-                                <Linkedin className="w-5 h-5" />
-                            </a>
-                            <a
-                                href="https://www.youtube.com/@modo_freelance"
-                                className="hover:text-brand-600 transition-colors"
-                            >
-                                <Youtube className="w-5 h-5" />
-                            </a>
-                            <a
-                                href="https://x.com/modo_freelance"
-                                className="hover:text-brand-600 transition-colors"
-                            >
-                                <Twitter className="w-5 h-5" />
-                            </a>
-                            <a
-                                href="https://www.facebook.com/modofreelancedev/"
-                                className="hover:text-brand-600 transition-colors"
-                            >
-                                <Facebook className="w-5 h-5" />
-                            </a>
-                            <a
-                                href="https://www.twitch.tv/modofreelance"
-                                className="hover:text-brand-600 transition-colors"
-                            >
-                                <Zap className="w-5 h-5" />
-                            </a>
+                            {[Instagram, Linkedin, Youtube, Twitter, Facebook].map((Icon, i) => (
+                                <a key={i} href="#" className="p-2 bg-slate-100 dark:bg-white/5 rounded-lg hover:text-brand-600 transition-all">
+                                    <Icon className="w-5 h-5" />
+                                </a>
+                            ))}
                         </div>
                     </div>
                     <div>
-                        <h4 className="text-slate-900 dark:text-white font-bold mb-4">
-                            Legal
-                        </h4>
-                        <ul className="space-y-2">
-                            <li>
-                                <button
-                                    onClick={() => openLegal('terms')}
-                                    className="hover:text-brand-600"
-                                >
-                                    Términos y Condiciones
-                                </button>
-                            </li>
-                            <li>
-                                <button
-                                    onClick={() => openLegal('privacy')}
-                                    className="hover:text-brand-600"
-                                >
-                                    Privacidad
-                                </button>
-                            </li>
+                        <h4 className="text-slate-900 dark:text-white font-bold mb-6 uppercase tracking-widest text-xs">Producto</h4>
+                        <ul className="space-y-4">
+                            <li><button onClick={() => scrollTo('features')} className="hover:text-brand-600 transition-colors">Funcionalidades</button></li>
+                            <li><button onClick={() => scrollTo('pricing')} className="hover:text-brand-600 transition-colors">Precios</button></li>
+                            <li><button onClick={() => scrollTo('download')} className="hover:text-brand-600 transition-colors">Descargar App</button></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 className="text-slate-900 dark:text-white font-bold mb-6 uppercase tracking-widest text-xs">Legal</h4>
+                        <ul className="space-y-4">
+                            <li><button onClick={() => openLegal('terms')} className="hover:text-brand-600 transition-colors">Términos y Condiciones</button></li>
+                            <li><button onClick={() => openLegal('privacy')} className="hover:text-brand-600 transition-colors">Política de Privacidad</button></li>
+                            <li><a href="mailto:modofreelancedev@gmail.com" className="hover:text-brand-600 transition-colors">Soporte Tecnico</a></li>
                         </ul>
                     </div>
                 </div>
-                <div className="text-center mt-12 pt-8 border-t border-slate-200 dark:border-white/5">
-                    &copy; 2026 ModoFreelanceOS. Todos los derechos reservados.
+                <div className="container mx-auto px-6 mt-16 pt-8 border-t border-slate-200 dark:border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <p>&copy; 2026 ModoFreelanceOS. Hecho con ❤️ para la comunidad de freelancers.</p>
+                    <div className="flex gap-6">
+                        <span className="flex items-center gap-1.5"><Globe className="w-4 h-4" /> Español (Latam)</span>
+                    </div>
                 </div>
             </footer>
         </div>

@@ -1,17 +1,18 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { useTheme } from '@context/ThemeContext';
 import { useAgendaNotifications } from '@/app/hooks/useAgendaNotifications';
+import { usePushNotifications } from '@/app/hooks/usePushNotifications';
 import { AppView } from '@types';
 import { AuthView } from '@features/auth';
-import { PricingModal, ConfirmationModal } from '@features/shared/ui';
+import { PricingModal, ConfirmationModal, ToastProvider } from '@features/shared/ui';
 import { AIAssistant, SupportWidget, UpdateChecker } from '@features/shared/widgets';
 import { AppShell } from '@/app/AppShell';
 import { AppRoutes } from '@/app/AppRoutes';
 import { PomodoroController } from '@/app/PomodoroController';
 import { useAppDispatch, useAppSelector } from '@/app/hooks/storeHooks';
 import { setUser, setLoading, clearAuth } from '@/app/slices/authSlice';
-import { setDisplayName, setUserState, updateCredits } from '@/app/slices/userSlice';
+import { setDisplayName, setUserState, updateCredits, setPhoneNumber } from '@/app/slices/userSlice';
 import {
   closeAlertModal,
   setAlertModal,
@@ -32,6 +33,8 @@ const GUMROAD_LINK = 'https://modofreelanceos.gumroad.com/l/pro-subs';
 const WORDPRESS_URL = 'http://modofreelanceos.com/';
 const ADMIN_EMAILS = ['castillovictor2461@gmail.com'];
 const isE2E = import.meta.env.VITE_E2E === 'true';
+const isTestEnv =
+  import.meta.env.MODE === 'test' || (import.meta as { env?: { VITEST?: string } }).env?.VITEST;
 
 const App = () => {
   const dispatch = useAppDispatch();
@@ -49,30 +52,195 @@ const App = () => {
     isEditingName,
   } = useAppSelector((state) => state.ui);
   const { user: authUser, loading: loadingAuth } = useAppSelector((state) => state.auth);
-  const { userState, displayName } = useAppSelector((state) => state.user);
+  const { userState, displayName, phoneNumber } = useAppSelector((state) => state.user);
   const notifications = useAppSelector((state) => state.notifications.items);
+  const pomodoroActive = useAppSelector((state) => state.pomodoro.isActive);
 
   const hookNotifications = useAgendaNotifications(authUser?.uid);
+  usePushNotifications(authUser?.uid);
+  const notificationsKeyRef = useRef('');
+  const currentViewRef = useRef(currentView);
+  const userStateRef = useRef(userState);
   const agendaAlerts = notifications.filter((n) => n.type === 'agenda').length;
   const financeAlerts = notifications.filter((n) => n.type === 'finance').length;
   const showNoEventsToast = false;
 
-  const showAlert = (title: string, message: string) => {
-    dispatch(setAlertModal({ isOpen: true, title, message }));
-  };
+  useEffect(() => {
+    currentViewRef.current = currentView;
+  }, [currentView]);
 
-  const sendWakeUpPing = async () => {
+  useEffect(() => {
+    userStateRef.current = userState;
+  }, [userState]);
+
+  const showAlert = useCallback(
+    (title: string, message: string) => {
+      dispatch(setAlertModal({ isOpen: true, title, message }));
+    },
+    [dispatch]
+  );
+
+  const sendWakeUpPing = useCallback(async () => {
     try {
       await backendClient.ping();
     } catch (error) {
-      console.log('Ping complete or timed out (normal behavior).');
+      void error;
     }
-  };
+  }, []);
+
+  const fetchUserData = useCallback(
+    async (uid: string, email?: string) => {
+      try {
+        const result = await firebaseAdapters.users.getUserDoc(uid);
+        const now = Date.now();
+        const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
+
+        let finalIsSubscribed = false;
+        let finalCredits = 3;
+        let finalBaseCredits = 3;
+        let finalPurchasedCredits = 0;
+        let finalSubEnd = null;
+        let finalLastReset = now;
+
+        if (result.exists) {
+          const data = result.data || {};
+          dispatch(setDisplayName(data.displayName || email?.split('@')[0] || 'Usuario'));
+          dispatch(setPhoneNumber(data.phoneNumber || ''));
+
+          let isSub = data.isSubscribed || false;
+          let baseCredits = data.credits !== undefined ? data.credits : 0;
+          let purchasedCredits = data.purchasedCredits || 0;
+          let subEnd = data.subscriptionEnd;
+          let lastReset = data.lastReset || now;
+
+          if (isSub && subEnd && now > subEnd) {
+            isSub = false;
+            baseCredits = 3;
+            lastReset = now;
+            subEnd = null;
+            firebaseAdapters.users.updateUserDoc(uid, {
+              isSubscribed: false,
+              credits: 3,
+              lastReset: now,
+              subscriptionEnd: null,
+            });
+            showAlert('Plan Vencido', 'Tu plan PRO ha finalizado.');
+          }
+
+          finalIsSubscribed = isSub;
+          finalCredits = baseCredits + purchasedCredits;
+          finalBaseCredits = baseCredits;
+          finalPurchasedCredits = purchasedCredits;
+          finalSubEnd = subEnd;
+          finalLastReset = lastReset;
+        } else {
+          await firebaseAdapters.users.setUserDoc(uid, {
+            email,
+            credits: 3,
+            purchasedCredits: 0,
+            isSubscribed: false,
+            createdAt: new Date().toISOString(),
+            lastReset: now,
+            signupPlatform: Capacitor.isNativePlatform() ? 'Mobile' : 'Web',
+          });
+          dispatch(setDisplayName(email?.split('@')[0] || 'Usuario'));
+        }
+
+        dispatch(
+          setUserState({
+            isSubscribed: finalIsSubscribed,
+            credits: finalCredits,
+            baseCredits: finalBaseCredits,
+            purchasedCredits: finalPurchasedCredits,
+            subscriptionEnd: finalSubEnd,
+            nextReset: finalLastReset + oneWeekMs,
+          })
+        );
+      } catch (error) {
+        void error;
+      } finally {
+        dispatch(setLoading(false));
+      }
+    },
+    [dispatch, showAlert]
+  );
+
+  const syncWithBackend = useCallback(
+    async (uid: string) => {
+      if (isE2E) return;
+      try {
+        let currentPlatform = 'Web Browser';
+        if (Capacitor.isNativePlatform()) currentPlatform = 'Android App';
+        else if (navigator.userAgent.toLowerCase().includes(' electron/'))
+          currentPlatform = 'Windows App';
+        const result = await checkStatus({ platform: currentPlatform, userId: uid }).unwrap();
+        const data = result.data;
+        dispatch(
+          setUserState({
+            isSubscribed: data.isSubscribed || false,
+            credits: data.credits !== undefined ? data.credits : 0,
+            baseCredits: data.baseCredits !== undefined ? data.baseCredits : 0,
+            purchasedCredits: data.purchasedCredits !== undefined ? data.purchasedCredits : 0,
+            subscriptionEnd: data.subscriptionEnd,
+            nextReset: (data.lastReset || Date.now()) + 604800000,
+          })
+        );
+      } catch (error) {
+        void error;
+      }
+    },
+    [checkStatus, dispatch]
+  );
+
+  const activateProPlan = useCallback(
+    async (uid: string) => {
+      try {
+        const now = new Date();
+        const expirationDate = new Date();
+        expirationDate.setDate(now.getDate() + 30);
+
+        await firebaseAdapters.users.updateUserDoc(uid, {
+          isSubscribed: true,
+          credits: 9999,
+          subscriptionEnd: expirationDate.getTime(),
+        });
+
+        const prevState = userStateRef.current;
+        dispatch(
+          setUserState({
+            ...prevState,
+            isSubscribed: true,
+            credits: 9999,
+            subscriptionEnd: expirationDate.getTime(),
+          })
+        );
+        window.history.replaceState({}, document.title, window.location.pathname);
+        showAlert(
+          '¡Pago Exitoso!',
+          `Suscripción PRO activa. Tu plan es válido hasta el ${expirationDate.toLocaleDateString()}. ¡Disfruta!`
+        );
+        dispatch(setShowSuccessMsg(true));
+        setTimeout(() => dispatch(setShowSuccessMsg(false)), 5000);
+      } catch (error) {
+        void error;
+      }
+    },
+    [dispatch, showAlert]
+  );
 
   useEffect(() => {
-    if (isE2E) {
-      const isLoggedIn = localStorage.getItem('e2e_auth') !== 'false';
-      if (isLoggedIn) {
+    if (isTestEnv) return;
+    const e2eAuthFlag = import.meta.env.DEV && !isTestEnv ? localStorage.getItem('e2e_auth') : null;
+    const e2eQueryFlag =
+      import.meta.env.DEV &&
+      !isTestEnv &&
+      new URLSearchParams(window.location.search).get('e2e') === '1';
+    const isE2EActive = isE2E || e2eAuthFlag !== null || e2eQueryFlag;
+    if (!isE2EActive) return;
+
+    const isLoggedIn = (e2eAuthFlag ?? 'true') !== 'false';
+    if (isLoggedIn) {
+      if (authUser?.uid !== 'e2e-user') {
         dispatch(
           setUser({
             uid: 'e2e-user',
@@ -80,6 +248,8 @@ const App = () => {
             displayName: 'E2E User',
           })
         );
+      }
+      if (!userState.isSubscribed || userState.credits !== 9999 || !userState.subscriptionEnd) {
         dispatch(
           setUserState({
             isSubscribed: true,
@@ -87,18 +257,53 @@ const App = () => {
             subscriptionEnd: Date.now() + 30 * 24 * 60 * 60 * 1000,
           })
         );
+      }
+      if (displayName !== 'E2E User') {
         dispatch(setDisplayName('E2E User'));
-        if (currentView === AppView.LANDING) {
-          dispatch(setCurrentView(AppView.DASHBOARD));
-        }
-      } else {
+      }
+      if (currentView === AppView.LANDING) {
+        dispatch(setCurrentView(AppView.DASHBOARD));
+      }
+    } else {
+      if (authUser) {
         dispatch(clearAuth());
+      }
+      if (userState.isSubscribed || userState.credits !== 0) {
         dispatch(setUserState({ isSubscribed: false, credits: 0 }));
+      }
+      if (displayName) {
         dispatch(setDisplayName(''));
-        dispatch(setNotifications([]));
+      }
+      dispatch(setNotifications([]));
+      if (currentView !== AppView.LANDING) {
         dispatch(setCurrentView(AppView.LANDING));
       }
+    }
+    if (loadingAuth) {
       dispatch(setLoading(false));
+    }
+  }, [
+    authUser,
+    currentView,
+    dispatch,
+    displayName,
+    loadingAuth,
+    userState.credits,
+    userState.isSubscribed,
+    userState.subscriptionEnd,
+  ]);
+
+  useEffect(() => {
+    if (isTestEnv) {
+      if (loadingAuth) dispatch(setLoading(false));
+      return;
+    }
+    const e2eAuthFlag = import.meta.env.DEV && !isTestEnv ? localStorage.getItem('e2e_auth') : null;
+    const e2eQueryFlag =
+      import.meta.env.DEV &&
+      !isTestEnv &&
+      new URLSearchParams(window.location.search).get('e2e') === '1';
+    if (isE2E || e2eAuthFlag !== null || e2eQueryFlag) {
       return;
     }
 
@@ -121,7 +326,7 @@ const App = () => {
           activateProPlan(currentUser.uid);
         }
 
-        if (currentView === AppView.LANDING) {
+        if (currentViewRef.current === AppView.LANDING) {
           dispatch(setCurrentView(AppView.DASHBOARD));
         }
       } else {
@@ -129,13 +334,22 @@ const App = () => {
         dispatch(setUserState({ isSubscribed: false, credits: 0 }));
         dispatch(setDisplayName(''));
         dispatch(setNotifications([]));
+        if (currentViewRef.current !== AppView.LANDING) {
+          dispatch(setCurrentView(AppView.LANDING));
+        }
       }
     });
 
     return () => unsubscribe();
-  }, [currentView, dispatch]);
+  }, [activateProPlan, dispatch, fetchUserData, sendWakeUpPing, syncWithBackend]);
 
   useEffect(() => {
+    if (isTestEnv) return;
+    const key = hookNotifications
+      .map((item) => `${item.id}:${item.date}:${item.type}:${item.severity}`)
+      .join('|');
+    if (key === notificationsKeyRef.current) return;
+    notificationsKeyRef.current = key;
     dispatch(setNotifications(hookNotifications));
   }, [dispatch, hookNotifications]);
 
@@ -166,136 +380,44 @@ const App = () => {
       });
       dispatch(setIsEditingName(false));
     } catch (error) {
-      console.error('Error guardando nombre', error);
-    }
-  };
-
-  const fetchUserData = async (uid: string, email?: string) => {
-    try {
-      const result = await firebaseAdapters.users.getUserDoc(uid);
-      const now = Date.now();
-      const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
-
-      let finalIsSubscribed = false;
-      let finalCredits = 3;
-      let finalSubEnd = null;
-      let finalLastReset = now;
-
-      if (result.exists) {
-        const data = result.data || {};
-        dispatch(
-          setDisplayName(data.displayName || email?.split('@')[0] || 'Usuario')
-        );
-
-        let isSub = data.isSubscribed || false;
-        let credits = data.credits !== undefined ? data.credits : 0;
-        let subEnd = data.subscriptionEnd;
-        let lastReset = data.lastReset || now;
-
-        if (isSub && subEnd && now > subEnd) {
-          isSub = false;
-          credits = 3;
-          lastReset = now;
-          subEnd = null;
-          firebaseAdapters.users.updateUserDoc(uid, {
-            isSubscribed: false,
-            credits: 3,
-            lastReset: now,
-            subscriptionEnd: null,
-          });
-          showAlert('Plan Vencido', 'Tu plan PRO ha finalizado.');
-        }
-
-        finalIsSubscribed = isSub;
-        finalCredits = credits;
-        finalSubEnd = subEnd;
-        finalLastReset = lastReset;
-      } else {
-        await firebaseAdapters.users.setUserDoc(uid, {
-          email,
-          credits: 3,
-          isSubscribed: false,
-          createdAt: new Date().toISOString(),
-          lastReset: now,
-          signupPlatform: Capacitor.isNativePlatform() ? 'Mobile' : 'Web',
-        });
-        dispatch(setDisplayName(email?.split('@')[0] || 'Usuario'));
-      }
-
-      dispatch(setUserState({
-        isSubscribed: finalIsSubscribed,
-        credits: finalCredits,
-        subscriptionEnd: finalSubEnd,
-        nextReset: finalLastReset + oneWeekMs,
-      }));
-    } catch (error) {
-      console.error('Error fetchUserData:', error);
-    } finally {
-      dispatch(setLoading(false));
-    }
-  };
-
-  const syncWithBackend = async (uid: string) => {
-    if (isE2E) return;
-    try {
-      let currentPlatform = 'Web Browser';
-      if (Capacitor.isNativePlatform()) currentPlatform = 'Android App';
-      else if (navigator.userAgent.toLowerCase().includes(' electron/'))
-        currentPlatform = 'Windows App';
-      const result = await checkStatus({ platform: currentPlatform, userId: uid }).unwrap();
-      const data = result.data;
-      dispatch(
-        setUserState({
-          isSubscribed: data.isSubscribed || false,
-          credits: data.credits !== undefined ? data.credits : 0,
-          subscriptionEnd: data.subscriptionEnd,
-          nextReset: (data.lastReset || Date.now()) + 604800000,
-        })
-      );
-    } catch (error) {
-      console.log('Backend todavía despertando o error de red (no crítico).');
-    }
-  };
-
-  const activateProPlan = async (uid: string) => {
-    try {
-      const now = new Date();
-      const expirationDate = new Date();
-      expirationDate.setDate(now.getDate() + 30);
-
-      await firebaseAdapters.users.updateUserDoc(uid, {
-        isSubscribed: true,
-        credits: 9999,
-        subscriptionEnd: expirationDate.getTime(),
-      });
-
-      dispatch(
-        setUserState({
-          ...userState,
-          isSubscribed: true,
-          credits: 9999,
-          subscriptionEnd: expirationDate.getTime(),
-        })
-      );
-      window.history.replaceState({}, document.title, window.location.pathname);
-      showAlert(
-        '¡Pago Exitoso!',
-        `Suscripción PRO activa. Tu plan es válido hasta el ${expirationDate.toLocaleDateString()}. ¡Disfruta!`
-      );
-      dispatch(setShowSuccessMsg(true));
-      setTimeout(() => dispatch(setShowSuccessMsg(false)), 5000);
-    } catch (error) {
-      console.error('Error activando plan:', error);
+      void error;
     }
   };
 
   const handleFeatureUsage = async (cost: number = 1): Promise<boolean> => {
     if (isE2E) return true;
     if (userState.isSubscribed) return true;
-    if (userState.credits >= cost && authUser) {
-      const newCredits = userState.credits - cost;
-      dispatch(updateCredits(newCredits));
-      firebaseAdapters.users.updateUserDoc(authUser.uid, { credits: newCredits });
+    const { baseCredits, purchasedCredits } = userState;
+    const totalAvailable = baseCredits + purchasedCredits;
+
+    if (totalAvailable >= cost && authUser) {
+      let newBase = baseCredits;
+      let newPurchased = purchasedCredits;
+
+      // Deduct from base first
+      if (newBase >= cost) {
+        newBase -= cost;
+      } else {
+        const remainingCost = cost - newBase;
+        newBase = 0;
+        newPurchased -= remainingCost;
+      }
+
+      const totalCredits = newBase + newPurchased;
+
+      dispatch(
+        setUserState({
+          ...userState,
+          credits: totalCredits,
+          baseCredits: newBase,
+          purchasedCredits: newPurchased,
+        })
+      );
+
+      firebaseAdapters.users.updateUserDoc(authUser.uid, {
+        credits: newBase,
+        purchasedCredits: newPurchased
+      });
       return true;
     } else {
       dispatch(setPricingOpen(true));
@@ -355,12 +477,16 @@ const App = () => {
         handleBellClick={handleBellClick}
         agendaAlerts={agendaAlerts}
         financeAlerts={financeAlerts}
+        pomodoroBadge={pomodoroActive ? 1 : 0}
         userState={userState}
         userEmail={authUser.email}
         userDisplayName={displayName}
         adminEmails={ADMIN_EMAILS}
         handleLogout={handleLogout}
         setIsPricingOpen={(value) => dispatch(setPricingOpen(value))}
+        setDisplayName={(val) => dispatch(setDisplayName(val))}
+        userPhoneNumber={phoneNumber}
+        setPhoneNumber={(val) => dispatch(setPhoneNumber(val))}
       >
         <AppRoutes
           currentView={currentView}
@@ -396,6 +522,7 @@ const App = () => {
         confirmText="Entendido"
         cancelText=""
       />
+      <ToastProvider />
     </>
   );
 };

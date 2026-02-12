@@ -5,7 +5,7 @@ test('cv builder export', async ({ page }) => {
   await gotoApp(page, true);
 
   await openNav(page, 'Constructor CV');
-  await expect(page.getByRole('heading', { name: /Constructor CV/i })).toBeVisible();
+  await expect(page.getByPlaceholder('Nombre Completo')).toBeVisible();
 
   await page.getByPlaceholder('Nombre Completo').fill('E2E Tester');
   await page.getByPlaceholder('Título Profesional').fill('Frontend Dev');

@@ -1,18 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { freelanceTips } from '@/data/tips';
 import { Sparkles, RefreshCw } from 'lucide-react';
 
 export const DashboardTips = () => {
-  const [randomTips, setRandomTips] = useState<typeof freelanceTips>([]);
+  const getRandomTips = () => {
+    const shuffled = [...freelanceTips].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, 4);
+  };
+
+  const [randomTips, setRandomTips] = useState<typeof freelanceTips>(getRandomTips());
 
   const shuffleTips = () => {
     const shuffled = [...freelanceTips].sort(() => 0.5 - Math.random());
     setRandomTips(shuffled.slice(0, 4));
   };
-
-  useEffect(() => {
-    shuffleTips();
-  }, []);
 
   return (
     <div className="mt-12">
@@ -47,7 +48,7 @@ export const DashboardTips = () => {
                   {tip.category}
                 </span>
                 <p className="text-slate-700 dark:text-slate-300 text-sm mt-1 leading-relaxed font-medium">
-                  "{tip.text}"
+                  &quot;{tip.text}&quot;
                 </p>
               </div>
             </div>

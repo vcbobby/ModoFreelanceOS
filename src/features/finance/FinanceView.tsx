@@ -667,20 +667,52 @@ import {
   Filter,
   Repeat,
   AlertCircle,
-  ArrowRight,
 } from 'lucide-react';
 import { Button, Card, ConfirmationModal } from '@features/shared/ui';
-import { analyzeFinancialHealth } from '@features/shared/services';
+import { analyzeFinancialHealth, processTransaction } from '@features/shared/services';
+import { useAppDispatch } from '@/app/hooks/storeHooks';
+import { addToast } from '@/app/slices/uiSlice';
 import ReactMarkdown from 'react-markdown';
 
 interface FinanceViewProps {
   userId?: string;
 }
 
+interface FinanceTransaction {
+  id: string;
+  amount: number;
+  description: string;
+  type: 'income' | 'expense';
+  date: string;
+  isRecurring: boolean;
+  status: 'paid' | 'pending';
+  createdAt?: string;
+}
+
 export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
-  const isE2E = import.meta.env.VITE_E2E === 'true';
+  const dispatch = useAppDispatch();
+  const isE2E = (import.meta as any).env.VITE_E2E === 'true';
+  const getE2eKey = (id?: string) => `e2e_finances_${id || 'anon'}`;
+  const loadE2eTransactions = (): FinanceTransaction[] => {
+    if (!userId) return [];
+    try {
+      const raw = localStorage.getItem(getE2eKey(userId));
+      if (!raw) return [];
+      return JSON.parse(raw) as FinanceTransaction[];
+    } catch (error) {
+      void error;
+      return [];
+    }
+  };
+  const saveE2eTransactions = (nextTransactions: FinanceTransaction[]) => {
+    if (!userId) return;
+    localStorage.setItem(getE2eKey(userId), JSON.stringify(nextTransactions));
+  };
+
   // ESTADOS DE DATOS
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<FinanceTransaction[]>(() =>
+    isE2E && userId ? loadE2eTransactions() : []
+  );
   const [privacyMode, setPrivacyMode] = useState(true);
 
   // ESTADOS DE FILTRO Y VISTA
@@ -704,36 +736,32 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
     isOpen: false,
     title: '',
     message: '',
-    action: () => {},
+    action: () => { },
   });
 
-  const getE2eKey = (id?: string) => `e2e_finances_${id || 'anon'}`;
-  const loadE2eTransactions = () => {
-    if (!userId) return [] as any[];
-    try {
-      const raw = localStorage.getItem(getE2eKey(userId));
-      if (!raw) return [] as any[];
-      return JSON.parse(raw) as any[];
-    } catch (error) {
-      console.error('Error leyendo finanzas E2E', error);
-      return [] as any[];
-    }
-  };
-  const saveE2eTransactions = (nextTransactions: any[]) => {
-    if (!userId) return;
-    localStorage.setItem(getE2eKey(userId), JSON.stringify(nextTransactions));
+  const normalizeTransaction = (t: Partial<FinanceTransaction>): FinanceTransaction => {
+    const normalizedAmount = Number(t.amount);
+    return {
+      id: t.id || `${Date.now()}`,
+      amount: Number.isFinite(normalizedAmount) ? normalizedAmount : 0,
+      description: t.description || '',
+      type: t.type === 'income' ? 'income' : 'expense',
+      date: t.date || new Date().toISOString().split('T')[0],
+      isRecurring: Boolean(t.isRecurring),
+      status: t.status === 'pending' ? 'pending' : 'paid',
+      createdAt: t.createdAt,
+    };
   };
 
   // CARGAR DATOS
   useEffect(() => {
     if (!userId) return;
-    if (isE2E) {
-      setTransactions(loadE2eTransactions());
-      return;
-    }
+    if (isE2E) return;
     const q = query(collection(db, 'users', userId, 'finances'), orderBy('date', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      setTransactions(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+      setTransactions(
+        snapshot.docs.map((doc) => normalizeTransaction({ id: doc.id, ...doc.data() }))
+      );
     });
     return () => unsubscribe();
   }, [isE2E, userId]);
@@ -816,32 +844,49 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount || !description || !userId) return;
+    const parsedAmount = Number(amount);
+    if (!Number.isFinite(parsedAmount)) return;
     if (isE2E) {
       const next = [
         {
           id: `${Date.now()}`,
-          amount: parseFloat(amount),
+          amount: parsedAmount,
+          description,
+          type,
+          date,
+          isRecurring,
+          status: status as 'paid' | 'pending',
+          createdAt: new Date().toISOString(),
+        },
+        ...transactions,
+      ];
+      const normalized = next.map(normalizeTransaction);
+      setTransactions(normalized);
+      saveE2eTransactions(normalized);
+    } else {
+      try {
+        await processTransaction({
           description,
           type,
           date,
           isRecurring,
           status,
-          createdAt: new Date().toISOString(),
-        },
-        ...transactions,
-      ];
-      setTransactions(next);
-      saveE2eTransactions(next);
-    } else {
-      await addDoc(collection(db, 'users', userId, 'finances'), {
-        amount: parseFloat(amount),
-        description,
-        type,
-        date,
-        isRecurring,
-        status,
-        createdAt: new Date().toISOString(),
-      });
+          amount: parsedAmount,
+          userId: userId,
+        });
+        dispatch(addToast({
+          title: '✅ Transacción Guardada',
+          message: 'El movimiento se ha registrado correctamente.',
+          type: 'success'
+        }));
+      } catch (error) {
+        console.error('Error processing transaction:', error);
+        dispatch(addToast({
+          title: '❌ Error',
+          message: 'No se pudo guardar la transacción. Reintenta.',
+          type: 'error'
+        }));
+      }
     }
     setAmount('');
     setDescription('');
@@ -867,18 +912,34 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
     });
   };
 
-  const handleMarkAsPaid = async (t: any) => {
+  const handleMarkAsPaid = async (t: FinanceTransaction) => {
     if (!userId) return;
     if (isE2E) {
       const next = transactions.map((tx) =>
-        tx.id === t.id ? { ...tx, status: 'paid' } : tx
+        tx.id === t.id ? { ...tx, status: 'paid' as const } : tx
       );
       setTransactions(next);
       saveE2eTransactions(next);
     } else {
-      await updateDoc(doc(db, 'users', userId, 'finances', t.id), {
-        status: 'paid',
-      });
+      try {
+        await processTransaction({
+          ...t,
+          status: 'paid',
+          userId: userId,
+        });
+        dispatch(addToast({
+          title: '✅ Pago Registrado',
+          message: 'La transacción se ha marcado como pagada.',
+          type: 'success'
+        }));
+      } catch (error) {
+        console.error('Error updating transaction:', error);
+        dispatch(addToast({
+          title: '❌ Error',
+          message: 'Error al marcar como pagado.',
+          type: 'error'
+        }));
+      }
     }
   };
 
@@ -900,7 +961,12 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
       );
       setAiAnalysis(result);
     } catch (error) {
-      alert('Error al analizar.');
+      void error;
+      dispatch(addToast({
+        title: '❌ Error',
+        message: 'No se pudo completar el análisis financiero.',
+        type: 'error'
+      }));
     } finally {
       setAnalyzing(false);
     }
@@ -965,21 +1031,19 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
         <div className="flex bg-white dark:bg-slate-800 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-x-auto w-full md:w-auto">
           <button
             onClick={() => setViewMode('period')}
-            className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors whitespace-nowrap flex items-center gap-2 ${
-              viewMode === 'period'
-                ? 'bg-slate-900 text-white dark:bg-slate-700'
-                : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/50'
-            }`}
+            className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors whitespace-nowrap flex items-center gap-2 ${viewMode === 'period'
+              ? 'bg-slate-900 text-white dark:bg-slate-700'
+              : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/50'
+              }`}
           >
             <Calendar className="w-4 h-4" /> Historial
           </button>
           <button
             onClick={() => setViewMode('pending')}
-            className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors whitespace-nowrap flex items-center gap-2 ${
-              viewMode === 'pending'
-                ? 'bg-orange-500 text-white'
-                : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/50'
-            }`}
+            className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors whitespace-nowrap flex items-center gap-2 ${viewMode === 'pending'
+              ? 'bg-orange-500 text-white'
+              : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/50'
+              }`}
           >
             <Clock className="w-4 h-4" /> Pendientes
             {financialData.pendingTx.length > 0 && (
@@ -990,11 +1054,10 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
           </button>
           <button
             onClick={() => setViewMode('recurring')}
-            className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors whitespace-nowrap flex items-center gap-2 ${
-              viewMode === 'recurring'
-                ? 'bg-brand-600 text-white'
-                : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/50'
-            }`}
+            className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors whitespace-nowrap flex items-center gap-2 ${viewMode === 'recurring'
+              ? 'bg-brand-600 text-white'
+              : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/50'
+              }`}
           >
             <Repeat className="w-4 h-4" /> Fijos
           </button>
@@ -1066,22 +1129,20 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                     <button
                       type="button"
                       onClick={() => setType('income')}
-                      className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${
-                        type === 'income'
-                          ? 'bg-white dark:bg-slate-800 text-green-600 shadow-sm'
-                          : 'text-slate-400'
-                      }`}
+                      className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${type === 'income'
+                        ? 'bg-white dark:bg-slate-800 text-green-600 shadow-sm'
+                        : 'text-slate-400'
+                        }`}
                     >
                       Ingreso
                     </button>
                     <button
                       type="button"
                       onClick={() => setType('expense')}
-                      className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${
-                        type === 'expense'
-                          ? 'bg-white dark:bg-slate-800 text-red-600 shadow-sm'
-                          : 'text-slate-400'
-                      }`}
+                      className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${type === 'expense'
+                        ? 'bg-white dark:bg-slate-800 text-red-600 shadow-sm'
+                        : 'text-slate-400'
+                        }`}
                     >
                       Gasto
                     </button>
@@ -1142,9 +1203,8 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                       onClick={() => setIsRecurring(!isRecurring)}
                     >
                       <div
-                        className={`w-4 h-4 border rounded flex items-center justify-center ${
-                          isRecurring ? 'bg-slate-800 text-white' : 'border-slate-300'
-                        }`}
+                        className={`w-4 h-4 border rounded flex items-center justify-center ${isRecurring ? 'bg-slate-800 text-white' : 'border-slate-300'
+                          }`}
                       >
                         {isRecurring && <CheckCircle className="w-3 h-3" />}
                       </div>
@@ -1152,11 +1212,10 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                     </div>
                   )}
                   <Button
-                    className={`w-full ${
-                      type === 'income'
-                        ? 'bg-green-600 hover:bg-green-700'
-                        : 'bg-red-600 hover:bg-red-700'
-                    }`}
+                    className={`w-full ${type === 'income'
+                      ? 'bg-green-600 hover:bg-green-700'
+                      : 'bg-red-600 hover:bg-red-700'
+                      }`}
                   >
                     <Plus className="w-4 h-4 mr-2" />{' '}
                     {status === 'pending' ? 'Agendar' : 'Registrar'}
@@ -1167,7 +1226,7 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                     onClick={handleAIAnalysis}
                     isLoading={analyzing}
                     className="w-full bg-indigo-600 hover:bg-indigo-700"
-                    variant="default"
+                    variant="primary"
                   >
                     <BrainCircuit className="w-4 h-4 mr-2" /> Analizar
                   </Button>
@@ -1204,11 +1263,10 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                       >
                         <div className="flex items-center gap-3">
                           <div
-                            className={`p-2 rounded-full ${
-                              t.type === 'income'
-                                ? 'bg-green-100 text-green-600 dark:bg-green-900/30'
-                                : 'bg-red-100 text-red-600 dark:bg-red-900/30'
-                            }`}
+                            className={`p-2 rounded-full ${t.type === 'income'
+                              ? 'bg-green-100 text-green-600 dark:bg-green-900/30'
+                              : 'bg-red-100 text-red-600 dark:bg-red-900/30'
+                              }`}
                           >
                             {t.type === 'income' ? (
                               <TrendingUp className="w-4 h-4" />
@@ -1237,9 +1295,8 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                         </div>
                         <div className="flex items-center gap-4">
                           <span
-                            className={`font-bold ${
-                              t.type === 'income' ? 'text-green-600' : 'text-red-600'
-                            }`}
+                            className={`font-bold ${t.type === 'income' ? 'text-green-600' : 'text-red-600'
+                              }`}
                           >
                             {t.type === 'income' ? '+' : '-'} {formatMoney(t.amount)}
                           </span>
@@ -1291,21 +1348,19 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                   return (
                     <div
                       key={t.id}
-                      className={`p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors ${
-                        isLate
-                          ? 'bg-red-50/50 dark:bg-red-900/10'
-                          : isSoon
-                            ? 'bg-orange-50/50 dark:bg-orange-900/10'
-                            : ''
-                      }`}
+                      className={`p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors ${isLate
+                        ? 'bg-red-50/50 dark:bg-red-900/10'
+                        : isSoon
+                          ? 'bg-orange-50/50 dark:bg-orange-900/10'
+                          : ''
+                        }`}
                     >
                       <div className="flex items-center gap-4">
                         <div
-                          className={`p-3 rounded-xl shrink-0 ${
-                            t.type === 'income'
-                              ? 'bg-green-100 text-green-600 dark:bg-green-900/30'
-                              : 'bg-red-100 text-red-600 dark:bg-red-900/30'
-                          }`}
+                          className={`p-3 rounded-xl shrink-0 ${t.type === 'income'
+                            ? 'bg-green-100 text-green-600 dark:bg-green-900/30'
+                            : 'bg-red-100 text-red-600 dark:bg-red-900/30'
+                            }`}
                         >
                           {t.type === 'income' ? (
                             <DollarSign className="w-5 h-5" />
@@ -1319,13 +1374,12 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                           </p>
                           <div className="flex items-center gap-2 text-sm mt-1">
                             <span
-                              className={`font-bold ${
-                                isLate
-                                  ? 'text-red-600'
-                                  : isSoon
-                                    ? 'text-orange-500'
-                                    : 'text-slate-500'
-                              }`}
+                              className={`font-bold ${isLate
+                                ? 'text-red-600'
+                                : isSoon
+                                  ? 'text-orange-500'
+                                  : 'text-slate-500'
+                                }`}
                             >
                               {isLate
                                 ? `Venció hace ${Math.abs(daysLeft)} días`
@@ -1341,9 +1395,8 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
 
                       <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-0 border-slate-100 dark:border-slate-700">
                         <span
-                          className={`font-bold text-lg ${
-                            t.type === 'income' ? 'text-green-600' : 'text-red-600'
-                          }`}
+                          className={`font-bold text-lg ${t.type === 'income' ? 'text-green-600' : 'text-red-600'
+                            }`}
                         >
                           {formatMoney(t.amount)}
                         </span>
@@ -1380,7 +1433,7 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
               <Repeat className="w-5 h-5 text-brand-600" /> Gastos e Ingresos Fijos
             </h3>
             <p className="text-sm text-slate-500 mb-6">
-              Listado de movimientos marcados como "Recurrentes".
+              Listado de movimientos marcados como &quot;Recurrentes&quot;.
             </p>
 
             {financialData.recurringTx.length === 0 ? (
@@ -1396,14 +1449,12 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                   >
                     <div className="flex items-center gap-3">
                       <div
-                        className={`p-2 rounded-lg ${
-                          t.type === 'income' ? 'bg-green-50' : 'bg-red-50'
-                        }`}
+                        className={`p-2 rounded-lg ${t.type === 'income' ? 'bg-green-50' : 'bg-red-50'
+                          }`}
                       >
                         <Repeat
-                          className={`w-4 h-4 ${
-                            t.type === 'income' ? 'text-green-600' : 'text-red-600'
-                          }`}
+                          className={`w-4 h-4 ${t.type === 'income' ? 'text-green-600' : 'text-red-600'
+                            }`}
                         />
                       </div>
                       <div>
@@ -1413,9 +1464,8 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                     </div>
                     <div className="flex items-center gap-4">
                       <span
-                        className={`font-bold ${
-                          t.type === 'income' ? 'text-green-600' : 'text-red-600'
-                        }`}
+                        className={`font-bold ${t.type === 'income' ? 'text-green-600' : 'text-red-600'
+                          }`}
                       >
                         {formatMoney(t.amount)} / mes
                       </span>

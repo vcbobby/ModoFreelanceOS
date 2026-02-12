@@ -18,10 +18,9 @@ describe('SupportWidget', () => {
 
     // Switch to Support tab and click first option (mock window.open)
     await user.click(screen.getByText('Soporte'));
-    const originalOpen = window.open;
-    window.open = vi.fn() as any;
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
     await user.click(screen.getByText('Reportar un error técnico'));
     expect(window.open).toHaveBeenCalled();
-    window.open = originalOpen;
+    openSpy.mockRestore();
   });
 });

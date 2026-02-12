@@ -1,16 +1,12 @@
 import React, { useState } from 'react';
-import {
-  ArrowRight,
-  ArrowLeft,
-  Check,
-  FileText,
-  Briefcase,
-  User,
-  AlignLeft,
-  Download,
-} from 'lucide-react';
+import { ArrowRight, ArrowLeft, Check, Briefcase, User, AlignLeft, Download } from 'lucide-react';
 import { Button, Card, ConfirmationModal } from '@features/shared/ui';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db } from '@config/firebase';
 import { downloadFile, loadHtml2Pdf } from '@features/shared/utils';
+import { getBackendURL } from '@config/features';
+import { getAuthHeaders } from '@/services/backend/authHeaders';
+import { runWithCredits } from '@/utils/credits';
 
 interface BriefingToolProps {
   onUsage: (cost: number) => Promise<boolean>;
@@ -59,9 +55,12 @@ export const BriefingTool: React.FC<BriefingToolProps> = ({ onUsage, userId }) =
     agreedTasks: '',
   });
 
-  const BACKEND_URL = import.meta.env.PROD
-    ? 'https://backend-freelanceos.onrender.com' // Se usa en Vercel, Windows (.exe) y Android (.apk)
-    : 'http://localhost:8000'; // Se usa solo en tu PC cuando haces "npm run dev"
+  const BACKEND_URL = getBackendURL();
+
+  const buildChecklistContent = (tasks: string[]) =>
+    tasks.length > 0
+      ? tasks.map((task) => `☐ ${task}`).join('\n')
+      : '☐ Revisar requerimientos del proyecto';
 
   const updateForm = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -91,9 +90,6 @@ export const BriefingTool: React.FC<BriefingToolProps> = ({ onUsage, userId }) =
 
   const handleProcess = async () => {
     if (!userId) return;
-    const canProceed = await onUsage(2);
-    if (!canProceed) return;
-
     setLoading(true);
     try {
       const fullDetails = `
@@ -105,28 +101,74 @@ export const BriefingTool: React.FC<BriefingToolProps> = ({ onUsage, userId }) =
                 PUNTOS ACORDADOS / TAREAS ESPECÍFICAS: ${formData.agreedTasks}
             `;
 
-      const data = new FormData();
-      data.append('userId', userId);
-      data.append('clientName', formData.clientName);
-      data.append('projectType', formData.projectType);
-      data.append('details', fullDetails);
+      const usage = await runWithCredits(2, onUsage, async () => {
+        const authHeaders = await getAuthHeaders();
+        const response = await fetch(`${BACKEND_URL}/api/v1/briefings/checklist`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...authHeaders,
+          },
+          body: JSON.stringify({
+            userId,
+            project_type: formData.projectType,
+            client_info: `Cliente: ${formData.clientName}. Presupuesto: ${formData.budget || 'A definir'}. Fecha limite: ${formData.deadline || 'A definir'}.`,
+            requirements: fullDetails.trim(),
+          }),
+        });
 
-      const response = await fetch(`${BACKEND_URL}/api/generate-checklist`, {
-        method: 'POST',
-        body: data,
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.detail || 'Error en el servidor');
+        }
+        const data = await response.json();
+        if (!data?.success || !Array.isArray(data?.tasks)) {
+          throw new Error('Respuesta invalida del servidor');
+        }
+        return data.tasks as string[];
       });
 
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.detail || 'Error en el servidor');
+      if (!usage.ok || !usage.result) return;
+
+      if (userId) {
+        const checklist = buildChecklistContent(usage.result);
+        try {
+          await addDoc(collection(db, 'users', userId, 'notes'), {
+            title: `Checklist - ${formData.clientName || 'Cliente'}`,
+            content: checklist,
+            color: 'bg-blue-100',
+            isPinned: true,
+            isPrivate: false,
+            order: 0,
+            createdAt: serverTimestamp(),
+          });
+        } catch (error) {
+          console.warn('No se pudo guardar la nota del checklist.', error);
+        }
+
+        try {
+          await addDoc(collection(db, 'users', userId, 'history'), {
+            createdAt: new Date().toISOString(),
+            category: 'briefing',
+            type: 'brief-checklist',
+            clientName: formData.clientName || 'Cliente',
+            platform: formData.projectType,
+            content: `Checklist generado con ${usage.result.length} tareas.`,
+            metadata: {
+              projectType: formData.projectType,
+            },
+          });
+        } catch (error) {
+          console.warn('No se pudo guardar el briefing en el historial.', error);
+        }
       }
 
       setIsFinished(true);
-    } catch (error: any) {
-      console.error(error);
+    } catch (error: unknown) {
+      void error;
       showModal(
         'Error de Generación',
-        `No se pudo crear el checklist. Detalle: ${error.message}`,
+        `No se pudo crear el checklist. Detalle: ${error instanceof Error ? error.message : 'Error en el servidor'}`,
         true,
         true
       );
