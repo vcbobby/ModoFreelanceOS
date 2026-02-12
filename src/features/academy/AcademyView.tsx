@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { GraduationCap, ChevronDown, ChevronRight, Sparkles, Trash2 } from 'lucide-react';
+import { GraduationCap, ChevronDown, ChevronRight, Trash2 } from 'lucide-react';
 import { Button, Card, ConfirmationModal } from '@features/shared/ui';
 import ReactMarkdown from 'react-markdown';
 import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';

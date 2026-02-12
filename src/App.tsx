@@ -12,7 +12,12 @@ import { AppRoutes } from '@/app/AppRoutes';
 import { PomodoroController } from '@/app/PomodoroController';
 import { useAppDispatch, useAppSelector } from '@/app/hooks/storeHooks';
 import { setUser, setLoading, clearAuth } from '@/app/slices/authSlice';
-import { setDisplayName, setUserState, updateCredits, setPhoneNumber } from '@/app/slices/userSlice';
+import {
+  setDisplayName,
+  setUserState,
+  updateCredits,
+  setPhoneNumber,
+} from '@/app/slices/userSlice';
 import {
   closeAlertModal,
   setAlertModal,
@@ -109,7 +114,7 @@ const App = () => {
 
           let isSub = data.isSubscribed || false;
           let baseCredits = data.credits !== undefined ? data.credits : 0;
-          let purchasedCredits = data.purchasedCredits || 0;
+          const purchasedCredits = data.purchasedCredits || 0;
           let subEnd = data.subscriptionEnd;
           let lastReset = data.lastReset || now;
 
@@ -416,7 +421,7 @@ const App = () => {
 
       firebaseAdapters.users.updateUserDoc(authUser.uid, {
         credits: newBase,
-        purchasedCredits: newPurchased
+        purchasedCredits: newPurchased,
       });
       return true;
     } else {

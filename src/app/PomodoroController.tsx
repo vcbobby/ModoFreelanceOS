@@ -23,7 +23,7 @@ export const PomodoroController = () => {
       } else {
         localStorage.removeItem('pomodoro_session');
       }
-    } catch (e) {
+    } catch (_e) {
       localStorage.removeItem('pomodoro_session');
     }
   }, [dispatch]);
@@ -31,7 +31,7 @@ export const PomodoroController = () => {
   // Persistence: Save timer on changes
   useEffect(() => {
     if (isActive && timeLeft > 0) {
-      const endTime = Date.now() + (timeLeft * 1000);
+      const endTime = Date.now() + timeLeft * 1000;
       localStorage.setItem('pomodoro_session', JSON.stringify({ endTime, mode }));
     } else if (!isActive) {
       localStorage.removeItem('pomodoro_session');
@@ -71,11 +71,13 @@ export const PomodoroController = () => {
         });
       }
 
-      dispatch(addToast({
-        title,
-        message: body,
-        type: 'success'
-      }));
+      dispatch(
+        addToast({
+          title,
+          message: body,
+          type: 'success',
+        })
+      );
 
       const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
       audio.play().catch((error) => {

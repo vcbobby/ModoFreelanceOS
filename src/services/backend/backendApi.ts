@@ -35,7 +35,7 @@ const baseQueryWithTimeout: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQu
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-  let headers = new Headers(typeof args === 'string' ? undefined : args.headers);
+  const headers = new Headers(typeof args === 'string' ? undefined : (args.headers as any));
   try {
     const token = await auth.currentUser?.getIdToken();
     if (token) {
