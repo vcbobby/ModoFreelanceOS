@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
 
 body {
   font-family: 'Inter', sans-serif;
@@ -26,10 +24,12 @@ body {
 }
 
 .thin-scrollbar::-webkit-scrollbar-thumb {
-  background-color: #cbd5e1; /* slate-300 */
+  background-color: #cbd5e1;
+  /* slate-300 */
   border-radius: 20px;
 }
 
 .dark .thin-scrollbar::-webkit-scrollbar-thumb {
-  background-color: #334155; /* slate-700 */
+  background-color: #334155;
+  /* slate-700 */
 }
