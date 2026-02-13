@@ -1,0 +1,19 @@
+diff --git a/node_modules/html-encoding-sniffer/lib/html-encoding-sniffer.js b/node_modules/html-encoding-sniffer/lib/html-encoding-sniffer.js
+index 08a92d3..47770a7 100644
+--- a/node_modules/html-encoding-sniffer/lib/html-encoding-sniffer.js
++++ b/node_modules/html-encoding-sniffer/lib/html-encoding-sniffer.js
+@@ -1,5 +1,13 @@
+ "use strict";
+-const { getBOMEncoding, labelToName } = require("@exodus/bytes/encoding-lite.js");
++let getBOMEncoding = () => null;
++let labelToName = (v) => v;
++try {
++  const _enc = require("@exodus/bytes/encoding-lite.js");
++  getBOMEncoding = _enc.getBOMEncoding || getBOMEncoding;
++  labelToName = _enc.labelToName || labelToName;
++} catch (e) {
++  // Fallback for ESM-only environments — keep behavior minimal and safe
++}
+ 
+ // https://html.spec.whatwg.org/#encoding-sniffing-algorithm
+ module.exports = (uint8Array, { xml = false, transportLayerEncodingLabel, defaultEncoding } = {}) => {

@@ -1,0 +1,19 @@
+diff --git a/node_modules/whatwg-url/lib/url-state-machine.js b/node_modules/whatwg-url/lib/url-state-machine.js
+index dd92fd0..6098900 100644
+--- a/node_modules/whatwg-url/lib/url-state-machine.js
++++ b/node_modules/whatwg-url/lib/url-state-machine.js
+@@ -1,6 +1,12 @@
+ "use strict";
+-require("@exodus/bytes/encoding.js"); // for legacy multi-byte encodings
+-const { percentEncodeAfterEncoding } = require("@exodus/bytes/whatwg.js");
++try { require("@exodus/bytes/encoding.js"); } catch (e) { /* ignore if ESM-only */ }
++let percentEncodeAfterEncoding = (input) => input;
++try {
++  const _what = require("@exodus/bytes/whatwg.js");
++  percentEncodeAfterEncoding = _what.percentEncodeAfterEncoding || percentEncodeAfterEncoding;
++} catch (e) {
++  // fallback to identity
++}
+ const tr46 = require("tr46");
+ 
+ const infra = require("./infra");

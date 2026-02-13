@@ -1,0 +1,385 @@
+    // ---------------------------------------------------------
+    // ACADEMY (Permitir leer, escribir y borrar cursos generados)
+    // ---------------------------------------------------------
+    match /users/{userId}/academy/{docId} {
+      allow read, write, delete: if isOwner(userId);
+    }
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.admin == true;
+    }
+
+    function isValidKnowledgeBase() {
+      return request.resource.data.keys().hasOnly([
+          'title',
+          'summary',
+          'tags',
+          'source',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 140
+        && request.resource.data.summary is string
+        && request.resource.data.summary.size() > 0
+        && request.resource.data.summary.size() <= 2000
+        && request.resource.data.tags is list
+        && request.resource.data.tags.size() <= 12
+        && (!request.resource.data.keys().hasAny(['source'])
+          || request.resource.data.source == null
+          || request.resource.data.source is string)
+        && (!request.resource.data.keys().hasAny(['createdAt'])
+          || request.resource.data.createdAt is timestamp)
+        && (!request.resource.data.keys().hasAny(['updatedAt'])
+          || request.resource.data.updatedAt is timestamp);
+    }
+
+    function isValidAutomation() {
+      return request.resource.data.keys().hasOnly([
+          'name',
+          'trigger',
+          'action',
+          'actionType',
+          'target',
+          'message',
+          'schedule',
+          'enabled',
+          'createdAt',
+          'lastRunAt',
+          'lastRunStatus',
+          'lastRunJobId',
+          'lastRunError',
+          'retryAttempts',
+          'retryBaseDelay',
+          'retryJitter'
+        ])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 120
+        && request.resource.data.trigger is string
+        && request.resource.data.trigger.size() > 0
+        && request.resource.data.trigger.size() <= 160
+        && request.resource.data.action is string
+        && request.resource.data.action.size() > 0
+        && request.resource.data.action.size() <= 240
+        && (!request.resource.data.keys().hasAny(['actionType'])
+          || request.resource.data.actionType == null
+          || request.resource.data.actionType in ['notify', 'email', 'whatsapp', 'task'])
+        && (!request.resource.data.keys().hasAny(['target'])
+          || request.resource.data.target == null
+          || request.resource.data.target is string)
+        && (!request.resource.data.keys().hasAny(['message'])
+          || request.resource.data.message == null
+          || (request.resource.data.message is string
+            && request.resource.data.message.size() <= 600))
+        && (!request.resource.data.keys().hasAny(['schedule'])
+          || request.resource.data.schedule == null
+          || request.resource.data.schedule is string)
+        && request.resource.data.enabled is bool
+        && (!request.resource.data.keys().hasAny(['createdAt'])
+          || request.resource.data.createdAt is timestamp)
+        && (!request.resource.data.keys().hasAny(['lastRunAt'])
+          || request.resource.data.lastRunAt is timestamp)
+        && (!request.resource.data.keys().hasAny(['lastRunStatus'])
+          || request.resource.data.lastRunStatus == null
+          || request.resource.data.lastRunStatus is string)
+        && (!request.resource.data.keys().hasAny(['lastRunJobId'])
+          || request.resource.data.lastRunJobId == null
+          || request.resource.data.lastRunJobId is string)
+        && (!request.resource.data.keys().hasAny(['lastRunError'])
+          || request.resource.data.lastRunError == null
+          || (request.resource.data.lastRunError is string
+            && request.resource.data.lastRunError.size() <= 500))
+        && (!request.resource.data.keys().hasAny(['retryAttempts'])
+          || request.resource.data.retryAttempts == null
+          || (request.resource.data.retryAttempts is number
+            && request.resource.data.retryAttempts >= 1
+            && request.resource.data.retryAttempts <= 10))
+        && (!request.resource.data.keys().hasAny(['retryBaseDelay'])
+          || request.resource.data.retryBaseDelay == null
+          || (request.resource.data.retryBaseDelay is number
+            && request.resource.data.retryBaseDelay >= 0
+            && request.resource.data.retryBaseDelay <= 30))
+        && (!request.resource.data.keys().hasAny(['retryJitter'])
+          || request.resource.data.retryJitter == null
+          || (request.resource.data.retryJitter is number
+            && request.resource.data.retryJitter >= 0
+            && request.resource.data.retryJitter <= 10));
+    }
+
+    function isValidFinance() {
+      return request.resource.data.keys().hasOnly([
+          'amount',
+          'description',
+          'type',
+          'date',
+          'isRecurring',
+          'status',
+          'createdAt',
+          'recurringId'
+        ])
+        && request.resource.data.amount is number
+        && request.resource.data.amount >= 0
+        && request.resource.data.description is string
+        && request.resource.data.description.size() > 0
+        && request.resource.data.description.size() <= 200
+        && request.resource.data.type in ['income', 'expense']
+        && request.resource.data.date is string
+        && request.resource.data.date.size() <= 20
+        && request.resource.data.isRecurring is bool
+        && request.resource.data.status in ['paid', 'pending']
+        && (!request.resource.data.keys().hasAny(['recurringId'])
+          || request.resource.data.recurringId == null
+          || request.resource.data.recurringId is string)
+        && (!request.resource.data.keys().hasAny(['createdAt'])
+          || request.resource.data.createdAt is timestamp
+          || request.resource.data.createdAt is string);
+    }
+
+    function isValidHistory() {
+      let allowedCategories = [
+        'logo',
+        'optimizer',
+        'invoice',
+        'cv',
+        'analyzer',
+        'proposal',
+        'fiverr',
+        'briefing',
+        'academy',
+        'portfolio',
+        'website',
+        'jobs',
+        'notes',
+        'finance',
+        'tool',
+        'qr',
+        'assistant',
+        'history',
+        'gig',
+        'course'
+      ];
+      return request.resource.data.keys().hasOnly([
+          'category',
+          'type',
+          'clientName',
+          'platform',
+          'content',
+          'imageUrl',
+          'invoiceData',
+          'metadata',
+          'createdAt',
+          'gigData',
+          'userId'
+        ])
+        && request.resource.data.category is string
+        && request.resource.data.category in allowedCategories
+        && (!request.resource.data.keys().hasAny(['type'])
+          || request.resource.data.type == null
+          || (request.resource.data.type is string
+            && request.resource.data.type.size() <= 120))
+        && (!request.resource.data.keys().hasAny(['clientName'])
+          || request.resource.data.clientName == null
+          || (request.resource.data.clientName is string
+            && request.resource.data.clientName.size() <= 120))
+        && (!request.resource.data.keys().hasAny(['platform'])
+          || request.resource.data.platform == null
+          || (request.resource.data.platform is string
+            && request.resource.data.platform.size() <= 120))
+        && (!request.resource.data.keys().hasAny(['content'])
+          || request.resource.data.content == null
+          || (request.resource.data.content is string
+            && request.resource.data.content.size() <= 5000))
+        && (!request.resource.data.keys().hasAny(['imageUrl'])
+          || request.resource.data.imageUrl == null
+          || (request.resource.data.imageUrl is string
+            && request.resource.data.imageUrl.size() <= 500))
+        && (!request.resource.data.keys().hasAny(['invoiceData'])
+          || request.resource.data.invoiceData == null
+          || request.resource.data.invoiceData is map)
+        && (!request.resource.data.keys().hasAny(['gigData'])
+          || request.resource.data.gigData == null
+          || request.resource.data.gigData is map)
+        && (!request.resource.data.keys().hasAny(['metadata'])
+          || request.resource.data.metadata == null
+          || request.resource.data.metadata is map)
+        && (!request.resource.data.keys().hasAny(['createdAt'])
+          || request.resource.data.createdAt is timestamp
+          || request.resource.data.createdAt is string)
+        && (!request.resource.data.keys().hasAny(['userId'])
+          || request.resource.data.userId == null
+          || (request.resource.data.userId is string
+            && request.resource.data.userId.size() <= 128));
+    }
+
+    function isValidAutomationSettings() {
+      return request.resource.data.keys().hasOnly([
+          'attempts',
+          'baseDelay',
+          'jitter',
+          'updatedAt'
+        ])
+        && request.resource.data.attempts is number
+        && request.resource.data.attempts >= 1
+        && request.resource.data.attempts <= 10
+        && request.resource.data.baseDelay is number
+        && request.resource.data.baseDelay >= 0
+        && request.resource.data.baseDelay <= 30
+        && request.resource.data.jitter is number
+        && request.resource.data.jitter >= 0
+        && request.resource.data.jitter <= 10
+        && (!request.resource.data.keys().hasAny(['updatedAt'])
+          || request.resource.data.updatedAt is timestamp);
+    }
+
+    function isFinancePath(userId) {
+      return request.path.matches('/databases/$(database)/documents/users/$(userId)/finances/{docId}');
+    }
+
+    function isHistoryPath(userId) {
+      return request.path.matches('/databases/$(database)/documents/users/$(userId)/history/{docId}');
+    }
+
+
+    // --------------------------------------------------------- 
+    // 1.1. REGLA EXPLÍCITA PARA /users/{userId} (PERFIL DE USUARIO)
+    // --------------------------------------------------------- 
+    function isValidUser() {
+      return true;
+      && (!request.resource.data.keys().hasAny(['displayName']) || request.resource.data.displayName == null || request.resource.data.displayName is string)
+      && (!request.resource.data.keys().hasAny(['email']) || request.resource.data.email == null || request.resource.data.email is string)
+      && (!request.resource.data.keys().hasAny(['photoURL']) || request.resource.data.photoURL == null || request.resource.data.photoURL is string)
+      && (!request.resource.data.keys().hasAny(['createdAt']) || request.resource.data.createdAt == null || request.resource.data.createdAt is timestamp || request.resource.data.createdAt is string)
+      && (!request.resource.data.keys().hasAny(['lastLogin']) || request.resource.data.lastLogin == null || request.resource.data.lastLogin is timestamp || request.resource.data.lastLogin is string)
+      && (!request.resource.data.keys().hasAny(['lastInvoiceSequence']) || request.resource.data.lastInvoiceSequence == null || request.resource.data.lastInvoiceSequence is number)
+      && (!request.resource.data.keys().hasAny(['plan']) || request.resource.data.plan == null || request.resource.data.plan is string)
+      && (!request.resource.data.keys().hasAny(['stripeCustomerId']) || request.resource.data.stripeCustomerId == null || request.resource.data.stripeCustomerId is string)
+      && (!request.resource.data.keys().hasAny(['stripeSubscriptionId']) || request.resource.data.stripeSubscriptionId == null || request.resource.data.stripeSubscriptionId is string)
+      && (!request.resource.data.keys().hasAny(['stripePriceId']) || request.resource.data.stripePriceId == null || request.resource.data.stripePriceId is string)
+      && (!request.resource.data.keys().hasAny(['onboarding']) || request.resource.data.onboarding == null || request.resource.data.onboarding is map)
+      && (!request.resource.data.keys().hasAny(['settings']) || request.resource.data.settings == null || request.resource.data.settings is map)
+      && (!request.resource.data.keys().hasAny(['phoneNumber']) || request.resource.data.phoneNumber == null || request.resource.data.phoneNumber is string)
+      && (!request.resource.data.keys().hasAny(['country']) || request.resource.data.country == null || request.resource.data.country is string)
+      && (!request.resource.data.keys().hasAny(['language']) || request.resource.data.language == null || request.resource.data.language is string)
+      && (!request.resource.data.keys().hasAny(['timezone']) || request.resource.data.timezone == null || request.resource.data.timezone is string)
+      && (!request.resource.data.keys().hasAny(['isTestUser']) || request.resource.data.isTestUser == null || request.resource.data.isTestUser is bool)
+      && (!request.resource.data.keys().hasAny(['isAdmin']) || request.resource.data.isAdmin == null || request.resource.data.isAdmin is bool)
+      && (!request.resource.data.keys().hasAny(['metadata']) || request.resource.data.metadata == null || request.resource.data.metadata is map)
+      && (!request.resource.data.keys().hasAny(['credits']) || request.resource.data.credits == null || request.resource.data.credits is number)
+      && (!request.resource.data.keys().hasAny(['isSubscribed']) || request.resource.data.isSubscribed == null || request.resource.data.isSubscribed is bool)
+      && (!request.resource.data.keys().hasAny(['lastPlatform']) || request.resource.data.lastPlatform == null || request.resource.data.lastPlatform is string)
+      && (!request.resource.data.keys().hasAny(['lastReset']) || request.resource.data.lastReset == null || request.resource.data.lastReset is number)
+      && (!request.resource.data.keys().hasAny(['signupPlatform']) || request.resource.data.signupPlatform == null || request.resource.data.signupPlatform is string);
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create, update: if isOwner(userId) && isValidUser();
+      allow delete: if false;
+    }
+
+    // ---------------------------------------------------------
+    // 1. REGLA MAESTRA (EL DUEÑO TOCA TODO)
+    // ---------------------------------------------------------
+    match /users/{userId}/{document=**} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId)
+        && !isFinancePath(userId)
+        && !isHistoryPath(userId);
+    }
+
+    // ---------------------------------------------------------
+    // 2. EXCEPCIONES PUBLICAS (PORTAFOLIO WEB)
+    // ---------------------------------------------------------
+    match /users/{userId}/portfolio/site_config {
+      allow read: if true;
+      allow create, update, delete: if isOwner(userId);
+    }
+
+    match /users/{userId}/assets/{assetId} {
+      allow read: if true;
+    }
+
+    // ---------------------------------------------------------
+    // 3. SLUGS (RUTAS PUBLICAS AMIGABLES)
+    // ---------------------------------------------------------
+    match /slugs/{slug} {
+      allow read: if true;
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && !exists(/databases/$(database)/documents/slugs/$(slug));
+      allow update, delete: if isSignedIn()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == resource.data.userId;
+    }
+
+    // ---------------------------------------------------------
+    // 4. SISTEMA (NOTIFICACIONES Y LOGS)
+    // ---------------------------------------------------------
+    match /admin_notifications/{docId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /system_logs/{docId} {
+      allow read, write: if isAdmin();
+    }
+
+    // ---------------------------------------------------------
+    // 5. MODULOS NUEVOS (BASE DE CONOCIMIENTO Y AUTOMATIZACIONES)
+    // ---------------------------------------------------------
+    match /users/{userId}/knowledge_base/{docId} {
+      allow read: if isOwner(userId);
+      allow create, update: if isOwner(userId) && isValidKnowledgeBase();
+      allow delete: if isOwner(userId);
+    }
+
+    match /users/{userId}/automations/{docId} {
+      allow read: if isOwner(userId);
+      allow create, update: if isOwner(userId) && isValidAutomation();
+      allow delete: if isOwner(userId);
+    }
+
+    match /users/{userId}/automation_settings/{docId} {
+      allow read: if isOwner(userId);
+      allow create, update: if isOwner(userId) && isValidAutomationSettings();
+      allow delete: if isOwner(userId);
+    }
+
+    match /users/{userId}/finances/{docId} {
+      allow read: if isOwner(userId);
+      allow create, update: if isOwner(userId) && isValidFinance();
+      allow delete: if isOwner(userId);
+    }
+
+    match /users/{userId}/history/{docId} {
+      allow read: if isOwner(userId);
+      allow create, update: if isOwner(userId) && isValidHistory();
+      allow delete: if isOwner(userId);
+    }
+
+    match /users/{userId}/notes/{noteId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    match /users/{userId}/agenda/{eventId} {
+      allow read, write: if isOwner(userId);
+    }
+    // ---------------------------------------------------------
+    // 6. INVOICES (FACTURAS)
+    // ---------------------------------------------------------
+    match /users/{userId}/invoices/{invoiceId} {
+      allow read, create, update, delete: if isOwner(userId);
+    }
+  }
+}
