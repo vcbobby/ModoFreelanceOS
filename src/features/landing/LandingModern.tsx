@@ -829,7 +829,10 @@ export const LandingModern: React.FC = () => {
       <footer className="py-20 border-t border-slate-200 dark:border-white/10 bg-white dark:bg-black text-sm text-slate-500">
         <div className="container mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="col-span-1 md:col-span-2">
-            <div className="flex items-center gap-2 font-bold text-xl text-slate-900 dark:text-white mb-6">
+            <div
+              className="flex items-center gap-2 font-bold text-xl text-slate-900 dark:text-white mb-6 cursor-pointer"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            >
               <span className="text-brand-600">ModoFreelance</span>OS
             </div>
             <p className="max-w-sm mb-8 leading-relaxed">
@@ -837,49 +840,38 @@ export const LandingModern: React.FC = () => {
               virtual de nueva generación, simplificando la burocracia para que tú te enfoques en
               crear.
             </p>
+
+            {/* REDES SOCIALES CORREGIDAS */}
             <div className="flex gap-4">
-              <a
-                href="https://instagram.com/modofreelancedev"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 bg-slate-100 dark:bg-white/5 rounded-lg hover:text-brand-600 transition-all"
-              >
-                <Instagram className="w-5 h-5" />
-              </a>
-              <a
-                href="https://linkedin.com/company/modofreelance"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 bg-slate-100 dark:bg-white/5 rounded-lg hover:text-brand-600 transition-all"
-              >
-                <Linkedin className="w-5 h-5" />
-              </a>
-              <a
-                href="https://youtube.com/modofreelance"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 bg-slate-100 dark:bg-white/5 rounded-lg hover:text-brand-600 transition-all"
-              >
-                <Youtube className="w-5 h-5" />
-              </a>
-              <a
-                href="https://x.com/modofreelance"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 bg-slate-100 dark:bg-white/5 rounded-lg hover:text-brand-600 transition-all"
-              >
-                <Twitter className="w-5 h-5" />
-              </a>
-              <a
-                href="https://facebook.com/modofreelance"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 bg-slate-100 dark:bg-white/5 rounded-lg hover:text-brand-600 transition-all"
-              >
-                <Facebook className="w-5 h-5" />
-              </a>
+              {[
+                {
+                  icon: <Instagram className="w-5 h-5" />,
+                  url: 'https://instagram.com/modofreelancedev',
+                },
+                {
+                  icon: <Linkedin className="w-5 h-5" />,
+                  url: 'https://linkedin.com/company/modofreelance',
+                },
+                { icon: <Youtube className="w-5 h-5" />, url: 'https://youtube.com/modofreelance' },
+                { icon: <Twitter className="w-5 h-5" />, url: 'https://x.com/modofreelance' },
+                {
+                  icon: <Facebook className="w-5 h-5" />,
+                  url: 'https://facebook.com/modofreelance',
+                },
+              ].map((social, index) => (
+                <a
+                  key={index}
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 bg-slate-100 dark:bg-white/5 rounded-lg hover:text-brand-600 transition-all flex items-center justify-center"
+                >
+                  {social.icon}
+                </a>
+              ))}
             </div>
           </div>
+
           <div>
             <h4 className="text-slate-900 dark:text-white font-bold mb-6 uppercase tracking-widest text-xs">
               Producto
@@ -911,6 +903,7 @@ export const LandingModern: React.FC = () => {
               </li>
             </ul>
           </div>
+
           <div>
             <h4 className="text-slate-900 dark:text-white font-bold mb-6 uppercase tracking-widest text-xs">
               Legal
@@ -933,16 +926,18 @@ export const LandingModern: React.FC = () => {
                 </button>
               </li>
               <li>
+                {/* ENLACE DE SOPORTE CORREGIDO (Sin target="_blank") */}
                 <a
                   href="mailto:modofreelancedev@gmail.com"
-                  className="hover:text-brand-600 transition-colors"
+                  className="hover:text-brand-600 transition-colors inline-block"
                 >
-                  Soporte Tecnico
+                  Soporte Técnico
                 </a>
               </li>
             </ul>
           </div>
         </div>
+
         <div className="container mx-auto px-6 mt-16 pt-8 border-t border-slate-200 dark:border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
           <p>&copy; 2026 ModoFreelanceOS. Hecho con ❤️ para la comunidad de freelancers.</p>
           <div className="flex gap-6">
