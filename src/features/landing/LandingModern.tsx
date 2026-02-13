@@ -846,17 +846,20 @@ export const LandingModern: React.FC = () => {
               {[
                 {
                   icon: <Instagram className="w-5 h-5" />,
-                  url: 'https://instagram.com/modofreelancedev',
+                  url: 'https://www.instagram.com/modofreelance/',
                 },
                 {
                   icon: <Linkedin className="w-5 h-5" />,
-                  url: 'https://linkedin.com/company/modofreelance',
+                  url: 'https://www.linkedin.com/showcase/modofreelancedev/',
                 },
-                { icon: <Youtube className="w-5 h-5" />, url: 'https://youtube.com/modofreelance' },
-                { icon: <Twitter className="w-5 h-5" />, url: 'https://x.com/modofreelance' },
+                {
+                  icon: <Youtube className="w-5 h-5" />,
+                  url: 'https://www.youtube.com/@modo_freelance',
+                },
+                { icon: <Twitter className="w-5 h-5" />, url: 'https://x.com/modo_freelance' },
                 {
                   icon: <Facebook className="w-5 h-5" />,
-                  url: 'https://facebook.com/modofreelance',
+                  url: 'https://www.facebook.com/modofreelancedev/',
                 },
               ].map((social, index) => (
                 <a
