@@ -12,6 +12,9 @@ const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Failed to find the root element');
 
 const root = ReactDOM.createRoot(rootElement);
+console.log('Main: Bootstrap started');
+console.log('Main: Protocol:', window.location.protocol);
+console.log('Main: Pathname:', window.location.pathname);
 
 // 1. Detección robusta del entorno
 const hostname = window.location.hostname;
@@ -24,17 +27,24 @@ const isPortfolioRoute = pathname.startsWith('/p/');
 
 // 2. Función para renderizar la App principal (SaaS)
 const renderApp = async () => {
-  const [{ default: App }, { AppProviders }] = await Promise.all([
-    import('@/App'),
-    import('@context'),
-  ]);
-  root.render(
-    <React.StrictMode>
-      <AppProviders>
-        <App />
-      </AppProviders>
-    </React.StrictMode>
-  );
+  console.log('Main: Rendering App...');
+  try {
+    const [{ default: App }, { AppProviders }] = await Promise.all([
+      import('@/App'),
+      import('@context'),
+    ]);
+    console.log('Main: All modules loaded');
+    root.render(
+      <React.StrictMode>
+        <AppProviders>
+          <App />
+        </AppProviders>
+      </React.StrictMode>
+    );
+    console.log('Main: root.render sequence called');
+  } catch (err) {
+    console.error('Main: Error in renderApp:', err);
+  }
 };
 
 // 3. Función para renderizar el Portafolio (Lógica de Slugs)

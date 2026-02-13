@@ -34,7 +34,22 @@
       gtag('config', 'G-LPJJ3DEY1H');
     </script>
   </head>
+
   <body class="bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+    <script>
+      console.log('Diagnostic: HTML script started');
+      console.log('Diagnostic: Protocol:', window.location.protocol);
+      window.onload = () => {
+        console.log('Diagnostic: window.onload triggered');
+        const root = document.getElementById('root');
+        if (root) {
+          console.log('Diagnostic: Found root element');
+          // root.innerText = 'Diagnostic: JS is running!'; // Uncheck if still white
+        } else {
+          console.error('Diagnostic: Root element NOT found!');
+        }
+      };
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <script>
