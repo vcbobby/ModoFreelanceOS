@@ -367,30 +367,34 @@ WEB DEL USUARIO:
       // 5. CREAR CURSO (Conecta con Academy)
       if (action.action === 'create_course') {
         try {
-          const usage = await runWithCredits(3, onUsage, async () => {
-            const formData = new FormData();
-            formData.append('topic', action.topic);
-            formData.append('level', action.level || 'Principiante');
-            formData.append('userId', userId);
+          const usage = await runWithCredits(
+            3,
+            (cost?: number) => onUsage(cost || 3),
+            async () => {
+              const formData = new FormData();
+              formData.append('topic', action.topic);
+              formData.append('level', action.level || 'Principiante');
+              formData.append('userId', userId);
 
-            const authHeaders = await getAuthHeaders();
-            const res = await fetch(`${BACKEND_URL}/api/generate-course`, {
-              method: 'POST',
-              headers: authHeaders,
-              body: formData,
-            });
+              const authHeaders = await getAuthHeaders();
+              const res = await fetch(`${BACKEND_URL}/api/generate-course`, {
+                method: 'POST',
+                headers: authHeaders,
+                body: formData,
+              });
 
-            if (!res.ok) {
-              let errMsg = 'Error en el servidor';
-              try {
-                const errData = await res.json();
-                errMsg = errData.detail || JSON.stringify(errData);
-              } catch (parseErr) {
-                void parseErr;
+              if (!res.ok) {
+                let errMsg = 'Error en el servidor';
+                try {
+                  const errData = await res.json();
+                  errMsg = errData.detail || JSON.stringify(errData);
+                } catch (parseErr) {
+                  void parseErr;
+                }
+                throw new Error(errMsg);
               }
-              throw new Error(errMsg);
             }
-          });
+          );
 
           if (!usage.ok) {
             return '❌ No tienes suficientes créditos para crear un curso (Costo: 3).';
@@ -415,27 +419,48 @@ WEB DEL USUARIO:
     if (!textToSend.trim()) return;
 
     try {
-      const usage = await runWithCredits(1, onUsage, async () => {
-        if (!userId) {
-          throw new Error('Falta userId para el asistente.');
+      const usage = await runWithCredits(
+        1,
+        (cost?: number) => onUsage(cost || 1),
+        async () => {
+          if (!userId) {
+            throw new Error('Falta userId para el asistente.');
+          }
+
+          setInput('');
+          setMessages((prev) => [...prev, { role: 'user', text: textToSend }]);
+          setLoading(true);
+
+          return chatWithAssistant(userId, textToSend, messages, contextData);
         }
-
-        setInput('');
-        setMessages((prev) => [...prev, { role: 'user', text: textToSend }]);
-        setLoading(true);
-
-        return chatWithAssistant(userId, textToSend, messages, contextData);
-      });
+      );
 
       if (!usage.ok || !usage.result) return;
       const rawReply = usage.result;
 
-      // Detectar si la respuesta es un JSON de acción
-      if (rawReply.trim().startsWith('{') || rawReply.trim().startsWith('```json')) {
-        const actionResult = await executeAIAction(rawReply);
+      // --- EXTRACTOR DE ACCIONES ROBUSTO ---
+      const jsonRegex = /\{[\s\S]*?"action"[\s\S]*?\}/;
+      const match = rawReply.match(jsonRegex);
+
+      if (match) {
+        const jsonStr = match[0];
+        const textPart = rawReply
+          .replace(jsonStr, '')
+          .replace(/```json/g, '')
+          .replace(/```/g, '')
+          .trim();
+
+        // Si hay texto acompañando a la acción, lo mostramos
+        if (textPart) {
+          setMessages((prev) => [...prev, { role: 'model', text: textPart }]);
+        }
+
+        // Ejecutar la acción
+        const actionResult = await executeAIAction(jsonStr);
         setMessages((prev) => [...prev, { role: 'model', text: actionResult }]);
-        loadContext(); // Recargar contexto por si cambió algo
+        loadContext();
       } else {
+        // Respuesta puramente conversacional
         setMessages((prev) => [...prev, { role: 'model', text: rawReply }]);
       }
     } catch (error) {

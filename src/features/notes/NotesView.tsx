@@ -1030,7 +1030,7 @@ const AgendaWidget = ({ userId }: { userId?: string }) => {
             <div className="w-24">
               <input
                 type="time"
-                className={`${inputClass} appearance-none`}
+                className={inputClass}
                 value={newEvent.time}
                 onChange={(e) =>
                   setNewEvent({
@@ -1060,7 +1060,7 @@ const AgendaWidget = ({ userId }: { userId?: string }) => {
         ) : (
           <div className="space-y-2">
             {displayEvents.map((ev) => {
-              const status = getEventStatus(ev.date, ev.time);
+              const status = getEventStatus(ev.date, ev.time || '');
               return (
                 <div
                   key={ev.id}

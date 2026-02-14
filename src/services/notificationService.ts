@@ -109,6 +109,8 @@ class NotificationService {
           schedule: { at: new Date(Date.now() + 1000) }, // 1 segundo después
           actionTypeId: '',
           extra: null,
+          smallIcon: 'ic_stat_name', // Requiere que el icono exista en Android res/drawable
+          iconColor: '#6366f1',
         },
       ],
     });
@@ -126,6 +128,8 @@ class NotificationService {
           schedule: { at: options.scheduledDate! },
           actionTypeId: '',
           extra: null,
+          smallIcon: 'ic_stat_name',
+          iconColor: '#6366f1',
         },
       ],
     });
