@@ -1224,7 +1224,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
           }}
         >
           {/* PORTADA */}
-          <div className="w-full relative flex flex-col justify-center items-center text-center mb-16 pb-12 border-b-2 border-slate-100 page-break-after-avoid">
+          <div className="w-full relative flex flex-col justify-center items-center text-center mb-16 pb-12 border-b-2 border-[#f1f5f9] page-break-after-avoid">
             <div
               className="absolute top-[-15mm] left-[-20mm] w-[210mm] h-4"
               style={{ backgroundColor: siteData.color }}
@@ -1238,18 +1238,18 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
               />
             )}
 
-            <h1 className="text-4xl font-black uppercase tracking-tight mb-2 leading-none text-slate-900">
+            <h1 className="text-4xl font-black uppercase tracking-tight mb-2 leading-none text-[#0f172a]">
               {siteData.name}
             </h1>
-            <p className="text-lg font-medium uppercase tracking-widest text-slate-500 mb-6">
+            <p className="text-lg font-medium uppercase tracking-widest text-[#64748b] mb-6">
               {siteData.role}
             </p>
 
-            <div className="max-w-md mx-auto text-sm text-slate-600 leading-relaxed mb-8">
+            <div className="max-w-md mx-auto text-sm text-[#475569] leading-relaxed mb-8">
               {siteData.bio}
             </div>
 
-            <div className="flex flex-wrap justify-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50 py-2 px-6 rounded-full">
+            <div className="flex flex-wrap justify-center gap-4 text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider bg-[#f8fafc] py-2 px-6 rounded-full">
               {siteData.email && <span>{siteData.email}</span>}
               {siteData.whatsapp && <span>• {siteData.whatsapp}</span>}
               {siteData.slug && <span>• modofreelanceos.com/p/{siteData.slug}</span>}
@@ -1274,12 +1274,12 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
                     className="flex items-center gap-4 mb-6 border-b-2 pb-2"
                     style={{ borderColor: siteData.color }}
                   >
-                    <h2 className="text-xl font-bold uppercase text-slate-800">Portafolio</h2>
+                    <h2 className="text-xl font-bold uppercase text-[#1e293b]">Portafolio</h2>
                   </div>
 
                   {/* PRIMER PROYECTO */}
                   <div
-                    className="mb-8 border-b border-slate-100 pb-8"
+                    className="mb-8 border-b border-[#f1f5f9] pb-8"
                     style={{
                       pageBreakInside: 'avoid',
                       breakInside: 'avoid',
@@ -1291,17 +1291,17 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
                         {siteData.projects[0].cover ? (
                           <img
                             src={siteData.projects[0].cover}
-                            className="w-full h-24 object-cover rounded-lg shadow-sm bg-slate-100"
+                            className="w-full h-24 object-cover rounded-lg shadow-sm bg-[#f1f5f9]"
                           />
                         ) : (
-                          <div className="w-full h-24 bg-slate-100 rounded-lg flex items-center justify-center text-[10px] text-slate-400">
+                          <div className="w-full h-24 bg-[#f1f5f9] rounded-lg flex items-center justify-center text-[10px] text-[#94a3b8]">
                             Sin Foto
                           </div>
                         )}
                       </div>
 
                       <div className="flex-1">
-                        <h3 className="text-lg font-bold text-slate-900 mb-1">
+                        <h3 className="text-lg font-bold text-[#0f172a] mb-1">
                           {siteData.projects[0].title}
                         </h3>
 
@@ -1316,14 +1316,14 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
                           </p>
                         )}
 
-                        <p className="text-xs text-slate-600 leading-relaxed mb-2 text-justify">
+                        <p className="text-xs text-[#475569] leading-relaxed mb-2 text-justify">
                           {siteData.projects[0].desc}
                         </p>
 
                         {siteData.projects[0].link && (
                           <a
                             href={siteData.projects[0].link}
-                            className="text-[10px] underline text-slate-400"
+                            className="text-[10px] underline text-[#94a3b8]"
                           >
                             Ver Proyecto
                           </a>
@@ -1333,8 +1333,8 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
 
                     {/* GALERÍA */}
                     {siteData.projects[0].gallery && siteData.projects[0].gallery.length > 0 && (
-                      <div className="mt-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">
+                      <div className="mt-3 p-3 bg-[#f8fafc] rounded-lg border border-[#f1f5f9]">
+                        <p className="text-[10px] font-bold text-[#94a3b8] uppercase mb-2">
                           Galería:
                         </p>
 
@@ -1370,7 +1370,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
                     return (
                       <div
                         key={i}
-                        className={`mb-8 pb-8 ${isLast ? '' : 'border-b border-slate-100'}`}
+                        className={`mb-8 pb-8 ${isLast ? '' : 'border-b border-[#f1f5f9]'}`}
                         style={{
                           pageBreakInside: 'avoid',
                           breakInside: 'avoid',
@@ -1393,7 +1393,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
                           </div>
 
                           <div className="flex-1">
-                            <h3 className="text-lg font-bold text-slate-900 mb-1">{proj.title}</h3>
+                            <h3 className="text-lg font-bold text-[#0f172a] mb-1">{proj.title}</h3>
 
                             {proj.tags && (
                               <p
@@ -1406,12 +1406,12 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
                               </p>
                             )}
 
-                            <p className="text-xs text-slate-600 leading-relaxed mb-2 text-justify">
+                            <p className="text-xs text-[#475569] leading-relaxed mb-2 text-justify">
                               {proj.desc}
                             </p>
 
                             {proj.link && (
-                              <a href={proj.link} className="text-[10px] underline text-slate-400">
+                              <a href={proj.link} className="text-[10px] underline text-[#94a3b8]">
                                 Ver Proyecto
                               </a>
                             )}
@@ -1420,8 +1420,8 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
 
                         {/* GALERÍA */}
                         {proj.gallery && proj.gallery.length > 0 && (
-                          <div className="mt-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">
+                          <div className="mt-3 p-3 bg-[#f8fafc] rounded-lg border border-[#f1f5f9]">
+                            <p className="text-[10px] font-bold text-[#94a3b8] uppercase mb-2">
                               Galería:
                             </p>
 
@@ -1438,7 +1438,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
                                   >
                                     <img
                                       src={img.url}
-                                      className="w-full h-40 object-cover rounded border border-slate-200 bg-white"
+                                      className="w-full h-40 object-cover rounded border border-[#e2e8f0] bg-white"
                                     />
                                   </div>
                                 );
@@ -1463,16 +1463,16 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
                     breakInside: 'avoid',
                   }}
                 >
-                  <h3 className="text-lg font-bold uppercase mb-4 pb-2 border-b border-slate-200 text-slate-800">
+                  <h3 className="text-lg font-bold uppercase mb-4 pb-2 border-b border-[#e2e8f0] text-[#1e293b]">
                     Experiencia
                   </h3>
                   {siteData.experience.map((exp: Experience, i: number) => (
                     <div key={i} className="mb-4">
-                      <h4 className="font-bold text-sm text-slate-900">{exp.role}</h4>
-                      <p className="text-xs font-bold text-slate-500 mb-1">
+                      <h4 className="font-bold text-sm text-[#0f172a]">{exp.role}</h4>
+                      <p className="text-xs font-bold text-[#64748b] mb-1">
                         {exp.company} • {exp.year}
                       </p>
-                      <p className="text-xs text-slate-600 leading-relaxed text-justify">
+                      <p className="text-xs text-[#475569] leading-relaxed text-justify">
                         {exp.desc}
                       </p>
                     </div>
@@ -1490,13 +1490,13 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
               >
                 {siteData.education?.length > 0 && (
                   <div>
-                    <h3 className="text-base font-bold uppercase mb-3 pb-1 border-b border-slate-200 text-slate-800">
+                    <h3 className="text-base font-bold uppercase mb-3 pb-1 border-b border-[#e2e8f0] text-[#1e293b]">
                       Educación
                     </h3>
                     {siteData.education.map((edu: Education, i: number) => (
                       <div key={i} className="mb-3">
-                        <h4 className="font-bold text-xs text-slate-900">{edu.degree}</h4>
-                        <p className="text-[10px] text-slate-500">
+                        <h4 className="font-bold text-xs text-[#0f172a]">{edu.degree}</h4>
+                        <p className="text-[10px] text-[#64748b]">
                           {edu.school} • {edu.year}
                         </p>
                       </div>
@@ -1506,14 +1506,14 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
 
                 {siteData.skills && (
                   <div>
-                    <h3 className="text-base font-bold uppercase mb-3 pb-1 border-b border-slate-200 text-slate-800">
+                    <h3 className="text-base font-bold uppercase mb-3 pb-1 border-b border-[#e2e8f0] text-[#1e293b]">
                       Habilidades
                     </h3>
                     <div className="flex flex-wrap gap-1">
                       {siteData.skills.split(',').map((s: string, i: number) => (
                         <span
                           key={i}
-                          className="px-2 py-1 bg-slate-100 text-slate-700 text-[10px] font-bold rounded border border-slate-200"
+                          className="px-2 py-1 bg-[#f1f5f9] text-[#334155] text-[10px] font-bold rounded border border-[#e2e8f0]"
                         >
                           {s.trim()}
                         </span>

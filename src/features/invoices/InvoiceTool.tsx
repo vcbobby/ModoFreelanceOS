@@ -533,9 +533,9 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({ onUsage, userId }) => 
           <div
             id="invoice-preview"
             ref={invoiceRef}
-            className={`bg-white shadow-xl w-full max-w-[210mm] min-h-[197mm] overflow-x-auto p-8 md:p-12 text-slate-800 flex flex-col justify-between ${
-              template === 'minimal' ? 'border border-slate-200' : ''
-            } ${template === 'bold' ? 'border-2 border-slate-900' : ''}`}
+            className={`bg-white shadow-xl w-full max-w-[210mm] min-h-[197mm] overflow-x-auto p-8 md:p-12 text-[#1e293b] flex flex-col justify-between ${
+              template === 'minimal' ? 'border border-[#e2e8f0]' : ''
+            } ${template === 'bold' ? 'border-2 border-[#0f172a]' : ''}`}
             style={{ fontSize: '14px' }}
           >
             <div>
@@ -546,14 +546,14 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({ onUsage, userId }) => 
                   ) : (
                     <h1
                       className={`text-2xl font-bold uppercase tracking-widest ${
-                        template === 'bold' ? 'text-slate-900' : 'text-brand-600'
+                        template === 'bold' ? 'text-[#0f172a]' : 'text-brand-600'
                       }`}
                     >
                       Factura
                     </h1>
                   )}
-                  <div className="text-xs text-slate-500 mt-2">
-                    <p className="font-bold text-slate-900 text-sm">{sender.name || 'Tu Nombre'}</p>
+                  <div className="text-xs text-[#64748b] mt-2">
+                    <p className="font-bold text-[#0f172a] text-sm">{sender.name || 'Tu Nombre'}</p>
                     {sender.idDoc && <p className="flex items-center gap-1">{sender.idDoc}</p>}
                     {sender.phone && <p className="flex items-center gap-1">{sender.phone}</p>}
                     <p className="whitespace-pre-line">{sender.address || 'Tu Dirección'}</p>
@@ -563,24 +563,24 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({ onUsage, userId }) => 
                 <div className="text-right">
                   <h2
                     className={`text-3xl font-light ${
-                      template === 'bold' ? 'text-slate-500' : 'text-slate-200'
+                      template === 'bold' ? 'text-[#64748b]' : 'text-[#e2e8f0]'
                     }`}
                   >
                     INVOICE
                   </h2>
                   <div className="mt-2">
-                    <p className="font-bold text-slate-700 text-sm">#{fullInvoiceNumber}</p>
-                    <p className="text-xs text-slate-500">{date}</p>
+                    <p className="font-bold text-[#334155] text-sm">#{fullInvoiceNumber}</p>
+                    <p className="text-xs text-[#64748b]">{date}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="mb-8 border-b border-slate-100 pb-6">
-                <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Facturar a:</p>
-                <h3 className="text-lg font-bold text-slate-800">
+              <div className="mb-8 border-b border-[#f1f5f9] pb-6">
+                <p className="text-[10px] font-bold text-[#94a3b8] uppercase mb-1">Facturar a:</p>
+                <h3 className="text-lg font-bold text-[#1e293b]">
                   {client.name || 'Nombre Cliente'}
                 </h3>
-                <div className="text-xs text-slate-600 mt-1 space-y-0.5">
+                <div className="text-xs text-[#475569] mt-1 space-y-0.5">
                   {client.idDoc && <p>{client.idDoc}</p>}
                   {client.phone && <p>{client.phone}</p>}
                   <p className="whitespace-pre-line">{client.address || 'Dirección'}</p>
@@ -591,7 +591,7 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({ onUsage, userId }) => 
               <table className="w-full mb-8">
                 <thead>
                   <tr
-                    className={`border-b-2 ${template === 'minimal' ? 'border-slate-300' : 'border-slate-800'}`}
+                    className={`border-b-2 ${template === 'minimal' ? 'border-[#cbd5e1]' : 'border-[#1e293b]'}`}
                   >
                     <th className="text-left py-2 font-bold uppercase text-[10px]">Descripción</th>
                     <th className="text-right py-2 font-bold uppercase text-[10px] w-12">Cant.</th>
@@ -601,14 +601,14 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({ onUsage, userId }) => 
                 </thead>
                 <tbody>
                   {items.map((item) => (
-                    <tr key={item.id} className="border-b border-slate-100">
-                      <td className="py-3 text-slate-700 text-xs">{item.desc || 'Item...'}</td>
-                      <td className="py-3 text-right text-slate-600 text-xs">{item.qty}</td>
-                      <td className="py-3 text-right text-slate-600 text-xs">
+                    <tr key={item.id} className="border-b border-[#f1f5f9]">
+                      <td className="py-3 text-[#334155] text-xs">{item.desc || 'Item...'}</td>
+                      <td className="py-3 text-right text-[#475569] text-xs">{item.qty}</td>
+                      <td className="py-3 text-right text-[#475569] text-xs">
                         {currency}
                         {item.price.toFixed(2)}
                       </td>
-                      <td className="py-3 text-right font-bold text-slate-800 text-xs">
+                      <td className="py-3 text-right font-bold text-[#1e293b] text-xs">
                         {currency}
                         {(item.qty * item.price).toFixed(2)}
                       </td>
@@ -619,21 +619,21 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({ onUsage, userId }) => 
 
               <div className="flex justify-end mb-12">
                 <div className="w-56 space-y-2">
-                  <div className="flex justify-between text-slate-600 text-xs">
+                  <div className="flex justify-between text-[#475569] text-xs">
                     <span>Subtotal:</span>
                     <span>
                       {currency}
                       {subtotal.toFixed(2)}
                     </span>
                   </div>
-                  <div className="flex justify-between text-slate-600 text-xs">
+                  <div className="flex justify-between text-[#475569] text-xs">
                     <span>Impuestos ({taxRate}%):</span>
                     <span>
                       {currency}
                       {taxAmount.toFixed(2)}
                     </span>
                   </div>
-                  <div className="flex justify-between font-bold text-lg text-slate-900 border-t-2 border-slate-800 pt-2">
+                  <div className="flex justify-between font-bold text-lg text-[#0f172a] border-t-2 border-[#1e293b] pt-2">
                     <span>Total:</span>
                     <span>
                       {currency}
@@ -644,10 +644,10 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({ onUsage, userId }) => 
               </div>
             </div>
 
-            <div className="border-t border-slate-200 pt-6">
+            <div className="border-t border-[#e2e8f0] pt-6">
               <p className="font-bold text-xs mb-1">Notas:</p>
-              <p className="text-xs text-slate-500 whitespace-pre-line">{notes}</p>
-              <div className="mt-6 text-center text-[10px] text-slate-300">
+              <p className="text-xs text-[#64748b] whitespace-pre-line">{notes}</p>
+              <div className="mt-6 text-center text-[10px] text-[#cbd5e1]">
                 Generado con ModoFreelanceOS
               </div>
             </div>

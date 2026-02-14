@@ -15,14 +15,33 @@ export interface AppNotification {
 }
 
 export const useAgendaNotifications = (userId: string | undefined) => {
-  const isE2E = import.meta.env.VITE_E2E === 'true';
+  const isE2E = (import.meta as any).env?.VITE_E2E === 'true';
   // Estados internos para separar las fuentes de datos
   const [agendaNotifs, setAgendaNotifs] = useState<AppNotification[]>([]);
   const [financeNotifs, setFinanceNotifs] = useState<AppNotification[]>([]);
 
   // Función auxiliar para notificaciones nativas (Solo móvil)
-  const triggerNativeNotification = async (idStr: string, title: string, body: string) => {
-    if (!Capacitor.isNativePlatform()) return;
+  const triggerNativeNotification = async (
+    idStr: string,
+    title: string,
+    body: string,
+    scheduledDate?: Date
+  ) => {
+    if (!Capacitor.isNativePlatform()) {
+      // Si estamos en Web/Electron y la app está abierta, disparamos una notificación de navegador inmediata si es el momento
+      if (
+        typeof window !== 'undefined' &&
+        'Notification' in window &&
+        Notification.permission === 'granted'
+      ) {
+        // Si no hay fecha programada (es inmediata) o si la fecha programada es AHORA
+        const isNow = !scheduledDate || Math.abs(scheduledDate.getTime() - Date.now()) < 60000;
+        if (isNow) {
+          new Notification(title, { body });
+        }
+      }
+      return;
+    }
 
     // Generar ID numérico único seguro
     let hash = 0;
@@ -33,25 +52,21 @@ export const useAgendaNotifications = (userId: string | undefined) => {
     const notifId = Math.abs(hash);
 
     try {
-      // Verificar si ya fue programada hoy para no spamear (Lógica simplificada)
-      const pending = await LocalNotifications.getPending();
-      const exists = pending.notifications.find((n) => n.id === notifId);
+      if (scheduledDate && scheduledDate.getTime() < Date.now()) return; // No programar en el pasado
 
-      if (!exists) {
-        await LocalNotifications.schedule({
-          notifications: [
-            {
-              title,
-              body,
-              id: notifId,
-              schedule: { at: new Date(Date.now() + 1000) }, // En 1 segundo
-              smallIcon: 'ic_stat_icon_config_sample',
-              actionTypeId: '',
-              extra: null,
-            },
-          ],
-        });
-      }
+      await LocalNotifications.schedule({
+        notifications: [
+          {
+            title,
+            body,
+            id: notifId,
+            schedule: { at: scheduledDate || new Date(Date.now() + 1000) },
+            // smallIcon: 'ic_stat_icon_config_sample', // Comentado por seguridad (recurso faltante)
+            actionTypeId: '',
+            extra: null,
+          },
+        ],
+      });
     } catch (e) {
       void e;
     }
@@ -86,18 +101,45 @@ export const useAgendaNotifications = (userId: string | undefined) => {
     const unsubAgenda = onSnapshot(qAgenda, (snap) => {
       const items = snap.docs.map((doc) => {
         const data = doc.data();
-        const isUrgent = data.date === todayStr;
+        const eventDate = data.date;
+        const eventTime = data.time; // Formato HH:mm
+        const isToday = eventDate === todayStr;
 
-        if (isUrgent)
-          triggerNativeNotification(doc.id, 'Agenda Hoy 📅', `${data.title} a las ${data.time}`);
+        // PROGRAMACIÓN PROACTIVA (30 minutos antes)
+        if (eventTime && eventDate) {
+          const [hours, minutes] = eventTime.split(':').map(Number);
+          const startDate = new Date(
+            `${eventDate}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`
+          );
+          const alertDate = new Date(startDate.getTime() - 30 * 60 * 1000); // 30 mins antes
+
+          if (alertDate.getTime() > Date.now()) {
+            triggerNativeNotification(
+              `${doc.id}_30min`,
+              'Recordatorio Próximo ⏳',
+              `Tu evento "${data.title}" comienza en 30 minutos.`,
+              alertDate
+            );
+          }
+
+          // También programar notificación de inicio exacto
+          if (startDate.getTime() > Date.now()) {
+            triggerNativeNotification(
+              doc.id,
+              '¡Inicia Ahora! 📅',
+              `${data.title} comienza ya.`,
+              startDate
+            );
+          }
+        }
 
         return {
           id: doc.id,
-          title: isUrgent ? '¡Evento Hoy!' : 'Evento Próximo',
+          title: isToday ? '¡Evento Hoy!' : 'Evento Próximo',
           message: `${data.title} - ${data.time}`,
           date: data.date,
           type: 'agenda' as const,
-          severity: isUrgent ? 'urgent' : ('normal' as const),
+          severity: (isToday ? 'urgent' : 'normal') as 'urgent' | 'normal',
           route: 'NOTES',
         };
       });
@@ -105,33 +147,46 @@ export const useAgendaNotifications = (userId: string | undefined) => {
     });
 
     // --- LISTENER 2: FINANZAS ---
+    // Incluimos TODO lo pendiente (incluyendo atrasados) para que el badge sea útil
     const qFinance = query(
       collection(db, 'users', userId, 'finances'),
-      where('status', '==', 'pending'),
-      where('date', '>=', todayStr),
-      where('date', '<=', limitStr)
+      where('status', '==', 'pending')
+      // Quitamos el límite de fecha superior para asegurar que el usuario vea deudas antiguas
     );
 
     const unsubFinance = onSnapshot(qFinance, (snap) => {
       const items = snap.docs.map((doc) => {
         const data = doc.data();
-        const isUrgent = data.date === todayStr;
+        const isUrgent = data.date <= todayStr; // Urgente si es hoy o ya pasó
         const msg = `${data.type === 'income' ? 'Cobrar' : 'Pagar'}: $${
           data.amount
         } (${data.description})`;
 
-        if (isUrgent) triggerNativeNotification(doc.id, 'Finanzas 💰', msg);
+        // Programar recordatorio para hoy a las 9 AM si vence hoy
+        if (data.date === todayStr) {
+          const alertDate = new Date();
+          alertDate.setHours(9, 0, 0, 0);
+          if (alertDate.getTime() > Date.now()) {
+            triggerNativeNotification(doc.id, 'Recordatorio de Pago 💰', msg, alertDate);
+          }
+        }
 
         return {
           id: doc.id,
-          title: isUrgent ? 'Vence Hoy' : 'Vence Pronto',
+          title:
+            data.date < todayStr
+              ? '¡Atrasado!'
+              : data.date === todayStr
+                ? 'Vence Hoy'
+                : 'Próximamente',
           message: msg,
           date: data.date,
           type: 'finance' as const,
-          severity: isUrgent ? 'urgent' : ('normal' as const),
+          severity: (isUrgent ? 'urgent' : 'normal') as 'urgent' | 'normal',
           route: 'FINANCES',
         };
       });
+      // Filtramos en el cliente para el estado combinado si queremos mantener el límite visual de 2 días
       setFinanceNotifs(items);
     });
 

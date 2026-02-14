@@ -184,35 +184,35 @@ export const BriefingTool: React.FC<BriefingToolProps> = ({ onUsage, userId }) =
   const A4Document = () => (
     <div
       id="brief-document-full-size"
-      className="bg-white text-slate-900 w-[210mm] min-h-[297mm] p-[20mm] shadow-2xl"
+      className="bg-white text-[#0f172a] w-[210mm] min-h-[297mm] p-[20mm] shadow-2xl"
       style={{ fontFamily: 'Inter, sans-serif' }}
     >
-      <div className="border-b-2 border-slate-900 pb-6 mb-8 flex justify-between items-start">
+      <div className="border-b-2 border-[#0f172a] pb-6 mb-8 flex justify-between items-start">
         <div>
           <h1 className="text-4xl font-extrabold uppercase tracking-tight mb-2">Briefing</h1>
-          <p className="text-sm text-slate-500 font-medium">Documento de Requerimientos</p>
+          <p className="text-sm text-[#64748b] font-medium">Documento de Requerimientos</p>
         </div>
         <div className="text-right">
           <p className="font-bold text-lg">{formData.clientName}</p>
-          <p className="text-sm text-slate-500">{new Date().toLocaleDateString()}</p>
+          <p className="text-sm text-[#64748b]">{new Date().toLocaleDateString()}</p>
         </div>
       </div>
       <div className="space-y-10">
         <section>
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 border-b border-slate-100 pb-1">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-[#94a3b8] mb-4 border-b border-[#f1f5f9] pb-1">
             Detalles Generales
           </h3>
           <div className="grid grid-cols-2 gap-y-6 gap-x-8">
             <div>
-              <span className="block text-xs font-bold text-slate-500 mb-1">Tipo de Proyecto</span>
+              <span className="block text-xs font-bold text-[#64748b] mb-1">Tipo de Proyecto</span>
               <p className="text-base font-medium">{formData.projectType}</p>
             </div>
             <div>
-              <span className="block text-xs font-bold text-slate-500 mb-1">Fecha Límite</span>
+              <span className="block text-xs font-bold text-[#64748b] mb-1">Fecha Límite</span>
               <p className="text-base font-medium">{formData.deadline || 'A definir'}</p>
             </div>
             <div>
-              <span className="block text-xs font-bold text-slate-500 mb-1">
+              <span className="block text-xs font-bold text-[#64748b] mb-1">
                 Presupuesto Estimado
               </span>
               <p className="text-base font-medium">{formData.budget || 'A definir'}</p>
@@ -220,10 +220,10 @@ export const BriefingTool: React.FC<BriefingToolProps> = ({ onUsage, userId }) =
           </div>
         </section>
         <section>
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 border-b border-slate-100 pb-1">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-[#94a3b8] mb-4 border-b border-[#f1f5f9] pb-1">
             Objetivos & Alcance
           </h3>
-          <div className="bg-slate-50 p-6 rounded-lg border border-slate-100">
+          <div className="bg-[#f8fafc] p-6 rounded-lg border border-[#f1f5f9]">
             <p className="text-sm leading-relaxed whitespace-pre-wrap">
               {formData.goals || 'Sin objetivos definidos.'}
             </p>
@@ -231,10 +231,10 @@ export const BriefingTool: React.FC<BriefingToolProps> = ({ onUsage, userId }) =
           {/* NUEVO: PUNTOS ACORDADOS */}
           {formData.agreedTasks && (
             <div className="mb-4">
-              <h4 className="text-xs font-bold text-slate-500 mb-2">
+              <h4 className="text-xs font-bold text-[#64748b] mb-2">
                 Puntos Acordados / Entregables
               </h4>
-              <div className="bg-white border border-slate-200 p-4 rounded-lg">
+              <div className="bg-white border border-[#e2e8f0] p-4 rounded-lg">
                 <p className="text-sm whitespace-pre-wrap leading-relaxed">
                   {formData.agreedTasks}
                 </p>
@@ -244,20 +244,20 @@ export const BriefingTool: React.FC<BriefingToolProps> = ({ onUsage, userId }) =
         </section>
         <section className="grid grid-cols-2 gap-8">
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 border-b border-slate-100 pb-1">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[#94a3b8] mb-4 border-b border-[#f1f5f9] pb-1">
               Público Objetivo
             </h3>
             <p className="text-sm leading-relaxed">{formData.audience || 'No especificado.'}</p>
           </div>
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 border-b border-slate-100 pb-1">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[#94a3b8] mb-4 border-b border-[#f1f5f9] pb-1">
               Estilo Visual
             </h3>
             <p className="text-sm leading-relaxed">{formData.style || 'No especificado.'}</p>
           </div>
         </section>
       </div>
-      <div className="mt-24 pt-8 border-t border-slate-200 flex justify-between items-center text-xs text-slate-400">
+      <div className="mt-24 pt-8 border-t border-[#e2e8f0] flex justify-between items-center text-xs text-[#94a3b8]">
         <p>Generado con ModoFreelanceOS</p>
         <p>Página 1 de 1</p>
       </div>

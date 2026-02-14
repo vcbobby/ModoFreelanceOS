@@ -471,7 +471,7 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage: _onUsage, userId 
                   {/* Sin bordes, sin sombras, tamaño exacto */}
                   <div
                     id="cv-preview"
-                    className="bg-white text-slate-800 box-border"
+                    className="bg-white text-[#1e293b] box-border"
                     style={{
                       width: '210mm',
                       minHeight: '297mm',
@@ -491,7 +491,7 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage: _onUsage, userId 
                     {/* Header */}
                     <div
                       className={`border-b-2 pb-6 mb-8 flex gap-8 items-center page-break-inside-avoid ${
-                        isMinimal ? 'border-slate-200' : 'border-slate-800'
+                        isMinimal ? 'border-[#e2e8f0]' : 'border-[#1e293b]'
                       }`}
                     >
                       {cvData.photo && (
@@ -499,25 +499,25 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage: _onUsage, userId 
                           src={cvData.photo}
                           alt="Profile"
                           className={`w-32 h-32 rounded-full object-cover shadow-sm shrink-0 ${
-                            isMinimal ? 'border border-slate-200' : 'border-4 border-slate-100'
+                            isMinimal ? 'border border-[#e2e8f0]' : 'border-4 border-[#f1f5f9]'
                           }`}
                         />
                       )}
                       <div className="flex-1 min-w-0">
-                        <h1 className="text-3xl font-extrabold uppercase tracking-tight text-slate-900 leading-tight mb-1">
+                        <h1 className="text-3xl font-extrabold uppercase tracking-tight text-[#0f172a] leading-tight mb-1">
                           {cvData.fullName || 'Tu Nombre'}
                         </h1>
                         <p
                           className={`text-xl font-medium mb-3 ${
-                            isMinimal ? 'text-slate-700' : 'text-brand-700'
+                            isMinimal ? 'text-[#334155]' : 'text-[#15803d]'
                           }`}
                         >
                           {cvData.title || 'Título Profesional'}
                         </p>
-                        <div className="flex flex-wrap gap-y-2 gap-x-4 text-sm text-slate-600">
+                        <div className="flex flex-wrap gap-y-2 gap-x-4 text-sm text-[#475569]">
                           {cvData.email && (
                             <span className="flex items-center gap-1.5">
-                              <Mail className="w-4 h-4 text-brand-600" /> {cvData.email}
+                              <Mail className="w-4 h-4 text-[#16a34a]" /> {cvData.email}
                             </span>
                           )}
                           {cvData.phone && (
@@ -525,7 +525,7 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage: _onUsage, userId 
                           )}
                           {cvData.address && (
                             <span className="flex items-center gap-1.5">
-                              <MapPin className="w-4 h-4 text-brand-600" /> {cvData.address}
+                              <MapPin className="w-4 h-4 text-[#16a34a]" /> {cvData.address}
                             </span>
                           )}
                         </div>
@@ -536,20 +536,20 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage: _onUsage, userId 
                     {cvData.summary && (
                       <div className="mb-8 page-break-inside-avoid">
                         <h3
-                          className={`font-bold uppercase text-slate-900 border-b-2 mb-3 pb-1 text-sm tracking-widest ${
-                            isMinimal ? 'border-slate-200' : 'border-slate-100'
+                          className={`font-bold uppercase text-[#0f172a] border-b-2 mb-3 pb-1 text-sm tracking-widest ${
+                            isMinimal ? 'border-[#e2e8f0]' : 'border-[#f1f5f9]'
                           }`}
                         >
                           Perfil
                         </h3>
-                        <p className="text-justify text-sm text-slate-700">{cvData.summary}</p>
+                        <p className="text-justify text-sm text-[#334155]">{cvData.summary}</p>
                       </div>
                     )}
 
                     <div className="mb-8">
                       <h3
-                        className={`font-bold uppercase text-slate-900 border-b-2 mb-4 pb-1 text-sm tracking-widest page-break-after-avoid ${
-                          isMinimal ? 'border-slate-200' : 'border-slate-100'
+                        className={`font-bold uppercase text-[#0f172a] border-b-2 mb-4 pb-1 text-sm tracking-widest page-break-after-avoid ${
+                          isMinimal ? 'border-[#e2e8f0]' : 'border-[#f1f5f9]'
                         }`}
                       >
                         Experiencia Profesional
@@ -557,10 +557,10 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage: _onUsage, userId 
                       {cvData.experience.map((exp) => (
                         <div key={exp.id} className="mb-6 last:mb-0 page-break-inside-avoid">
                           <div className="flex justify-between items-baseline mb-1">
-                            <h4 className="font-bold text-base text-slate-900">{exp.role}</h4>
+                            <h4 className="font-bold text-base text-[#0f172a]">{exp.role}</h4>
                             <span
-                              className={`text-xs text-slate-500 font-medium italic shrink-0 ml-4 px-2 py-0.5 rounded ${
-                                isMinimal ? 'bg-slate-50' : 'bg-slate-100'
+                              className={`text-xs text-[#64748b] font-medium italic shrink-0 ml-4 px-2 py-0.5 rounded ${
+                                isMinimal ? 'bg-[#f8fafc]' : 'bg-[#f1f5f9]'
                               }`}
                             >
                               {exp.dates}
@@ -568,12 +568,12 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage: _onUsage, userId 
                           </div>
                           <p
                             className={`font-semibold text-sm mb-2 ${
-                              isMinimal ? 'text-slate-700' : 'text-brand-700'
+                              isMinimal ? 'text-[#334155]' : 'text-[#15803d]'
                             }`}
                           >
                             {exp.company}
                           </p>
-                          <p className="text-sm text-slate-600 whitespace-pre-wrap text-justify">
+                          <p className="text-sm text-[#475569] whitespace-pre-wrap text-justify">
                             {exp.desc}
                           </p>
                         </div>
@@ -583,8 +583,8 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage: _onUsage, userId 
                     {cvData.education.length > 0 && cvData.education[0].degree && (
                       <div className="mb-8 page-break-inside-avoid">
                         <h3
-                          className={`font-bold uppercase text-slate-900 border-b-2 mb-4 pb-1 text-sm tracking-widest ${
-                            isMinimal ? 'border-slate-200' : 'border-slate-100'
+                          className={`font-bold uppercase text-[#0f172a] border-b-2 mb-4 pb-1 text-sm tracking-widest ${
+                            isMinimal ? 'border-[#e2e8f0]' : 'border-[#f1f5f9]'
                           }`}
                         >
                           Formación
@@ -592,12 +592,12 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage: _onUsage, userId 
                         {cvData.education.map((edu) => (
                           <div key={edu.id} className="mb-3 page-break-inside-avoid">
                             <div className="flex justify-between items-baseline">
-                              <h4 className="font-bold text-sm text-slate-900">{edu.degree}</h4>
-                              <span className="text-xs text-slate-500 italic shrink-0 ml-4">
+                              <h4 className="font-bold text-sm text-[#0f172a]">{edu.degree}</h4>
+                              <span className="text-xs text-[#64748b] italic shrink-0 ml-4">
                                 {edu.dates}
                               </span>
                             </div>
-                            <p className="text-slate-600 text-sm">{edu.school}</p>
+                            <p className="text-[#475569] text-sm">{edu.school}</p>
                           </div>
                         ))}
                       </div>
@@ -606,13 +606,13 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage: _onUsage, userId 
                     {cvData.skills && (
                       <div className="page-break-inside-avoid">
                         <h3
-                          className={`font-bold uppercase text-slate-900 border-b-2 mb-3 pb-1 text-sm tracking-widest ${
-                            isMinimal ? 'border-slate-200' : 'border-slate-100'
+                          className={`font-bold uppercase text-[#0f172a] border-b-2 mb-3 pb-1 text-sm tracking-widest ${
+                            isMinimal ? 'border-[#e2e8f0]' : 'border-[#f1f5f9]'
                           }`}
                         >
                           Habilidades
                         </h3>
-                        <p className="text-sm text-slate-700 leading-relaxed">{cvData.skills}</p>
+                        <p className="text-sm text-[#334155] leading-relaxed">{cvData.skills}</p>
                       </div>
                     )}
                   </div>

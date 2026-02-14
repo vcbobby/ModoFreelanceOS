@@ -76,11 +76,11 @@ export const PomodoroController = () => {
                 body:
                   mode === 'work' ? 'Tu sesión de enfoque ha terminado.' : 'El descanso terminó.',
                 schedule: { at: new Date(endTime) },
-                smallIcon: 'ic_stat_icon_config_sample', // Android specific icon if available
-                sound: 'beep.wav',
+                // smallIcon: 'ic_stat_icon_config_sample', removed to use default
+                // sound: 'beep.wav' removed to use default
               },
             ],
-          }).catch(() => {});
+          }).catch((err) => console.error('Error scheduling notification', err));
         });
       }
     } else if (!isActive && timeLeft > 0) {
