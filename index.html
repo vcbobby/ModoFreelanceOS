@@ -8,14 +8,14 @@
       content="ModoFreelanceOS, el sistema operativo todo en uno para freelancers. Gestiona proyectos, facturación, clientes y más."
     />
     <title>ModoFreelanceOS - El Sistema Operativo para Freelancers</title>
-    <link rel="icon" type="image/png" href="/favicon.png" />
-    <link rel="apple-touch-icon" href="/favicon.png" />
+    <link rel="icon" type="image/png" href="./favicon.png" />
+    <link rel="apple-touch-icon" href="./favicon.png" />
     <meta property="og:title" content="ModoFreelanceOS - Tu oficina virtual" />
     <meta property="og:description" content="Genera propuestas, logos y facturas con IA." />
     <meta property="og:image" content="https://app.modofreelanceos.com/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <link rel="manifest" href="/manifest.json" />
+    <link rel="manifest" href="./manifest.json" />
     <meta name="theme-color" content="#16a34a" />
 
     <link
@@ -50,20 +50,5 @@
       Cargando ModoFreelanceOS...
     </div>
     <script type="module" src="/src/main.tsx"></script>
-    <script>
-      // Only register service worker for web, not for Electron
-      if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker
-            .register('/sw.js')
-            .then((registration) => {
-              console.log('SW registrado:', registration.scope);
-            })
-            .catch((err) => {
-              console.log('SW falló:', err);
-            });
-        });
-      }
-    </script>
   </body>
 </html>
