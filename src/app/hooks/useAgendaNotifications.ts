@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '@config/firebase';
-import { notificationService } from '@services/notificationService';
+import { notificationService } from '../../services/notificationService';
 
 export interface AppNotification {
   id: string;
