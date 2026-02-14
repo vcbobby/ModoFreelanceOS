@@ -42,7 +42,6 @@ const isTestEnv =
   import.meta.env.MODE === 'test' || (import.meta as { env?: { VITEST?: string } }).env?.VITEST;
 
 const App = () => {
-  console.log('App: Component rendering');
   const dispatch = useAppDispatch();
   const { theme, toggleTheme } = useTheme();
   const [checkStatus] = useCheckStatusMutation();
