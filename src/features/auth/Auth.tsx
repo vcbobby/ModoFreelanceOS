@@ -232,19 +232,12 @@ export const AuthView = ({ onLoginSuccess, onBack: _onBack }: AuthProps) => {
             <button
               type="button"
               onClick={handleGoogleLogin}
-              disabled={loading || window.location.protocol === 'file:'}
-              className="w-full py-2.5 border border-slate-300 dark:border-slate-600 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-3 text-slate-700 dark:text-slate-200 font-medium bg-white dark:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={loading}
+              className="w-full py-2.5 border border-slate-300 dark:border-slate-600 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-3 text-slate-700 dark:text-slate-200 font-medium bg-white dark:bg-slate-800 disabled:opacity-50"
             >
               <Chrome className="w-5 h-5 text-slate-900 dark:text-white" />
-              {window.location.protocol === 'file:'
-                ? 'Google Login solo en Web'
-                : 'Continuar con Google'}
+              Continuar con Google
             </button>
-            {window.location.protocol === 'file:' && (
-              <p className="text-[10px] text-center text-slate-400 mt-1">
-                Usa tu correo/pass o inicia sesión en la web.
-              </p>
-            )}
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t border-slate-200 dark:border-slate-700"></span>

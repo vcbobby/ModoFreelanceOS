@@ -4,7 +4,7 @@ import * as path from 'path';
 import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineConfig(({ mode }) => ({
-  base: './', // Required for Electron to load assets correctly with file:// protocol
+  base: '/', // Changed to / because we now use a local HTTP server for Electron
   plugins: [
     react(),
     mode === 'analyze' &&

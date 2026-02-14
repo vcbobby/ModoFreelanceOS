@@ -9,7 +9,7 @@ export const usePushNotifications = (userId: string | undefined) => {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    if (!userId || window.location.protocol === 'file:') return;
+    if (!userId) return;
 
     const requestPermission = async () => {
       try {
