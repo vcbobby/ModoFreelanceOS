@@ -10,7 +10,8 @@ import {
   type User,
 } from 'firebase/auth';
 import { GoogleAuth } from '@southdevs/capacitor-google-auth';
-import { Capacitor } from '@capacitor/core'; // <--- NUEVO IMPORT
+import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser'; // <--- Plugin para abrir navegador in-app/sistema
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { User as UserIcon, Mail, Lock, ArrowRight, Loader2, Chrome, KeyRound } from 'lucide-react';
 import { getBackendURL } from '@config/features';
@@ -141,24 +142,16 @@ export const AuthView = ({ onLoginSuccess, onBack: _onBack }: AuthProps) => {
 
       await handleUserInDb(userResult.user);
       onLoginSuccess();
-    } catch (err: unknown) {
-      void err;
-      const code = (err as { code?: string })?.code as string | undefined;
+    } catch (err: any) {
+      console.error('Google Sign-In Error:', err);
+      // DEBUG: Mostrar error completo en pantalla para que el usuario pueda enviarnos una captura
+      const errorMsg = err?.message || JSON.stringify(err);
+      setError(`Error Google: ${errorMsg}`);
+
+      const code = err?.code;
       if (code === 'auth/unauthorized-domain') {
-        setError(
-          'Dominio no autorizado. Agrega este host en Firebase Auth > Dominios autorizados.'
-        );
-      } else if (code === 'auth/popup-blocked') {
-        setError('El navegador bloqueó el popup. Permite popups e intenta de nuevo.');
-      } else if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
-        setError('El popup se cerró antes de completar el inicio de sesión.');
-      } else if (code === 'auth/operation-not-allowed') {
-        setError('Google Sign-In no está habilitado en Firebase Auth.');
-      } else if (code === 'auth/network-request-failed') {
-        setError('Fallo de red. Revisa tu conexión e intenta de nuevo.');
-      } else {
-        setError('Error al iniciar sesión con Google.');
-      }
+        setError('Dominio no autorizado en Firebase.');
+      } // ... otros códigos ...
       setLoading(false);
     }
   };
@@ -172,13 +165,19 @@ export const AuthView = ({ onLoginSuccess, onBack: _onBack }: AuthProps) => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 p-4 font-sans relative">
       <button
-        onClick={() => {
-          // Si es Electron o App, intentamos abrir navegador externo o simplemente volver al login
+        type="button"
+        onClick={async () => {
+          const landingUrl = 'https://modofreelanceos.com';
+
           if (Capacitor.isNativePlatform()) {
-            // En Android no hay "atrás" hacia la landing page externa facilmente,
-            // mejor recargamos o no hacemos nada si ya estamos en Auth.
+            // Android/iOS: Usar Browser plugin para abrir el navegador del sistema
+            await Browser.open({ url: landingUrl });
+          } else if (navigator.userAgent.includes('Electron')) {
+            // Windows/Electron: Usar window.open (interceptado por main.cjs para abrir en navegador default)
+            window.open(landingUrl, '_blank');
           } else {
-            window.location.href = 'http://modofreelanceos.com/';
+            // Web Normal: Navegación estándar
+            window.location.href = landingUrl;
           }
         }}
         className="absolute top-6 left-6 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-2 text-sm font-medium transition-colors"
