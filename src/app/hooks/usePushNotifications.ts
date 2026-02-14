@@ -5,6 +5,14 @@ import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { useAppDispatch } from '@/app/hooks/storeHooks';
 import { addToast } from '@/app/slices/uiSlice';
 
+declare global {
+  interface Window {
+    electronAPI?: {
+      showNotification: (title: string, body: string) => void;
+    };
+  }
+}
+
 export const usePushNotifications = (userId: string | undefined) => {
   const dispatch = useAppDispatch();
 
@@ -13,35 +21,48 @@ export const usePushNotifications = (userId: string | undefined) => {
 
     const requestPermission = async () => {
       try {
-        // Solo pedir permiso en navegadores (Web)
-        // Para Android/Capacitor se requiere configuración adicional en el repo nativo
-        if (typeof window !== 'undefined' && 'Notification' in window) {
-          const permission = await Notification.requestPermission();
-          if (permission === 'granted') {
-            const token = await getToken(messaging, {
-              vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY, // Necesitarás esta variable
-            });
+        // Si estamos en Electron, usar la API puenteada
+        if (window.electronAPI) {
+          // No necesitamos pedir permiso en Electron, suele estar concedido o manejado por el OS
+          return;
+        }
 
-            if (token) {
-              // Guardar token en Firestore
+        // Evitar ejecución en Electron/Desktop si no tenemos el puente (fallback)
+        const isElectron = navigator.userAgent.toLowerCase().includes(' electron/');
+        if (typeof window === 'undefined' || !('Notification' in window) || isElectron) {
+          return;
+        }
+
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          // Verificar si tenemos la key antes de llamar a getToken
+          const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
+          if (!vapidKey) return;
+
+          const token = await getToken(messaging, {
+            vapidKey: vapidKey,
+          });
+
+          if (token) {
+            try {
               const userRef = doc(db, 'users', userId);
               await updateDoc(userRef, {
                 fcmTokens: arrayUnion(token),
               });
+            } catch (e) {
+              // Silently fail if Firestore update fails
             }
           }
         }
       } catch (error) {
-        console.error('Error al registrar notificaciones push:', error);
+        // Silently ensure we don't spam console on errors
       }
     };
 
     requestPermission();
 
     // Escuchar mensajes en primer plano
-    const unsubscribe = onMessage(messaging, (payload) => {
-      console.log('FCM: Mensaje recibido en primer plano!', payload);
-
+    return onMessage(messaging, (payload) => {
       if (payload.notification) {
         dispatch(
           addToast({
@@ -52,7 +73,5 @@ export const usePushNotifications = (userId: string | undefined) => {
         );
       }
     });
-
-    return () => unsubscribe();
   }, [userId]);
 };

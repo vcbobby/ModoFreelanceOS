@@ -24,13 +24,11 @@ const isPortfolioRoute = pathname.startsWith('/p/');
 
 // 2. Función para renderizar la App principal (SaaS)
 const renderApp = async () => {
-  console.log('Main: renderApp called');
   try {
     const [{ default: App }, { AppProviders }] = await Promise.all([
       import('@/App'),
       import('@context'),
     ]);
-    console.log('Main: Modules loaded, rendering...');
     root.render(
       <React.StrictMode>
         <AppProviders>
@@ -38,7 +36,6 @@ const renderApp = async () => {
         </AppProviders>
       </React.StrictMode>
     );
-    console.log('Main: root.render executed');
   } catch (err) {
     console.error('Main: CRITICAL ERROR in renderApp:', err);
     const rootEl = document.getElementById('root');
