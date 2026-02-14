@@ -1,7 +1,7 @@
 {
-    "version": "2.0.0",
-    "critical": false,
-    "apkUrl": "https://github.com/vcbobby/ModoFreelanceOS/releases/download/v2.0.0/app-release.apk",
-    "exeUrl": "https://github.com/vcbobby/ModoFreelanceOS/releases/download/v2.0.0/ModoFreelanceOS.Setup.exe",
-    "message": "🎉 ¡ModoFreelanceOS v2.0.0! Nueva arquitectura backend, landing moderna, mejoras de rendimiento y sistema de IA optimizado con rotación de keys."
+  "version": "2.1.0",
+  "critical": false,
+  "apkUrl": "https://github.com/vcbobby/ModoFreelanceOS/releases/download/v2.0.0/app-release.apk",
+  "exeUrl": "https://github.com/vcbobby/ModoFreelanceOS/releases/download/v2.0.0/ModoFreelanceOS.Setup.exe",
+  "message": "🎉 ¡ModoFreelanceOS v2.1.0! Nueva arquitectura backend, landing moderna, mejoras de rendimiento y sistema de IA optimizado con rotación de keys."
 }
