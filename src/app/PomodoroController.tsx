@@ -10,8 +10,13 @@ export const PomodoroController = () => {
   const dispatch = useAppDispatch();
   const { isActive, timeLeft, mode } = useAppSelector((state) => state.pomodoro);
 
-  // 1. Sync Timer on Resume (Mobile/Desktop focus)
+  // 1. Sync Timer on Resume & Request Permissions
   useEffect(() => {
+    // Request Permissions on Mount
+    if (Capacitor.isNativePlatform()) {
+      LocalNotifications.requestPermissions();
+    }
+
     const handleResume = async () => {
       const saved = localStorage.getItem('pomodoro_session');
       if (!saved) return;
