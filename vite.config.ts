@@ -23,6 +23,7 @@ export default defineConfig(({ mode }) => ({
       '@config': path.resolve(__dirname, './src/config'),
       '@types': path.resolve(__dirname, './src/types'),
       '@context': path.resolve(__dirname, './src/context'),
+      '@utils': path.resolve(__dirname, './src/utils'),
       // Alias for test-time mock to avoid requiring ESM-only dependency
       'html-encoding-sniffer': path.resolve(__dirname, './test/mocks/html-encoding-sniffer.cjs'),
     },

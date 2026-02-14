@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '@config/firebase';
-import { LocalNotifications } from '@capacitor/local-notifications';
-import { Capacitor } from '@capacitor/core';
+import { notificationService } from '@/services/notificationService';
 
 export interface AppNotification {
   id: string;
@@ -20,57 +19,12 @@ export const useAgendaNotifications = (userId: string | undefined) => {
   const [agendaNotifs, setAgendaNotifs] = useState<AppNotification[]>([]);
   const [financeNotifs, setFinanceNotifs] = useState<AppNotification[]>([]);
 
-  // Función auxiliar para notificaciones nativas (Solo móvil)
-  const triggerNativeNotification = async (
-    idStr: string,
-    title: string,
-    body: string,
-    scheduledDate?: Date
-  ) => {
-    if (!Capacitor.isNativePlatform()) {
-      // Si estamos en Web/Electron y la app está abierta, disparamos una notificación de navegador inmediata si es el momento
-      if (
-        typeof window !== 'undefined' &&
-        'Notification' in window &&
-        Notification.permission === 'granted'
-      ) {
-        // Si no hay fecha programada (es inmediata) o si la fecha programada es AHORA
-        const isNow = !scheduledDate || Math.abs(scheduledDate.getTime() - Date.now()) < 60000;
-        if (isNow) {
-          new Notification(title, { body });
-        }
-      }
-      return;
+  // Solicitar permisos al montar el hook
+  useEffect(() => {
+    if (!isE2E) {
+      notificationService.requestPermission().catch(console.error);
     }
-
-    // Generar ID numérico único seguro
-    let hash = 0;
-    for (let i = 0; i < idStr.length; i++) {
-      hash = (hash << 5) - hash + idStr.charCodeAt(i);
-      hash |= 0;
-    }
-    const notifId = Math.abs(hash);
-
-    try {
-      if (scheduledDate && scheduledDate.getTime() < Date.now()) return; // No programar en el pasado
-
-      await LocalNotifications.schedule({
-        notifications: [
-          {
-            title,
-            body,
-            id: notifId,
-            schedule: { at: scheduledDate || new Date(Date.now() + 1000) },
-            // smallIcon: 'ic_stat_icon_config_sample', // Comentado por seguridad (recurso faltante)
-            actionTypeId: '',
-            extra: null,
-          },
-        ],
-      });
-    } catch (e) {
-      void e;
-    }
-  };
+  }, [isE2E]);
 
   useEffect(() => {
     if (isE2E || !userId) return;
@@ -114,22 +68,26 @@ export const useAgendaNotifications = (userId: string | undefined) => {
           const alertDate = new Date(startDate.getTime() - 30 * 60 * 1000); // 30 mins antes
 
           if (alertDate.getTime() > Date.now()) {
-            triggerNativeNotification(
-              `${doc.id}_30min`,
-              'Recordatorio Próximo ⏳',
-              `Tu evento "${data.title}" comienza en 30 minutos.`,
-              alertDate
-            );
+            notificationService
+              .scheduleNotification({
+                id: `${doc.id}_30min`,
+                title: 'Recordatorio Próximo ⏳',
+                body: `Tu evento "${data.title}" comienza en 30 minutos.`,
+                scheduledDate: alertDate,
+              })
+              .catch(console.error);
           }
 
           // También programar notificación de inicio exacto
           if (startDate.getTime() > Date.now()) {
-            triggerNativeNotification(
-              doc.id,
-              '¡Inicia Ahora! 📅',
-              `${data.title} comienza ya.`,
-              startDate
-            );
+            notificationService
+              .scheduleNotification({
+                id: doc.id,
+                title: '¡Inicia Ahora! 📅',
+                body: `${data.title} comienza ya.`,
+                scheduledDate: startDate,
+              })
+              .catch(console.error);
           }
         }
 
@@ -167,7 +125,14 @@ export const useAgendaNotifications = (userId: string | undefined) => {
           const alertDate = new Date();
           alertDate.setHours(9, 0, 0, 0);
           if (alertDate.getTime() > Date.now()) {
-            triggerNativeNotification(doc.id, 'Recordatorio de Pago 💰', msg, alertDate);
+            notificationService
+              .scheduleNotification({
+                id: doc.id,
+                title: 'Recordatorio de Pago 💰',
+                body: msg,
+                scheduledDate: alertDate,
+              })
+              .catch(console.error);
           }
         }
 

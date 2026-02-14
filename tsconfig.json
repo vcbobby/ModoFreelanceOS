@@ -12,7 +12,8 @@
       "@features/*": ["./src/features/*"],
       "@config/*": ["./src/config/*"],
       "@types/*": ["./src/types/*"],
-      "@context/*": ["./src/context/*"]
+      "@context/*": ["./src/context/*"],
+      "@utils/*": ["./src/utils/*"]
     },
     "jsx": "react-jsx",
     "allowJs": true

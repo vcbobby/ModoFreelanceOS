@@ -1,5 +1,6 @@
 import { getBackendURL } from '@config/features';
 import { auth } from '@config/firebase';
+import { fetchWithRetry, logFetchError } from '@utils/fetchUtils';
 
 const getAuthHeader = async () => {
   const user = auth.currentUser;
@@ -9,28 +10,39 @@ const getAuthHeader = async () => {
 };
 
 const postJson = async <T>(endpoint: string, payload: unknown): Promise<T> => {
-  const authHeader = await getAuthHeader();
-  const response = await fetch(`${getBackendURL()}${endpoint}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(authHeader ? { Authorization: authHeader } : {}),
-    },
-    body: JSON.stringify(payload),
-  });
+  try {
+    const authHeader = await getAuthHeader();
+    const response = await fetchWithRetry(`${getBackendURL()}${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(authHeader ? { Authorization: authHeader } : {}),
+      },
+      body: JSON.stringify(payload),
+      timeout: 60000, // 60 segundos para operaciones de IA
+      retries: 3,
+      retryDelay: 2000,
+      onRetry: (attempt: number, error: Error) => {
+        console.warn(`[AI Backend] Retry attempt ${attempt} for ${endpoint}:`, error.message);
+      },
+    });
 
-  if (!response.ok) {
-    let message = 'Error de conexion con IA';
-    try {
-      const data = await response.json();
-      message = data?.detail || data?.message || message;
-    } catch {
-      // Ignore JSON parse errors for non-JSON responses.
+    if (!response.ok) {
+      let message = 'Error de conexion con IA';
+      try {
+        const data = await response.json();
+        message = data?.detail || data?.message || message;
+      } catch {
+        // Ignore JSON parse errors for non-JSON responses.
+      }
+      throw new Error(message);
     }
-    throw new Error(message);
-  }
 
-  return response.json() as Promise<T>;
+    return response.json() as Promise<T>;
+  } catch (error) {
+    logFetchError(error as Error, `AI Backend - ${endpoint}`);
+    throw error;
+  }
 };
 
 export const analyzeDocument = async (
