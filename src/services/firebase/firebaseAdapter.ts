@@ -1,5 +1,5 @@
 import { Auth, User, onAuthStateChanged, signOut } from 'firebase/auth';
-import { Firestore, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { Firestore, doc, getDoc, setDoc, updateDoc, runTransaction } from 'firebase/firestore';
 import { auth, db } from '@config/firebase';
 
 export interface FirebaseUserDocument {
@@ -17,9 +17,7 @@ export interface FirebaseUserDocument {
 
 export interface FirebaseAdapters {
   auth: {
-    onAuthStateChanged: (
-      callback: (user: User | null) => void
-    ) => () => void;
+    onAuthStateChanged: (callback: (user: User | null) => void) => () => void;
     signOut: () => Promise<void>;
   };
   users: {
@@ -46,7 +44,12 @@ export const createFirebaseAdapters = (deps: { auth: Auth; db: Firestore }): Fir
       },
       setUserDoc: async (uid, data) => {
         const docRef = doc(deps.db, 'users', uid);
-        await setDoc(docRef, data);
+        await runTransaction(deps.db, async (transaction) => {
+          const docSnap = await transaction.get(docRef);
+          if (!docSnap.exists()) {
+            transaction.set(docRef, data);
+          }
+        });
       },
       updateUserDoc: async (uid, data) => {
         const docRef = doc(deps.db, 'users', uid);

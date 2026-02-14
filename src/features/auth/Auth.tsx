@@ -70,14 +70,18 @@ export const AuthView = ({ onLoginSuccess, onBack: _onBack }: AuthProps) => {
     if (!docSnap.exists()) {
       const platform = getPlatformName();
       // Usuario Nuevo
-      await setDoc(docRef, {
-        email: user.email,
-        credits: 3,
-        isSubscribed: false,
-        createdAt: new Date().toISOString(),
-        lastReset: Date.now(),
-        signupPlatform: platform,
-      });
+      await setDoc(
+        docRef,
+        {
+          email: user.email,
+          credits: 3,
+          isSubscribed: false,
+          createdAt: new Date().toISOString(),
+          lastReset: Date.now(),
+          signupPlatform: platform,
+        },
+        { merge: true }
+      );
       // Notificamos al backend que hay un nuevo usuario
       notifyBackendSignup(user.email);
     }
