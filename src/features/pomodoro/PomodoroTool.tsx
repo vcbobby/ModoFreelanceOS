@@ -31,7 +31,7 @@ export const PomodoroTool = () => {
   const progress = 100 - (timeLeft / totalTime) * 100;
 
   return (
-    <div className="max-w-2xl mx-auto text-center">
+    <div className="max-w-xl mx-auto text-center">
       <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 flex items-center justify-center gap-2">
         <Brain className="w-6 h-6 text-brand-600" /> Pomodoro Focus
       </h2>

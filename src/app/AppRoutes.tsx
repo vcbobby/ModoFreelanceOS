@@ -201,7 +201,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         return <WebsiteBuilder onUsage={handleFeatureUsage} userId={userId} />;
       default:
         return (
-          <div className="max-w-5xl mx-auto py-8">
+          <div className="max-w-4xl mx-auto py-8">
             {showSuccessMsg && (
               <div className="mb-6 bg-green-500 text-white p-4 rounded-xl shadow-lg flex items-center justify-center gap-2 animate-bounce">
                 <CheckCircle className="w-6 h-6" />
@@ -322,11 +322,6 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
               </Suspense>
             )}
             <DashboardTips />
-
-            {/* UID Debug Info - Solo visible para Victor o en desarrollo */}
-            <div className="mt-12 pt-8 border-t border-slate-100 dark:border-slate-800 text-center">
-              <p className="text-[10px] text-slate-400 font-mono">ID de Sesión: {userId}</p>
-            </div>
           </div>
         );
     }

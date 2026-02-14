@@ -182,7 +182,7 @@ export const AuthView = ({ onLoginSuccess, onBack: _onBack }: AuthProps) => {
         ← Volver al inicio
       </button>
 
-      <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl w-full max-w-lg border border-slate-100 dark:border-slate-700">
+      <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-100 dark:border-slate-700">
         {isE2EEnabled && (
           <div className="mb-4">
             <button
