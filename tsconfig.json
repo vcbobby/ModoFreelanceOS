@@ -13,7 +13,8 @@
       "@config/*": ["./src/config/*"],
       "@types/*": ["./src/types/*"],
       "@context/*": ["./src/context/*"],
-      "@utils/*": ["./src/utils/*"]
+      "@utils/*": ["./src/utils/*"],
+      "@services/*": ["./src/services/*"]
     },
     "jsx": "react-jsx",
     "allowJs": true
