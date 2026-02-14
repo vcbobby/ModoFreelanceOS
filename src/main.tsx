@@ -24,17 +24,28 @@ const isPortfolioRoute = pathname.startsWith('/p/');
 
 // 2. Función para renderizar la App principal (SaaS)
 const renderApp = async () => {
-  const [{ default: App }, { AppProviders }] = await Promise.all([
-    import('@/App'),
-    import('@context'),
-  ]);
-  root.render(
-    <React.StrictMode>
-      <AppProviders>
-        <App />
-      </AppProviders>
-    </React.StrictMode>
-  );
+  console.log('Main: renderApp called');
+  try {
+    const [{ default: App }, { AppProviders }] = await Promise.all([
+      import('@/App'),
+      import('@context'),
+    ]);
+    console.log('Main: Modules loaded, rendering...');
+    root.render(
+      <React.StrictMode>
+        <AppProviders>
+          <App />
+        </AppProviders>
+      </React.StrictMode>
+    );
+    console.log('Main: root.render executed');
+  } catch (err) {
+    console.error('Main: CRITICAL ERROR in renderApp:', err);
+    const rootEl = document.getElementById('root');
+    if (rootEl) {
+      rootEl.innerHTML = `<div style="padding: 20px; color: red;"><h1>Error de Inicio</h1><pre>${err}</pre></div>`;
+    }
+  }
 };
 
 // 3. Función para renderizar el Portafolio (Lógica de Slugs)
