@@ -322,6 +322,7 @@ const App = () => {
           })
         );
         dispatch(setLoading(false));
+        console.log('App: User Logged In:', { uid: currentUser.uid, email: currentUser.email });
         fetchUserData(currentUser.uid, currentUser.email || undefined);
         sendWakeUpPing();
         syncWithBackend(currentUser.uid);

@@ -62,8 +62,9 @@ const DashboardPomodoroWidget = ({ onGoToPomodoro }: { onGoToPomodoro: () => voi
     <div className="mb-6 bg-slate-900 dark:bg-slate-800 text-white p-4 rounded-xl shadow-lg flex items-center justify-between border-l-4 border-brand-500 animate-in slide-in-from-top-2">
       <div className="flex items-center gap-3">
         <div
-          className={`w-3 h-3 rounded-full animate-pulse ${mode === 'work' ? 'bg-red-500' : 'bg-green-500'
-            }`}
+          className={`w-3 h-3 rounded-full animate-pulse ${
+            mode === 'work' ? 'bg-red-500' : 'bg-green-500'
+          }`}
         ></div>
         <div>
           <p className="text-xs font-bold uppercase opacity-70">
@@ -200,7 +201,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         return <WebsiteBuilder onUsage={handleFeatureUsage} userId={userId} />;
       default:
         return (
-          <div className="max-w-4xl mx-auto py-8">
+          <div className="max-w-5xl mx-auto py-8">
             {showSuccessMsg && (
               <div className="mb-6 bg-green-500 text-white p-4 rounded-xl shadow-lg flex items-center justify-center gap-2 animate-bounce">
                 <CheckCircle className="w-6 h-6" />
@@ -321,6 +322,11 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
               </Suspense>
             )}
             <DashboardTips />
+
+            {/* UID Debug Info - Solo visible para Victor o en desarrollo */}
+            <div className="mt-12 pt-8 border-t border-slate-100 dark:border-slate-800 text-center">
+              <p className="text-[10px] text-slate-400 font-mono">ID de Sesión: {userId}</p>
+            </div>
           </div>
         );
     }

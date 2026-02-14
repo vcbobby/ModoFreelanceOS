@@ -183,11 +183,13 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({ onUsage, userId }) => 
         const pdfDataUri = await html2pdf().set(opt).from(element).outputPdf('datauristring');
         await downloadFile(pdfDataUri, opt.filename);
 
-        dispatch(addToast({
-          title: '✅ Factura Lista',
-          message: `La factura ${fullInvoiceNumber} se ha generado y descargado.`,
-          type: 'success'
-        }));
+        dispatch(
+          addToast({
+            title: '✅ Factura Lista',
+            message: `La factura ${fullInvoiceNumber} se ha generado y descargado.`,
+            type: 'success',
+          })
+        );
       });
 
       if (!usage.ok) return;
@@ -202,7 +204,7 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({ onUsage, userId }) => 
   };
 
   return (
-    <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-start pb-20">
+    <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-8 items-start pb-20">
       <ConfirmationModal
         isOpen={modal.isOpen}
         onClose={() => setModal({ ...modal, isOpen: false })}
@@ -531,8 +533,9 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({ onUsage, userId }) => 
           <div
             id="invoice-preview"
             ref={invoiceRef}
-            className={`bg-white shadow-xl w-full max-w-[210mm] min-h-[197mm] overflow-x-auto p-8 md:p-12 text-slate-800 flex flex-col justify-between ${template === 'minimal' ? 'border border-slate-200' : ''
-              } ${template === 'bold' ? 'border-2 border-slate-900' : ''}`}
+            className={`bg-white shadow-xl w-full max-w-[210mm] min-h-[197mm] overflow-x-auto p-8 md:p-12 text-slate-800 flex flex-col justify-between ${
+              template === 'minimal' ? 'border border-slate-200' : ''
+            } ${template === 'bold' ? 'border-2 border-slate-900' : ''}`}
             style={{ fontSize: '14px' }}
           >
             <div>
@@ -542,8 +545,9 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({ onUsage, userId }) => 
                     <img src={logo} alt="Logo" className="h-14 object-contain mb-2" />
                   ) : (
                     <h1
-                      className={`text-2xl font-bold uppercase tracking-widest ${template === 'bold' ? 'text-slate-900' : 'text-brand-600'
-                        }`}
+                      className={`text-2xl font-bold uppercase tracking-widest ${
+                        template === 'bold' ? 'text-slate-900' : 'text-brand-600'
+                      }`}
                     >
                       Factura
                     </h1>
@@ -558,8 +562,9 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({ onUsage, userId }) => 
                 </div>
                 <div className="text-right">
                   <h2
-                    className={`text-3xl font-light ${template === 'bold' ? 'text-slate-500' : 'text-slate-200'
-                      }`}
+                    className={`text-3xl font-light ${
+                      template === 'bold' ? 'text-slate-500' : 'text-slate-200'
+                    }`}
                   >
                     INVOICE
                   </h2>
