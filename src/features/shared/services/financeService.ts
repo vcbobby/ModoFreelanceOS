@@ -1,6 +1,6 @@
 import { auth } from '@config/firebase';
 import { getBackendURL } from '@config/features';
-import { fetchWithRetry, logFetchError } from '@utils/fetchUtils';
+import { fetchWithRetry, logFetchError } from '../../../utils/fetchUtils';
 
 interface TransactionPayload {
   amount: number;

@@ -1,7 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Toast } from '@capacitor/toast';
-import { fetchWithRetry, logFetchError } from '@utils/fetchUtils';
+import { fetchWithRetry, logFetchError } from '../../../utils/fetchUtils';
 
 /**
  * Valida si una URL es válida

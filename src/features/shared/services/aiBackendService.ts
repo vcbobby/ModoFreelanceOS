@@ -1,6 +1,6 @@
 import { getBackendURL } from '@config/features';
 import { auth } from '@config/firebase';
-import { fetchWithRetry, logFetchError } from '@utils/fetchUtils';
+import { fetchWithRetry, logFetchError } from '../../../utils/fetchUtils';
 
 const getAuthHeader = async () => {
   const user = auth.currentUser;
