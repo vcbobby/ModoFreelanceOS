@@ -391,11 +391,35 @@ const App = () => {
 
   const handleFeatureUsage = async (cost: number = 1): Promise<boolean> => {
     if (isE2E) return true;
-    if (userState.isSubscribed) return true;
-    const { baseCredits, purchasedCredits } = userState;
+    if (!authUser) return false;
+
+    const { baseCredits, purchasedCredits, isSubscribed } = userState;
     const totalAvailable = baseCredits + purchasedCredits;
 
-    if (totalAvailable >= cost && authUser) {
+    // Log function helper
+    const logActivity = (finalCost: number) => {
+      firebaseAdapters.history.addLogEntry(authUser.uid, {
+        createdAt: new Date().toISOString(),
+        category: 'usage',
+        type: 'credits',
+        content: isSubscribed
+          ? `Uso de herramienta (Plan PRO)`
+          : `Uso de ${finalCost} ${finalCost === 1 ? 'crédito' : 'créditos'}`,
+        metadata: {
+          cost: finalCost,
+          prevTotal: totalAvailable,
+          currentView: currentViewRef.current,
+          isPro: isSubscribed,
+        },
+      });
+    };
+
+    if (isSubscribed) {
+      logActivity(0);
+      return true;
+    }
+
+    if (totalAvailable >= cost) {
       let newBase = baseCredits;
       let newPurchased = purchasedCredits;
 
@@ -424,19 +448,7 @@ const App = () => {
         purchasedCredits: newPurchased,
       });
 
-      // Log usage
-      firebaseAdapters.history.addLogEntry(authUser.uid, {
-        createdAt: new Date().toISOString(),
-        category: 'usage',
-        type: 'credits',
-        content: `Uso de ${cost} ${cost === 1 ? 'crédito' : 'créditos'}`,
-        metadata: {
-          cost,
-          prevTotal: totalAvailable,
-          currentView: currentViewRef.current,
-        },
-      });
-
+      logActivity(cost);
       return true;
     } else {
       dispatch(setPricingOpen(true));

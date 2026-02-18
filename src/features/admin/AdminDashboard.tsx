@@ -915,10 +915,47 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
                       </span>
                     )}
                   </div>
-                  <div className="flex justify-between items-center pt-3 border-t border-slate-200 dark:border-slate-700">
-                    <span className="text-xs text-slate-500">
-                      Créditos: <span className="font-mono font-bold">{u.credits ?? 0}</span>
-                    </span>
+                  <div className="flex flex-col gap-1 pt-3 border-t border-slate-200 dark:border-slate-700">
+                    <div className="flex justify-between text-[11px] uppercase font-bold text-slate-400">
+                      <span>Total</span>
+                      <span>Comprados</span>
+                      <span>Base</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="font-mono font-bold text-slate-900 dark:text-white">
+                        {u.credits ?? 0}
+                      </span>
+                      <span className="font-mono font-bold text-brand-600">
+                        +{u.purchasedCredits ?? 0}
+                      </span>
+                      <span className="font-mono text-slate-500">{u.baseCredits ?? 0}</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center pt-3 mt-2 border-t border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleViewHistory(u.id, u.email || '')}
+                        className="p-1.5 text-slate-400 hover:text-indigo-600 transition-colors"
+                        title="Ver Historial"
+                      >
+                        <History className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() =>
+                          setCreditModal({
+                            isOpen: true,
+                            targetId: u.id,
+                            email: u.email || '',
+                            amount: 10,
+                            loading: false,
+                          })
+                        }
+                        className="p-1.5 text-slate-400 hover:text-green-600 transition-colors"
+                        title="Gestionar Créditos"
+                      >
+                        <Coins className="w-4 h-4" />
+                      </button>
+                    </div>
                     <div className="flex items-center gap-2">
                       {!u.isPro ? (
                         <button
