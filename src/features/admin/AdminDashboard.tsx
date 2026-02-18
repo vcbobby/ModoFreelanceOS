@@ -51,6 +51,8 @@ interface AdminUser {
   platform?: string;
   isPro?: boolean;
   credits?: number;
+  baseCredits?: number;
+  purchasedCredits?: number;
 }
 
 interface AdminDashboardData {
@@ -771,7 +773,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
                       Plan
                     </th>
                     <th className="p-4 text-center text-xs font-bold text-slate-600 dark:text-slate-400 uppercase">
-                      Créditos
+                      Total
+                    </th>
+                    <th className="p-4 text-center text-xs font-bold text-slate-600 dark:text-slate-400 uppercase">
+                      Comprados
+                    </th>
+                    <th className="p-4 text-center text-xs font-bold text-slate-600 dark:text-slate-400 uppercase">
+                      Base
                     </th>
                     <th className="p-4 text-right text-xs font-bold text-slate-600 dark:text-slate-400 uppercase">
                       Acciones
@@ -810,8 +818,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
                           </span>
                         )}
                       </td>
-                      <td className="p-4 text-center font-mono text-sm text-slate-600 dark:text-slate-300">
+                      <td className="p-4 text-center font-mono text-sm text-slate-700 dark:text-white font-bold">
                         {u.credits ?? 0}
+                      </td>
+                      <td className="p-4 text-center font-mono text-sm text-brand-600 dark:text-brand-400">
+                        {u.purchasedCredits ?? 0}
+                      </td>
+                      <td className="p-4 text-center font-mono text-sm text-slate-500">
+                        {u.baseCredits ?? 0}
                       </td>
                       <td className="p-4">
                         <div className="flex items-center justify-end gap-1">
@@ -1106,11 +1120,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
                     className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 flex justify-between items-start"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-bold text-slate-700 dark:text-white leading-tight">
+                      <p
+                        className={`text-sm font-bold leading-tight ${log.category === 'usage' ? 'text-red-600 dark:text-red-400' : 'text-slate-700 dark:text-white'}`}
+                      >
                         {log.content}
                       </p>
                       <div className="flex gap-2 mt-1">
-                        <span className="text-[10px] bg-slate-200 dark:bg-slate-700 px-1.5 rounded uppercase font-bold text-slate-500">
+                        <span
+                          className={`text-[10px] px-1.5 rounded uppercase font-bold ${
+                            log.category === 'usage'
+                              ? 'bg-red-100 text-red-600'
+                              : log.category === 'purchase'
+                                ? 'bg-green-100 text-green-600'
+                                : 'bg-slate-200 text-slate-500'
+                          }`}
+                        >
                           {log.category}
                         </span>
                         {log.type && (
