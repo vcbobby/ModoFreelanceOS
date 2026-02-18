@@ -15,6 +15,14 @@ export interface FirebaseUserDocument {
   signupPlatform?: string;
 }
 
+export interface FirebaseHistoryEntry {
+  createdAt: string;
+  category: string;
+  type?: string;
+  content?: string;
+  metadata?: any;
+}
+
 export interface FirebaseAdapters {
   auth: {
     onAuthStateChanged: (callback: (user: User | null) => void) => () => void;
@@ -24,6 +32,9 @@ export interface FirebaseAdapters {
     getUserDoc: (uid: string) => Promise<{ exists: boolean; data?: FirebaseUserDocument }>;
     setUserDoc: (uid: string, data: FirebaseUserDocument) => Promise<void>;
     updateUserDoc: (uid: string, data: Partial<FirebaseUserDocument>) => Promise<void>;
+  };
+  history: {
+    addLogEntry: (uid: string, entry: FirebaseHistoryEntry) => Promise<void>;
   };
 }
 
@@ -54,6 +65,13 @@ export const createFirebaseAdapters = (deps: { auth: Auth; db: Firestore }): Fir
       updateUserDoc: async (uid, data) => {
         const docRef = doc(deps.db, 'users', uid);
         await updateDoc(docRef, data);
+      },
+    },
+    history: {
+      addLogEntry: async (uid, entry) => {
+        const { collection, addDoc } = await import('firebase/firestore');
+        const historyRef = collection(deps.db, 'users', uid, 'history');
+        await addDoc(historyRef, entry);
       },
     },
   };

@@ -17,6 +17,8 @@ import {
   RefreshCw,
   Download,
   TrendingUp,
+  History,
+  Coins,
 } from 'lucide-react';
 import { Card, Button, ConfirmationModal } from '@features/shared/ui';
 import { getBackendURL } from '@config/features';
@@ -69,6 +71,13 @@ interface AdminDashboardResponse {
   updatedAt?: number;
 }
 
+interface AdminCreditLog {
+  createdAt: string;
+  category: string;
+  type?: string;
+  content: string;
+}
+
 interface ModalConfig {
   isOpen: boolean;
   title: string;
@@ -102,6 +111,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
     message: '',
     action: () => {},
     isDanger: false,
+  });
+
+  // Nuevos estados para créditos e historial
+  const [creditModal, setCreditModal] = useState({
+    isOpen: false,
+    targetId: '',
+    email: '',
+    amount: 0,
+    loading: false,
+  });
+
+  const [historyModal, setHistoryModal] = useState({
+    isOpen: false,
+    targetId: '',
+    email: '',
+    logs: [] as AdminCreditLog[],
+    loading: false,
   });
 
   // Función para formatear fecha en zona horaria de Venezuela (VET = UTC-4)
@@ -400,7 +426,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
         if (type === 'grant') formData.append('days', '30');
 
         const authHeaders = await getAuthHeaders();
-        const res = await fetch(`${BACKEND_URL}/api/admin/${endpoint}`, {
+        const res = await fetch(`${BACKEND_URL}/api/v1/admin/${endpoint}`, {
           method: 'POST',
           headers: authHeaders,
           body: formData,
@@ -439,7 +465,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
             formData.append('targetUserId', targetId);
 
             const authHeaders = await getAuthHeaders();
-            const res = await fetch(`${BACKEND_URL}/api/admin/delete-user`, {
+            const res = await fetch(`${BACKEND_URL}/api/v1/admin/delete-user`, {
               method: 'POST',
               headers: authHeaders,
               body: formData,
@@ -461,6 +487,60 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
     },
     [BACKEND_URL, userId, searchTerm, filterType, loadData, openInfoModal, openErrorModal]
   );
+
+  // MANEJO DE CRÉDITOS MANUAL
+  const handleCreditAction = async () => {
+    if (!creditModal.targetId || creditModal.amount === 0) return;
+
+    setCreditModal((prev) => ({ ...prev, loading: true }));
+    try {
+      const formData = new FormData();
+      formData.append('adminId', userId);
+      formData.append('targetUserId', creditModal.targetId);
+      formData.append('amount', creditModal.amount.toString());
+
+      const authHeaders = await getAuthHeaders();
+      const res = await fetch(`${BACKEND_URL}/api/v1/admin/add-credits`, {
+        method: 'POST',
+        headers: authHeaders,
+        body: formData,
+      });
+      const json = await res.json();
+
+      if (json.success) {
+        setCreditModal((prev) => ({ ...prev, isOpen: false, loading: false }));
+        openInfoModal('Exito', json.message);
+        loadData({ reset: true, search: searchTerm, filter: filterType });
+      } else {
+        openErrorModal('Error', json.message);
+        setCreditModal((prev) => ({ ...prev, loading: false }));
+      }
+    } catch (error) {
+      openErrorModal('Error', 'Fallo la operacion');
+      setCreditModal((prev) => ({ ...prev, loading: false }));
+    }
+  };
+
+  const handleViewHistory = async (targetId: string, email: string) => {
+    setHistoryModal({ isOpen: true, targetId, email, logs: [], loading: true });
+    try {
+      const authHeaders = await getAuthHeaders();
+      const res = await fetch(`${BACKEND_URL}/api/v1/admin/user-credit-log/${targetId}`, {
+        headers: authHeaders,
+      });
+      const json = await res.json();
+
+      if (json.success) {
+        setHistoryModal((prev) => ({ ...prev, logs: json.logs, loading: false }));
+      } else {
+        setHistoryModal((prev) => ({ ...prev, loading: false }));
+        openErrorModal('Error', 'No se pudo cargar el historial');
+      }
+    } catch (error) {
+      setHistoryModal((prev) => ({ ...prev, loading: false }));
+      openErrorModal('Error', 'Error de red');
+    }
+  };
 
   // Funciones auxiliares
   const getPlatformIcon = (plat: string) => {
@@ -735,6 +815,28 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
                       </td>
                       <td className="p-4">
                         <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => handleViewHistory(u.id, u.email || '')}
+                            className="p-1.5 text-slate-400 hover:text-indigo-600 transition-colors"
+                            title="Ver Historial"
+                          >
+                            <History className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() =>
+                              setCreditModal({
+                                isOpen: true,
+                                targetId: u.id,
+                                email: u.email || '',
+                                amount: 10,
+                                loading: false,
+                              })
+                            }
+                            className="p-1.5 text-slate-400 hover:text-green-600 transition-colors"
+                            title="Gestionar Créditos"
+                          >
+                            <Coins className="w-4 h-4" />
+                          </button>
                           {!u.isPro ? (
                             <button
                               onClick={() => handleSubscriptionAction('grant', u.id, u.email || '')}
@@ -908,6 +1010,134 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
           </div>
         </div>
       </div>
+
+      {/* MODAL DE CRÉDITOS */}
+      {creditModal.isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+            onClick={() => setCreditModal((p) => ({ ...p, isOpen: false }))}
+          ></div>
+          <Card className="relative w-full max-w-sm p-6 bg-white dark:bg-slate-800 shadow-2xl animate-in zoom-in-95 duration-200">
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+              <Coins className="text-brand-500" /> Gestionar Créditos
+            </h3>
+            <p className="text-sm text-slate-500 mb-6">
+              Usuario: <b>{creditModal.email}</b>
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-slate-400 uppercase block mb-1">
+                  Cantidad a sumar (o restar)
+                </label>
+                <input
+                  type="number"
+                  value={creditModal.amount}
+                  onChange={(e) =>
+                    setCreditModal((p) => ({ ...p, amount: parseInt(e.target.value) }))
+                  }
+                  className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                />
+                <p className="text-[10px] text-slate-400 mt-1 italic">
+                  Ej: 10 para sumar, -5 para restar.
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setCreditModal((p) => ({ ...p, isOpen: false }))}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  variant="primary"
+                  className="flex-1"
+                  onClick={handleCreditAction}
+                  disabled={creditModal.loading}
+                >
+                  {creditModal.loading ? 'Procesando...' : 'Actualizar'}
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* MODAL DE HISTORIAL */}
+      {historyModal.isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+            onClick={() => setHistoryModal((p) => ({ ...p, isOpen: false }))}
+          ></div>
+          <Card className="relative w-full max-w-2xl h-[80vh] flex flex-col p-0 overflow-hidden bg-white dark:bg-slate-800 shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-900">
+              <div>
+                <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <History className="text-brand-500" /> Historial de Créditos
+                </h3>
+                <p className="text-xs text-slate-500">{historyModal.email}</p>
+              </div>
+              <button
+                onClick={() => setHistoryModal((p) => ({ ...p, isOpen: false }))}
+                className="p-1 hover:bg-slate-200 rounded-full"
+              >
+                <XCircle className="w-5 h-5 text-slate-400" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {historyModal.loading ? (
+                <div className="flex flex-col items-center justify-center h-full text-slate-400 italic">
+                  <RefreshCw className="w-8 h-8 animate-spin mb-2" />
+                  Cargando log...
+                </div>
+              ) : historyModal.logs.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-slate-400 italic">
+                  No hay movimientos registrados.
+                </div>
+              ) : (
+                historyModal.logs.map((log, i) => (
+                  <div
+                    key={i}
+                    className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 flex justify-between items-start"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-bold text-slate-700 dark:text-white leading-tight">
+                        {log.content}
+                      </p>
+                      <div className="flex gap-2 mt-1">
+                        <span className="text-[10px] bg-slate-200 dark:bg-slate-700 px-1.5 rounded uppercase font-bold text-slate-500">
+                          {log.category}
+                        </span>
+                        {log.type && (
+                          <span className="text-[10px] bg-brand-50 dark:bg-brand-900/20 text-brand-600 px-1.5 rounded uppercase font-bold">
+                            {log.type}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-[10px] text-slate-400">
+                        {formatVenezuelaDate(log.createdAt)}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="p-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 flex justify-end">
+              <Button onClick={() => setHistoryModal((p) => ({ ...p, isOpen: false }))}>
+                Cerrar
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };

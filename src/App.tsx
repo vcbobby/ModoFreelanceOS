@@ -423,6 +423,20 @@ const App = () => {
         credits: newBase,
         purchasedCredits: newPurchased,
       });
+
+      // Log usage
+      firebaseAdapters.history.addLogEntry(authUser.uid, {
+        createdAt: new Date().toISOString(),
+        category: 'usage',
+        type: 'credits',
+        content: `Uso de ${cost} ${cost === 1 ? 'crédito' : 'créditos'}`,
+        metadata: {
+          cost,
+          prevTotal: totalAvailable,
+          currentView: currentViewRef.current,
+        },
+      });
+
       return true;
     } else {
       dispatch(setPricingOpen(true));
