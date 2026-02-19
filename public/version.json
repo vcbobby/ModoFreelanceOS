@@ -1,7 +1,7 @@
 {
-  "version": "2.1.0",
-  "critical": false,
+  "version": "2.1.1",
+  "critical": true,
   "apkUrl": "https://github.com/vcbobby/ModoFreelanceOS/releases/download/v2.0.0/app-release.apk",
   "exeUrl": "https://github.com/vcbobby/ModoFreelanceOS/releases/download/v2.0.0/ModoFreelanceOS.Setup.exe",
-  "message": "🎉 ¡ModoFreelanceOS v2.1.0! Nueva arquitectura backend, landing moderna, mejoras de rendimiento y sistema de IA optimizado con rotación de keys."
+  "message": "🔧 ¡ModoFreelanceOS v2.1.1! Corrección crítica de créditos (ya no se duplican al agregar o quitar), mejoras en Finanzas y estabilidad general. Actualización requerida."
 }

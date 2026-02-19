@@ -3,8 +3,15 @@ import { Capacitor } from '@capacitor/core';
 import { Download, AlertTriangle } from 'lucide-react';
 import packageJson from '../../../../package.json';
 
-// URL EXACTA DE TU WEB DONDE ESTÁ EL JSON
-const APP_DOMAIN = 'https://app.modofreelanceos.com';
+// URL donde está alojado el version.json (debe coincidir con tu dominio de producción)
+const VERSION_CHECK_URL = 'https://app.modofreelanceos.com/version.json';
+
+// Cuántos ms esperar tras iniciar la app antes de hacer el check
+const CHECK_DELAY_MS = 3000;
+
+// Cuántos reintentos si la red falla
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 5000;
 
 interface VersionData {
   version: string;
@@ -14,54 +21,91 @@ interface VersionData {
   message: string;
 }
 
+/** Compara semver: devuelve true si `remote` es mayor que `local` */
+function isNewerVersion(local: string, remote: string): boolean {
+  try {
+    const parse = (v: string) => v.replace(/^v/, '').split('.').map(Number);
+    const [lMaj, lMin, lPat] = parse(local);
+    const [rMaj, rMin, rPat] = parse(remote);
+    if (rMaj !== lMaj) return rMaj > lMaj;
+    if (rMin !== lMin) return rMin > lMin;
+    return rPat > lPat;
+  } catch {
+    // Si el parseo falla, recurrimos a comparación de strings
+    return local.trim() !== remote.trim();
+  }
+}
+
+async function fetchVersionWithRetry(retries: number): Promise<VersionData> {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(`${VERSION_CHECK_URL}?t=${Date.now()}`, {
+        cache: 'no-store',
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return (await res.json()) as VersionData;
+    } catch (err) {
+      if (attempt === retries) throw err;
+      await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+    }
+  }
+  throw new Error('Max retries reached');
+}
+
 export const UpdateChecker = () => {
   const [updateAvailable, setUpdateAvailable] = useState<VersionData | null>(null);
 
   const isAndroid = Capacitor.getPlatform() === 'android';
-  const isElectron = navigator.userAgent.toLowerCase().includes(' electron/');
+  // Electron puede reportarse en el user-agent de más de una forma
+  const isElectron =
+    navigator.userAgent.toLowerCase().includes('electron') ||
+    // @ts-expect-error — propiedad inyectada por Electron
+    typeof window.__ELECTRON__ !== 'undefined';
 
   useEffect(() => {
-    // --- MODO PRUEBA ---
-    // Si quieres probar en el navegador que el modal funciona, COMENTA las siguientes 3 líneas:
-    if (!isAndroid && !isElectron) {
-      return;
-    }
-    // -------------------
+    // Solo actuar en plataformas instaladas (Android APK o Windows Electron)
+    if (!isAndroid && !isElectron) return;
 
-    const checkVersion = async () => {
+    const currentVersion = packageJson.version;
+
+    const run = async () => {
       try {
-        // Petición a Internet (Tu dominio real)
-        const res = await fetch(`${APP_DOMAIN}/version.json?t=${Date.now()}`);
+        const data = await fetchVersionWithRetry(MAX_RETRIES);
 
-        if (!res.ok) throw new Error('No se pudo conectar al servidor de actualizaciones');
-
-        const data: VersionData = await res.json();
-        const currentVersion = packageJson.version;
-
-        if (currentVersion !== data.version) {
+        if (isNewerVersion(currentVersion, data.version)) {
+          // Para updates no críticos, verificar si el usuario ya lo descartó previamente
+          if (!data.critical) {
+            const dismissed = localStorage.getItem('update_dismissed');
+            if (dismissed === data.version) {
+              return; // Ya lo descartó en esta sesión, no molestar de nuevo
+            }
+          }
           setUpdateAvailable(data);
         }
-      } catch (error) {
-        void error;
+      } catch {
+        // Fallo silencioso — no interrumpir la experiencia del usuario
       }
     };
 
-    checkVersion();
+    const timer = setTimeout(run, CHECK_DELAY_MS);
+    return () => clearTimeout(timer);
   }, [isAndroid, isElectron]);
 
   const handleDownload = () => {
     if (!updateAvailable) return;
-
-    // Seleccionar URL según dispositivo
-    // Si estás probando en web, usará la de Android por defecto
     const url = isElectron ? updateAvailable.exeUrl : updateAvailable.apkUrl;
-
     if (url) {
-      // Abre el navegador del sistema (Chrome/Edge) para descargar
       window.open(url, '_system');
     } else {
-      alert('Error: URL de descarga no encontrada');
+      alert('Error: URL de descarga no encontrada.');
     }
+  };
+
+  const handleDismiss = () => {
+    if (updateAvailable) {
+      localStorage.setItem('update_dismissed', updateAvailable.version);
+    }
+    setUpdateAvailable(null);
   };
 
   if (!updateAvailable) return null;
@@ -77,7 +121,11 @@ export const UpdateChecker = () => {
             <h3 className="text-white font-bold text-lg">
               Nueva Versión {updateAvailable.version}
             </h3>
-            <p className="text-brand-100 text-xs">¡Actualización disponible!</p>
+            <p className="text-brand-100 text-xs">
+              {updateAvailable.critical
+                ? '⚠️ Actualización requerida'
+                : '¡Actualización disponible!'}
+            </p>
           </div>
         </div>
 
@@ -100,9 +148,10 @@ export const UpdateChecker = () => {
               Descargar e Instalar
             </button>
 
+            {/* Solo mostrar "Actualizar más tarde" si NO es crítico */}
             {!updateAvailable.critical && (
               <button
-                onClick={() => setUpdateAvailable(null)}
+                onClick={handleDismiss}
                 className="w-full py-3 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 font-medium text-sm transition-colors"
               >
                 Actualizar más tarde
