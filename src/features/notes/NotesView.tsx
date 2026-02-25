@@ -13,6 +13,7 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db } from '@config/firebase';
+import { backendClient } from '@/services/backend/backendClient';
 import {
   Plus,
   Pin,
@@ -142,6 +143,13 @@ export const NotesView: React.FC<NotesViewProps> = ({ userId, autoOpenAgenda }) 
 
   const [showAgenda, setShowAgenda] = useState(false);
   const agendaOpen = showAgenda || Boolean(autoOpenAgenda);
+
+  useEffect(() => {
+    if (autoOpenAgenda) {
+      setShowAgenda(true);
+    }
+  }, [autoOpenAgenda]);
+
   const dragItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
 
@@ -876,6 +884,28 @@ const AgendaWidget = ({ userId }: { userId?: string }) => {
       ...newEvent,
       createdAt: new Date().toISOString(),
     });
+
+    if (newEvent.date && newEvent.time) {
+      backendClient
+        .post(
+          '/api/v1/notes/schedule-push',
+          JSON.stringify({
+            title: newEvent.title,
+            body: newEvent.desc || 'Tienes un evento en tu agenda.',
+            date: newEvent.date,
+            time: newEvent.time,
+            type: 'agenda',
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          }),
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        )
+        .catch(console.error);
+    }
+
     setNewEvent((prev) => ({
       title: '',
       date: selectedDate || prev.date,

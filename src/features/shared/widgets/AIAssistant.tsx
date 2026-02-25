@@ -315,6 +315,27 @@ WEB DEL USUARIO:
           desc: action.desc || 'IA Generated',
           createdAt: new Date().toISOString(),
         });
+
+        if (action.date && action.time) {
+          try {
+            const authHeaders = await getAuthHeaders();
+            fetch(`${BACKEND_URL}/api/v1/notes/schedule-push`, {
+              method: 'POST',
+              headers: { ...authHeaders, 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                title: action.title,
+                body: action.desc || 'Tienes un evento en tu agenda.',
+                date: action.date,
+                time: action.time,
+                type: 'agenda',
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+              }),
+            }).catch(console.error);
+          } catch (e) {
+            console.error(e);
+          }
+        }
+
         return `✅ **Evento Agendado:** ${action.title} para el ${action.date}.`;
       }
 
