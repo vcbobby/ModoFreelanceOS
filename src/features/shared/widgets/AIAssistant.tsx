@@ -36,7 +36,7 @@ const BACKEND_URL = getBackendURL();
 const FREENCY_AVATAR =
   'https://api.dicebear.com/9.x/bottts-neutral/svg?seed=Freency&backgroundColor=6366f1&eyes=bulging&mouth=smile01';
 
-const INGEST_TTL_MS = 6 * 60 * 60 * 1000;
+const INGEST_TTL_MS = 15 * 60 * 1000; // 15 minutos (antes 6 horas) para mayor frescura
 
 const SUGGESTED_QUESTIONS = [
   '¿Cómo van mis finanzas?',
@@ -153,21 +153,35 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ userId, onUsage }) => 
   const loadContext = useCallback(async () => {
     if (!userId) return;
     try {
-      // 1. Finanzas
-      const fQ = query(
-        collection(db, 'users', userId, 'finances'),
-        orderBy('date', 'desc'),
-        limit(30)
-      );
-      const fSnap = await getDocs(fQ);
-      const transactions = fSnap.docs.map((d) => d.data());
-      const balance = transactions.reduce(
-        (acc, t) => (t.type === 'income' ? acc + t.amount : acc - t.amount),
+      // 1. Finanzas - Balance Real y transacciones recientes
+      const fSnapAll = await getDocs(collection(db, 'users', userId, 'finances'));
+      const allTransactions = fSnapAll.docs.map((d) => d.data());
+
+      const realBalance = allTransactions.reduce(
+        (acc, t) =>
+          t.status === 'paid' || !t.status
+            ? t.type === 'income'
+              ? acc + t.amount
+              : acc - t.amount
+            : acc,
         0
       );
-      const financeContext = `Balance actual aproximado: $${balance.toFixed(
-        2
-      )} based on last 30 tx.`;
+
+      const fSnapRecent = await getDocs(
+        query(collection(db, 'users', userId, 'finances'), orderBy('date', 'desc'), limit(15))
+      );
+      const recentTransactionsList = fSnapRecent.docs
+        .map((d) => {
+          const t = d.data();
+          return `- ${t.date}: ${t.type === 'income' ? '+' : '-'}$${t.amount} (${t.description})`;
+        })
+        .join('\n');
+
+      const financeContext = `
+BALANCE REAL ACTUAL: $${realBalance.toFixed(2)}
+Últimas transacciones:
+${recentTransactionsList}
+      `.trim();
 
       // 2. Agenda & Notas
       const today = new Date().toISOString().split('T')[0];
@@ -184,11 +198,21 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ userId, onUsage }) => 
 
       const nQ = query(
         collection(db, 'users', userId, 'notes'),
-        where('isPinned', '==', true),
-        limit(5)
+        orderBy('createdAt', 'desc'),
+        limit(15)
       );
       const nSnap = await getDocs(nQ);
-      const notesList = nSnap.docs.map((d) => `Nota: ${d.data().title}`).join('\n');
+      const notesList = nSnap.docs
+        .map((d) => {
+          const note = d.data();
+          const contentPreview = note.content
+            ? note.content.length > 100
+              ? note.content.substring(0, 100) + '...'
+              : note.content
+            : '';
+          return `- [${note.title}]: ${contentPreview}`;
+        })
+        .join('\n');
 
       // 3. Historial (Expandido)
       const hQ = query(
