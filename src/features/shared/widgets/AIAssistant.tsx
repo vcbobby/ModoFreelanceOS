@@ -38,6 +38,17 @@ const FREENCY_AVATAR =
 
 const INGEST_TTL_MS = 15 * 60 * 1000; // 15 minutos (antes 6 horas) para mayor frescura
 
+interface FinanceTransaction {
+  id: string;
+  amount: number;
+  description: string;
+  type: 'income' | 'expense';
+  date: string;
+  isRecurring: boolean;
+  status: 'paid' | 'pending';
+  createdAt?: string;
+}
+
 const SUGGESTED_QUESTIONS = [
   '¿Cómo van mis finanzas?',
   'Busca trabajos remotos de React',
@@ -153,34 +164,65 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ userId, onUsage }) => 
   const loadContext = useCallback(async () => {
     if (!userId) return;
     try {
-      // 1. Finanzas - Balance Real y transacciones recientes
+      // 1. Finanzas - Balance Real, Pendientes y Recientes
       const fSnapAll = await getDocs(collection(db, 'users', userId, 'finances'));
-      const allTransactions = fSnapAll.docs.map((d) => d.data());
+      const allTransactions = fSnapAll.docs.map((d: any) => d.data() as FinanceTransaction);
 
-      const realBalance = allTransactions.reduce(
-        (acc, t) =>
-          t.status === 'paid' || !t.status
-            ? t.type === 'income'
-              ? acc + t.amount
-              : acc - t.amount
-            : acc,
+      const paidTx = allTransactions.filter(
+        (t: FinanceTransaction) => t.status === 'paid' || !t.status
+      );
+      const pendingTx = allTransactions.filter((t: FinanceTransaction) => t.status === 'pending');
+
+      const realBalance = paidTx.reduce(
+        (acc: number, t: FinanceTransaction) =>
+          t.type === 'income' ? acc + t.amount : acc - t.amount,
         0
       );
 
-      const fSnapRecent = await getDocs(
-        query(collection(db, 'users', userId, 'finances'), orderBy('date', 'desc'), limit(15))
+      const pendingIncome = pendingTx
+        .filter((t: FinanceTransaction) => t.type === 'income')
+        .reduce((acc: number, t: FinanceTransaction) => acc + t.amount, 0);
+      const pendingExpense = pendingTx
+        .filter((t: FinanceTransaction) => t.type === 'expense')
+        .reduce((acc: number, t: FinanceTransaction) => acc + t.amount, 0);
+
+      const sortedAll = [...allTransactions].sort((a, b) =>
+        (b.date || '').localeCompare(a.date || '')
       );
-      const recentTransactionsList = fSnapRecent.docs
-        .map((d) => {
-          const t = d.data();
-          return `- ${t.date}: ${t.type === 'income' ? '+' : '-'}$${t.amount} (${t.description})`;
-        })
+
+      const pendingList = pendingTx
+        .sort((a: FinanceTransaction, b: FinanceTransaction) =>
+          (a.date || '').localeCompare(b.date || '')
+        ) // Ordenar por fecha de vencimiento
+        .slice(0, 15)
+        .map(
+          (t: FinanceTransaction) =>
+            `- [PENDIENTE] ${t.date}: ${t.type === 'income' ? 'Por cobrar' : 'Por pagar'} $${t.amount} (${t.description})`
+        )
+        .join('\n');
+
+      const recentRealizedList = paidTx
+        .sort((a: FinanceTransaction, b: FinanceTransaction) =>
+          (b.date || '').localeCompare(a.date || '')
+        )
+        .slice(0, 10)
+        .map(
+          (t: FinanceTransaction) =>
+            `- ${t.date}: ${t.type === 'income' ? '+' : '-'}$${t.amount} (${t.description})`
+        )
         .join('\n');
 
       const financeContext = `
-BALANCE REAL ACTUAL: $${realBalance.toFixed(2)}
-Últimas transacciones:
-${recentTransactionsList}
+BALANCE REAL ACTUAL (EN CAJA): $${realBalance.toFixed(2)}
+
+RESUMEN DE PENDIENTES:
+- Total por cobrar: $${pendingIncome.toFixed(2)}
+- Total por pagar (deudas/atrasados): $${pendingExpense.toFixed(2)}
+
+${pendingList ? `MOVIMIENTOS PENDIENTES:\n${pendingList}` : 'No hay pagos o cobros pendientes.'}
+
+HISTORIAL RECIENTE (PAGADOS):
+${recentRealizedList}
       `.trim();
 
       // 2. Agenda & Notas
