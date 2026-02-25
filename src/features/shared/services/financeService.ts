@@ -3,6 +3,7 @@ import { getBackendURL } from '@config/features';
 import { fetchWithRetry, logFetchError } from '../../../utils/fetchUtils';
 
 interface TransactionPayload {
+  id?: string;
   amount: number;
   description: string;
   type: 'income' | 'expense';
