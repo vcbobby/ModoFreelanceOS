@@ -117,6 +117,8 @@ const formatGigTitle = (text: string, stripMarkdown: (value: string) => string) 
 };
 
 export const FiverrTool: React.FC<FiverrToolProps> = ({ onUsage, userId }) => {
+  const skillsInputId = 'fiverr-skills-input';
+  const serviceInputId = 'fiverr-service-input';
   const [skills, setSkills] = useState('');
   const [service, setService] = useState('');
   const [loading, setLoading] = useState(false);
@@ -206,7 +208,7 @@ export const FiverrTool: React.FC<FiverrToolProps> = ({ onUsage, userId }) => {
     }
     setLoading(true);
     try {
-      const usage = await runWithCredits(2, onUsage, async () => {
+      const usage = await runWithCredits(2, (cost?: number) => onUsage(cost ?? 2), async () => {
         const authHeaders = await getAuthHeaders();
         const gigTitle = formatGigTitle(trimmedService, stripMarkdown);
 
@@ -295,7 +297,7 @@ export const FiverrTool: React.FC<FiverrToolProps> = ({ onUsage, userId }) => {
 
       <div className="mb-8 text-center">
         <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center justify-center gap-2">
-          <Globe className="w-6 h-6 text-green-500" /> Generador de Gigs Fiverr
+          <Globe className="w-6 h-6 text-green-500" aria-hidden="true" /> Generador de Gigs Fiverr
         </h2>
         <p className="text-slate-600 dark:text-slate-400">
           Optimiza tu perfil para vender más. Costo: 2 Créditos.
@@ -306,10 +308,14 @@ export const FiverrTool: React.FC<FiverrToolProps> = ({ onUsage, userId }) => {
         <Card className="p-6 h-fit">
           <div className="space-y-4">
             <div>
-              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
+              <label
+                htmlFor={skillsInputId}
+                className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase"
+              >
                 Tus Habilidades
               </label>
               <input
+                id={skillsInputId}
                 className="w-full p-3 border rounded-lg bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-white"
                 placeholder="Ej: Photoshop, Illustrator, Branding"
                 value={skills}
@@ -317,10 +323,14 @@ export const FiverrTool: React.FC<FiverrToolProps> = ({ onUsage, userId }) => {
               />
             </div>
             <div>
-              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
+              <label
+                htmlFor={serviceInputId}
+                className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase"
+              >
                 Servicio a Ofrecer
               </label>
               <textarea
+                id={serviceInputId}
                 className="w-full p-3 border rounded-lg h-32 resize-none bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-white"
                 placeholder="Ej: Diseño de logotipos minimalistas para startups tecnológicas."
                 value={service}
@@ -347,14 +357,16 @@ export const FiverrTool: React.FC<FiverrToolProps> = ({ onUsage, userId }) => {
               <div className="flex items-center gap-2 mb-2">
                 <p className="text-xl font-bold text-green-600">{result.title}</p>
                 <button
+                  type="button"
                   onClick={() => handleCopy(result.title, 'title', true)}
+                  aria-label="Copiar título"
                   className="ml-auto p-1.5 rounded-md text-slate-500 hover:text-slate-800 dark:text-slate-300 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700"
                   title="Copiar titulo"
                 >
                   {copiedKey === 'title' ? (
-                    <Check className="w-4 h-4" />
+                    <Check className="w-4 h-4" aria-hidden="true" />
                   ) : (
-                    <Copy className="w-4 h-4" />
+                    <Copy className="w-4 h-4" aria-hidden="true" />
                   )}
                 </button>
               </div>
@@ -368,16 +380,18 @@ export const FiverrTool: React.FC<FiverrToolProps> = ({ onUsage, userId }) => {
                   </span>
                 ))}
                 <button
+                  type="button"
                   onClick={() =>
                     handleCopy(result.tags.map((tag) => `#${tag}`).join(' '), 'tags', true)
                   }
+                  aria-label="Copiar hashtags"
                   className="ml-auto inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs text-slate-500 hover:text-slate-800 dark:text-slate-300 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700"
                   title="Copiar hashtags"
                 >
                   {copiedKey === 'tags' ? (
-                    <Check className="w-3.5 h-3.5" />
+                    <Check className="w-3.5 h-3.5" aria-hidden="true" />
                   ) : (
-                    <Copy className="w-3.5 h-3.5" />
+                    <Copy className="w-3.5 h-3.5" aria-hidden="true" />
                   )}
                   Copiar
                 </button>
@@ -387,14 +401,16 @@ export const FiverrTool: React.FC<FiverrToolProps> = ({ onUsage, userId }) => {
               </h4>
               <div className="flex justify-end mb-2">
                 <button
+                  type="button"
                   onClick={() => handleCopy(result.description, 'description', true)}
+                  aria-label="Copiar descripción"
                   className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs text-slate-500 hover:text-slate-800 dark:text-slate-300 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700"
                   title="Copiar descripcion"
                 >
                   {copiedKey === 'description' ? (
-                    <Check className="w-3.5 h-3.5" />
+                    <Check className="w-3.5 h-3.5" aria-hidden="true" />
                   ) : (
-                    <Copy className="w-3.5 h-3.5" />
+                    <Copy className="w-3.5 h-3.5" aria-hidden="true" />
                   )}
                   Copiar
                 </button>

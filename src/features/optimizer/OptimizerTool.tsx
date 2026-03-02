@@ -12,6 +12,9 @@ interface OptimizerToolProps {
 }
 
 export const OptimizerTool: React.FC<OptimizerToolProps> = ({ onUsage, userId }) => {
+  const fileInputId = 'optimizer-file-input';
+  const compressionPresetId = 'optimizer-compression-preset';
+  const outputFormatId = 'optimizer-output-format';
   const [originalFile, setOriginalFile] = useState<File | null>(null);
   const [compressedFile, setCompressedFile] = useState<Blob | null>(null);
   const [isCompressing, setIsCompressing] = useState(false);
@@ -34,7 +37,7 @@ export const OptimizerTool: React.FC<OptimizerToolProps> = ({ onUsage, userId })
     if (!originalFile) return;
     setIsCompressing(true);
     try {
-      const usage = await runWithCredits(3, onUsage, async () => {
+      const usage = await runWithCredits(3, (cost?: number) => onUsage(cost ?? 3), async () => {
         const presets = {
           low: { maxSizeMB: 2, maxWidthOrHeight: 2560 },
           medium: { maxSizeMB: 1, maxWidthOrHeight: 1920 },
@@ -126,7 +129,7 @@ export const OptimizerTool: React.FC<OptimizerToolProps> = ({ onUsage, userId })
       />
       <div className="mb-8 text-center">
         <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center justify-center gap-2">
-          <Zap className="w-6 h-6 text-brand-600" /> Optimizador de Imágenes
+          <Zap className="w-6 h-6 text-brand-600" aria-hidden="true" /> Optimizador de Imágenes
         </h2>
         <p className="text-slate-600 dark:text-slate-400">
           Reduce el peso de tus imágenes.{' '}
@@ -139,10 +142,14 @@ export const OptimizerTool: React.FC<OptimizerToolProps> = ({ onUsage, userId })
       <Card className="p-8 shadow-md">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div>
-            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
+            <label
+              htmlFor={compressionPresetId}
+              className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase"
+            >
               Nivel de compresion
             </label>
             <select
+              id={compressionPresetId}
               value={compressionPreset}
               onChange={(e) => setCompressionPreset(e.target.value as typeof compressionPreset)}
               className="w-full p-2 border rounded bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-white"
@@ -153,10 +160,14 @@ export const OptimizerTool: React.FC<OptimizerToolProps> = ({ onUsage, userId })
             </select>
           </div>
           <div>
-            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
+            <label
+              htmlFor={outputFormatId}
+              className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase"
+            >
               Formato de salida
             </label>
             <select
+              id={outputFormatId}
               value={outputFormat}
               onChange={(e) => setOutputFormat(e.target.value as typeof outputFormat)}
               className="w-full p-2 border rounded bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-white"
@@ -168,15 +179,20 @@ export const OptimizerTool: React.FC<OptimizerToolProps> = ({ onUsage, userId })
             </select>
           </div>
         </div>
-        <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-8 text-center bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer relative">
+        <label
+          htmlFor={fileInputId}
+          className="block border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-8 text-center bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer relative"
+        >
           <input
+            id={fileInputId}
             type="file"
             accept="image/*"
             onChange={handleFileChange}
+            aria-label="Subir imagen para optimizar"
             className="absolute inset-0 opacity-0 cursor-pointer"
           />
           <div className="flex flex-col items-center">
-            <Upload className="w-10 h-10 text-slate-400 mx-auto mb-2" />
+            <Upload className="w-10 h-10 text-slate-400 mx-auto mb-2" aria-hidden="true" />
             <p className="font-bold text-slate-700 dark:text-slate-300">
               {originalFile ? originalFile.name : 'Arrastra o selecciona una imagen'}
             </p>
@@ -184,7 +200,7 @@ export const OptimizerTool: React.FC<OptimizerToolProps> = ({ onUsage, userId })
               {originalFile ? formatSize(originalFile.size) : 'Soporta JPG, PNG, WEBP'}
             </p>
           </div>
-        </div>
+        </label>
 
         {originalFile && !compressedFile && (
           <div className="mt-6 flex justify-center">
@@ -205,7 +221,7 @@ export const OptimizerTool: React.FC<OptimizerToolProps> = ({ onUsage, userId })
                   {formatSize(originalFile.size)}
                 </p>
               </div>
-              <ArrowRight className="text-green-500 w-6 h-6" />
+              <ArrowRight className="text-green-500 w-6 h-6" aria-hidden="true" />
               <div className="text-center md:text-right">
                 <p className="text-xs text-green-600 dark:text-green-400 uppercase font-bold">
                   Ahora
@@ -224,6 +240,7 @@ export const OptimizerTool: React.FC<OptimizerToolProps> = ({ onUsage, userId })
             </div>
             <div className="mt-6">
               <button
+                type="button"
                 onClick={handleDownloadAndSave}
                 disabled={isSaving}
                 className="w-full bg-green-600 hover:bg-green-700 text-white text-center font-bold py-3 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
@@ -232,7 +249,7 @@ export const OptimizerTool: React.FC<OptimizerToolProps> = ({ onUsage, userId })
                   <span>Guardando...</span>
                 ) : (
                   <>
-                    <Download className="w-5 h-5" /> Descargar y Guardar
+                    <Download className="w-5 h-5" aria-hidden="true" /> Descargar y Guardar
                   </>
                 )}
               </button>

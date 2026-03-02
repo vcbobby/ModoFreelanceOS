@@ -14,6 +14,7 @@ interface AnalyzerToolProps {
 }
 
 export const AnalyzerTool: React.FC<AnalyzerToolProps> = ({ onUsage, userId }) => {
+  const fileInputId = 'analyzer-file-input';
   const [file, setFile] = useState<File | null>(null);
   const [text, setText] = useState('');
   const [analysis, setAnalysis] = useState('');
@@ -106,7 +107,7 @@ export const AnalyzerTool: React.FC<AnalyzerToolProps> = ({ onUsage, userId }) =
   const executeAnalysis = async () => {
     setIsAnalyzing(true);
     try {
-      const usage = await runWithCredits(2, onUsage, async () => {
+      const usage = await runWithCredits(2, (cost?: number) => onUsage(cost ?? 2), async () => {
         return analyzeDocument(text, mode);
       });
       if (!usage.ok || !usage.result) return;
@@ -144,7 +145,7 @@ export const AnalyzerTool: React.FC<AnalyzerToolProps> = ({ onUsage, userId }) =
       <div className="lg:col-span-1 space-y-6">
         <div>
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <FileSearch className="w-6 h-6 text-brand-600" /> Analizador IA
+            <FileSearch className="w-6 h-6 text-brand-600" aria-hidden="true" /> Analizador IA
           </h2>
           <p className="text-slate-600 dark:text-slate-400 mt-1 text-sm">
             Sube un contrato o brief para analizarlo.
@@ -155,25 +156,30 @@ export const AnalyzerTool: React.FC<AnalyzerToolProps> = ({ onUsage, userId }) =
         </div>
 
         <Card className="p-6 space-y-6 shadow-md">
-          <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-6 text-center bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer relative">
+          <label
+            htmlFor={fileInputId}
+            className="block border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-6 text-center bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer relative"
+          >
             <input
+              id={fileInputId}
               type="file"
               accept=".pdf,.txt,.md"
               onChange={handleFileChange}
+              aria-label="Subir archivo para análisis"
               className="absolute inset-0 opacity-0 cursor-pointer"
             />
-            <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+            <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" aria-hidden="true" />
             <p className="text-sm font-bold text-slate-700 dark:text-slate-300 truncate px-2">
               {file ? file.name : 'Subir PDF o TXT'}
             </p>
             <p className="text-xs text-slate-500 mt-1">Máx 5MB</p>
-          </div>
+          </label>
 
-          <div>
-            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2 block">
+          <fieldset>
+            <legend className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2 block">
               Tipo de Análisis
-            </label>
-            <div className="grid grid-cols-2 gap-2">
+            </legend>
+            <div className="grid grid-cols-2 gap-2" role="group" aria-label="Seleccionar tipo de análisis">
               <ModeButton
                 active={mode === 'resumen'}
                 onClick={() => setMode('resumen')}
@@ -199,7 +205,7 @@ export const AnalyzerTool: React.FC<AnalyzerToolProps> = ({ onUsage, userId }) =
                 label="Mejorar"
               />
             </div>
-          </div>
+          </fieldset>
 
           <Button
             onClick={handleAnalyzeClick}
@@ -215,8 +221,8 @@ export const AnalyzerTool: React.FC<AnalyzerToolProps> = ({ onUsage, userId }) =
       <div className="lg:col-span-2">
         <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm min-h-[500px] p-8">
           {!analysis ? (
-            <div className="h-full flex flex-col items-center justify-center text-slate-400 opacity-60 mt-20">
-              <FileSearch className="w-16 h-16 mb-4" />
+            <div className="h-full flex flex-col items-center justify-center text-slate-400 opacity-60 mt-20" role="status" aria-live="polite">
+              <FileSearch className="w-16 h-16 mb-4" aria-hidden="true" />
               <p>{extractStatus || 'El resultado aparecerá aquí.'}</p>
             </div>
           ) : (
@@ -256,6 +262,7 @@ interface ModeButtonProps {
 
 const ModeButton = ({ active, onClick, icon, label }: ModeButtonProps) => (
   <button
+    type="button"
     onClick={onClick}
     className={`flex flex-col items-center justify-center gap-1 p-3 rounded-lg border text-xs font-medium transition-all ${
       active

@@ -41,6 +41,15 @@ interface CvData {
 }
 
 export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage: _onUsage, userId }) => {
+  const templateSelectId = 'cv-template-select';
+  const photoInputId = 'cv-photo-input';
+  const fullNameInputId = 'cv-fullname-input';
+  const titleInputId = 'cv-title-input';
+  const emailInputId = 'cv-email-input';
+  const phoneInputId = 'cv-phone-input';
+  const addressInputId = 'cv-address-input';
+  const summaryInputId = 'cv-summary-input';
+  const skillsInputId = 'cv-skills-input';
   const isE2E = import.meta.env.VITE_E2E === 'true';
   const getE2eKey = (id?: string) => `e2e_cv_${id || 'anon'}`;
   const loadE2eCv = () => {
@@ -93,7 +102,6 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage: _onUsage, userId 
 
   const template = cvData.template || 'classic';
   const isMinimal = template === 'minimal';
-  const isBold = template === 'bold';
   const inputClass =
     'w-full p-3 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none text-sm bg-slate-50 dark:bg-slate-900 dark:text-white transition-all placeholder:text-slate-400';
 
@@ -238,7 +246,7 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage: _onUsage, userId 
 
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-          <FileText className="w-6 h-6 text-brand-600" /> Constructor CV
+          <FileText className="w-6 h-6 text-brand-600" aria-hidden="true" /> Constructor CV
         </h2>
       </div>
 
@@ -252,11 +260,15 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage: _onUsage, userId 
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
+                <label
+                  htmlFor={templateSelectId}
+                  className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase"
+                >
                   Plantilla
                 </label>
                 <div className="relative">
                   <select
+                    id={templateSelectId}
                     value={template}
                     onChange={(e) => updateField('template', e.target.value)}
                     className={`${inputClass} appearance-none pr-10 font-medium`}
@@ -265,7 +277,10 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage: _onUsage, userId 
                     <option value="minimal">Minimal</option>
                     <option value="bold">Bold</option>
                   </select>
-                  <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <ChevronDown
+                    className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
+                    aria-hidden="true"
+                  />
                 </div>
               </div>
             </div>
@@ -275,9 +290,13 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage: _onUsage, userId 
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-bold dark:text-white">Datos Personales</h3>
               <div className="flex items-center gap-2">
-                <label className="cursor-pointer bg-slate-100 dark:bg-slate-700 px-3 py-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-xs font-semibold text-slate-600 dark:text-slate-200 inline-flex items-center gap-2">
-                  <Camera className="w-4 h-4" /> Subir foto
+                <label
+                  htmlFor={photoInputId}
+                  className="cursor-pointer bg-slate-100 dark:bg-slate-700 px-3 py-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-xs font-semibold text-slate-600 dark:text-slate-200 inline-flex items-center gap-2"
+                >
+                  <Camera className="w-4 h-4" aria-hidden="true" /> Subir foto
                   <input
+                    id={photoInputId}
                     type="file"
                     accept="image/*"
                     className="hidden"
@@ -297,38 +316,50 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage: _onUsage, userId 
             </div>
             <div className="grid grid-cols-2 gap-4">
               <input
+                id={fullNameInputId}
                 className={inputClass}
                 placeholder="Nombre Completo"
+                aria-label="Nombre completo"
                 value={cvData.fullName}
                 onChange={(e) => updateField('fullName', e.target.value)}
               />
               <input
+                id={titleInputId}
                 className={inputClass}
                 placeholder="Título Profesional"
+                aria-label="Título profesional"
                 value={cvData.title}
                 onChange={(e) => updateField('title', e.target.value)}
               />
               <input
+                id={emailInputId}
                 className={inputClass}
                 placeholder="Email"
+                aria-label="Email"
                 value={cvData.email}
                 onChange={(e) => updateField('email', e.target.value)}
               />
               <input
+                id={phoneInputId}
                 className={inputClass}
                 placeholder="Teléfono"
+                aria-label="Teléfono"
                 value={cvData.phone}
                 onChange={(e) => updateField('phone', e.target.value)}
               />
               <input
+                id={addressInputId}
                 className={`${inputClass} col-span-2`}
                 placeholder="Dirección / Ciudad"
+                aria-label="Dirección o ciudad"
                 value={cvData.address}
                 onChange={(e) => updateField('address', e.target.value)}
               />
               <textarea
+                id={summaryInputId}
                 className={`${inputClass} col-span-2 h-24`}
                 placeholder="Perfil Profesional (Resumen)"
+                aria-label="Perfil profesional"
                 value={cvData.summary}
                 onChange={(e) => updateField('summary', e.target.value)}
               />
@@ -339,6 +370,7 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage: _onUsage, userId 
             <div className="flex justify-between mb-4">
               <h3 className="font-bold dark:text-white">Experiencia</h3>
               <button
+                type="button"
                 onClick={addExp}
                 className="text-xs font-semibold bg-brand-100 text-brand-700 px-3 py-2 rounded-lg hover:bg-brand-200 transition-colors"
               >
@@ -351,21 +383,25 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage: _onUsage, userId 
                 className="mb-4 border-b pb-4 last:border-0 dark:border-slate-700 relative group"
               >
                 <button
+                  type="button"
                   onClick={() => removeExp(exp.id)}
+                  aria-label="Eliminar experiencia"
                   className="absolute top-0 right-0 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4" aria-hidden="true" />
                 </button>
                 <div className="grid grid-cols-2 gap-2 mb-2">
                   <input
                     className={inputClass}
                     placeholder="Cargo"
+                    aria-label="Cargo"
                     value={exp.role}
                     onChange={(e) => updateExp(exp.id, 'role', e.target.value)}
                   />
                   <input
                     className={inputClass}
                     placeholder="Empresa"
+                    aria-label="Empresa"
                     value={exp.company}
                     onChange={(e) => updateExp(exp.id, 'company', e.target.value)}
                   />
@@ -373,12 +409,14 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage: _onUsage, userId 
                 <input
                   className={`${inputClass} mb-2`}
                   placeholder="Fechas"
+                  aria-label="Fechas de experiencia"
                   value={exp.dates}
                   onChange={(e) => updateExp(exp.id, 'dates', e.target.value)}
                 />
                 <textarea
                   className={`${inputClass} h-20`}
                   placeholder="Descripción..."
+                  aria-label="Descripción de experiencia"
                   value={exp.desc}
                   onChange={(e) => updateExp(exp.id, 'desc', e.target.value)}
                 />
@@ -390,6 +428,7 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage: _onUsage, userId 
             <div className="flex justify-between mb-4">
               <h3 className="font-bold dark:text-white">Educación</h3>
               <button
+                type="button"
                 onClick={addEdu}
                 className="text-xs font-semibold bg-brand-100 text-brand-700 px-3 py-2 rounded-lg hover:bg-brand-200 transition-colors"
               >
@@ -402,21 +441,25 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage: _onUsage, userId 
                 className="mb-4 border-b pb-4 last:border-0 dark:border-slate-700 relative group"
               >
                 <button
+                  type="button"
                   onClick={() => removeEdu(edu.id)}
+                  aria-label="Eliminar educación"
                   className="absolute top-0 right-0 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4" aria-hidden="true" />
                 </button>
                 <div className="grid grid-cols-2 gap-2 mb-2">
                   <input
                     className={inputClass}
                     placeholder="Título"
+                    aria-label="Título académico"
                     value={edu.degree}
                     onChange={(e) => updateEdu(edu.id, 'degree', e.target.value)}
                   />
                   <input
                     className={inputClass}
                     placeholder="Institución"
+                    aria-label="Institución educativa"
                     value={edu.school}
                     onChange={(e) => updateEdu(edu.id, 'school', e.target.value)}
                   />
@@ -424,6 +467,7 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage: _onUsage, userId 
                 <input
                   className={inputClass}
                   placeholder="Fechas"
+                  aria-label="Fechas de educación"
                   value={edu.dates}
                   onChange={(e) => updateEdu(edu.id, 'dates', e.target.value)}
                 />
@@ -434,8 +478,10 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage: _onUsage, userId 
           <Card className="p-6 bg-white dark:bg-slate-800">
             <h3 className="font-bold mb-4 dark:text-white">Habilidades</h3>
             <textarea
+              id={skillsInputId}
               className={`${inputClass} h-24`}
               placeholder="Habilidades..."
+              aria-label="Habilidades"
               value={cvData.skills}
               onChange={(e) => updateField('skills', e.target.value)}
             />
@@ -446,7 +492,7 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage: _onUsage, userId 
               Guardar Cambios
             </Button>
             <Button onClick={handleDownloadCV} className="flex-1">
-              <Download className="w-4 h-4 mr-2" /> Descargar PDF
+              <Download className="w-4 h-4 mr-2" aria-hidden="true" /> Descargar PDF
             </Button>
           </div>
         </div>
@@ -471,22 +517,11 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage: _onUsage, userId 
                   {/* Sin bordes, sin sombras, tamaño exacto */}
                   <div
                     id="cv-preview"
-                    className="bg-white text-[#1e293b] box-border"
-                    style={{
-                      width: '210mm',
-                      minHeight: '297mm',
-                      // Padding lateral de 15mm sirve de margen izquierdo/derecho seguro
-                      // Padding vertical se suma al margen del PDF para dar aire
-                      padding: '15mm 20mm',
-                      fontFamily: isMinimal
-                        ? 'Georgia, serif'
-                        : isBold
-                          ? 'Arial Black, Arial, sans-serif'
-                          : 'Inter, sans-serif',
-                      fontSize: '11pt',
-                      lineHeight: '1.5',
-                      // IMPORTANTE: Sin borde aquí para que no salga en el PDF
-                    }}
+                    className={`bg-white text-[#1e293b] box-border w-[210mm] min-h-[297mm] p-[15mm_20mm] text-[11pt] leading-[1.5] ${{
+                      minimal: 'font-serif',
+                      bold: 'font-sans',
+                      classic: 'font-sans',
+                    }[template]}`}
                   >
                     {/* Header */}
                     <div
@@ -517,7 +552,7 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage: _onUsage, userId 
                         <div className="flex flex-wrap gap-y-2 gap-x-4 text-sm text-[#475569]">
                           {cvData.email && (
                             <span className="flex items-center gap-1.5">
-                              <Mail className="w-4 h-4 text-[#16a34a]" /> {cvData.email}
+                              <Mail className="w-4 h-4 text-[#16a34a]" aria-hidden="true" /> {cvData.email}
                             </span>
                           )}
                           {cvData.phone && (
@@ -525,7 +560,7 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage: _onUsage, userId 
                           )}
                           {cvData.address && (
                             <span className="flex items-center gap-1.5">
-                              <MapPin className="w-4 h-4 text-[#16a34a]" /> {cvData.address}
+                              <MapPin className="w-4 h-4 text-[#16a34a]" aria-hidden="true" /> {cvData.address}
                             </span>
                           )}
                         </div>
