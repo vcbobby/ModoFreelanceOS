@@ -184,8 +184,7 @@ export const BriefingTool: React.FC<BriefingToolProps> = ({ onUsage, userId }) =
   const A4Document = () => (
     <div
       id="brief-document-full-size"
-      className="bg-white text-[#0f172a] w-[210mm] min-h-[297mm] p-[20mm] shadow-2xl"
-      style={{ fontFamily: 'Inter, sans-serif' }}
+      className="bg-white text-[#0f172a] w-[210mm] min-h-[297mm] p-[20mm] shadow-2xl [font-family:Inter,sans-serif]"
     >
       <div className="border-b-2 border-[#0f172a] pb-6 mb-8 flex justify-between items-start">
         <div>
@@ -377,12 +376,12 @@ export const BriefingTool: React.FC<BriefingToolProps> = ({ onUsage, userId }) =
         </p>
       </div>
 
-      <div className="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full mb-8">
-        <div
-          className="bg-brand-600 h-2 rounded-full transition-all duration-300"
-          style={{ width: `${((step + 1) / 4) * 100}%` }}
-        />
-      </div>
+      <progress
+        className="w-full h-2 rounded-full mb-8 accent-brand-600"
+        value={step + 1}
+        max={4}
+        aria-label="Progreso del asistente de briefing"
+      />
 
       <Card className="p-8 shadow-lg min-h-[400px] flex flex-col relative dark:bg-slate-800 dark:border-slate-700">
         {/* PASO 1 */}
@@ -404,10 +403,14 @@ export const BriefingTool: React.FC<BriefingToolProps> = ({ onUsage, userId }) =
               />
             </div>
             <div>
-              <label className="text-sm font-bold text-slate-600 dark:text-slate-400">
+              <label
+                htmlFor="brief-project-type"
+                className="text-sm font-bold text-slate-600 dark:text-slate-400"
+              >
                 Tipo de Proyecto
               </label>
               <select
+                id="brief-project-type"
                 className="w-full p-3 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white rounded-lg mt-1 outline-none"
                 value={formData.projectType}
                 onChange={(e) => updateForm('projectType', e.target.value)}
@@ -441,10 +444,14 @@ export const BriefingTool: React.FC<BriefingToolProps> = ({ onUsage, userId }) =
               />
             </div>
             <div>
-              <label className="text-sm font-bold text-slate-600 dark:text-slate-400">
+              <label
+                htmlFor="brief-deadline"
+                className="text-sm font-bold text-slate-600 dark:text-slate-400"
+              >
                 Fecha de Entrega (Deadline)
               </label>
               <input
+                id="brief-deadline"
                 type="date"
                 className="w-full p-3 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white rounded-lg mt-1 outline-none"
                 value={formData.deadline}

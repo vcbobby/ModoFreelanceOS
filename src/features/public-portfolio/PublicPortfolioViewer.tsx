@@ -257,8 +257,7 @@ const ContactActions = ({
       <div className="flex flex-wrap gap-4 mt-8 justify-center">
         <a
           href={`mailto:${data.email}`}
-          className={`${btnBase} border-4 border-black text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none`}
-          style={{ backgroundColor: accent }}
+          className={`${btnBase} border-4 border-black text-black bg-[var(--portfolio-accent)] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none`}
         >
           <Mail className="w-5 h-5" /> Email
         </a>
@@ -302,8 +301,7 @@ const ContactActions = ({
     <div className="flex flex-wrap gap-4 mt-8 justify-center md:justify-start">
       <a
         href={`mailto:${data.email}`}
-        className={`${btnBase} text-white shadow-lg hover:scale-105 hover:shadow-xl`}
-        style={{ backgroundColor: accent }}
+        className={`${btnBase} text-white bg-[var(--portfolio-accent)] shadow-lg hover:scale-105 hover:shadow-xl`}
       >
         <Mail className="w-5 h-5" /> Contáctame
       </a>
@@ -336,7 +334,7 @@ const Footer = ({ name: _name, isDark }: { name?: string; isDark?: boolean }) =>
     <a
       href="https://modofreelanceos.com"
       target="_blank"
-      rel="noreferrer"
+      rel="noopener noreferrer"
       className="mt-2 inline-flex items-center gap-1 hover:text-brand-500 transition-colors font-bold"
     >
       <Zap className="w-3 h-3" /> Potenciado por ModoFreelanceOS
@@ -567,10 +565,7 @@ const ClassicLayout = ({ data, accent, openProject }: LayoutProps) => (
       <h1 className="text-5xl md:text-7xl font-extrabold mb-4 tracking-tight text-slate-900 dark:text-white">
         {data.name}
       </h1>
-      <p
-        className="text-xl opacity-60 mb-8 font-medium uppercase tracking-widest"
-        style={{ color: accent }}
-      >
+      <p className="text-xl opacity-60 mb-8 font-medium uppercase tracking-widest text-[var(--portfolio-accent)]">
         {data.role}
       </p>
       <p className="max-w-2xl mx-auto opacity-80 leading-relaxed mb-10 text-lg text-slate-700 dark:text-slate-300">
@@ -613,7 +608,7 @@ const SplitLayout = ({ data, accent, openProject }: LayoutProps) => (
         <h1 className="text-5xl font-black mb-4 leading-none tracking-tighter text-slate-900 dark:text-white">
           {data.name}
         </h1>
-        <p className="text-xl font-mono mb-8 opacity-90" style={{ color: accent }}>
+        <p className="text-xl font-mono mb-8 opacity-90 text-[var(--portfolio-accent)]">
           {data.role}
         </p>
         <p className="opacity-80 leading-relaxed text-lg mb-8 text-slate-600 dark:text-slate-400">
@@ -648,9 +643,7 @@ const GridLayout = ({ data, accent, openProject }: LayoutProps) => (
     <header className="py-32 px-6 text-center bg-slate-100 dark:bg-slate-900/50 relative overflow-hidden mb-12">
       <div className="relative z-10 container mx-auto">
         <h2 className="text-6xl font-bold mb-4 text-slate-900 dark:text-white">{data.name}</h2>
-        <p className="text-2xl font-light mb-8" style={{ color: accent }}>
-          {data.role}
-        </p>
+        <p className="text-2xl font-light mb-8 text-[var(--portfolio-accent)]">{data.role}</p>
         <p className="max-w-2xl mx-auto opacity-70 mb-8 text-slate-600 dark:text-slate-300">
           {data.bio}
         </p>
@@ -673,10 +666,10 @@ const GridLayout = ({ data, accent, openProject }: LayoutProps) => (
 const MinimalDarkLayout = ({ data, accent, openProject }: LayoutProps) => (
   <div className="bg-black text-gray-300 min-h-screen font-mono p-6 md:p-20">
     <div className="max-w-5xl mx-auto border-l border-gray-800 pl-8 md:pl-16 relative">
-      <div className="absolute left-0 top-0 w-1 h-20" style={{ backgroundColor: accent }}></div>
+      <div className="absolute left-0 top-0 w-1 h-20 bg-[var(--portfolio-accent)]"></div>
       <p className="text-sm mb-6 text-gray-500 tracking-widest">{'<Developer />'}</p>
       <h1 className="text-5xl md:text-8xl font-bold text-white mb-8 leading-none">{data.name}</h1>
-      <p className="text-xl mb-8 max-w-2xl" style={{ color: accent }}>
+      <p className="text-xl mb-8 max-w-2xl text-[var(--portfolio-accent)]">
         {'// '}
         {data.role}
       </p>
@@ -727,10 +720,7 @@ const NeoLayout = ({ data, accent, openProject }: LayoutProps) => (
   <div className="bg-[#e0e7ff] dark:bg-slate-950 min-h-screen font-sans text-black p-4">
     <div className="container mx-auto max-w-5xl bg-white dark:bg-slate-100 border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] p-8 md:p-16 mt-10 rounded-none">
       <header className="mb-16">
-        <h1
-          className="text-6xl md:text-8xl font-black uppercase mb-4 leading-none text-black"
-          style={{ textShadow: `4px 4px 0px ${accent}` }}
-        >
+        <h1 className="text-6xl md:text-8xl font-black uppercase mb-4 leading-none text-black [text-shadow:4px_4px_0px_var(--portfolio-accent)]">
           {data.name}
         </h1>
         <div className="bg-black text-white inline-block px-4 py-2 font-bold text-xl uppercase transform -rotate-2">
@@ -766,6 +756,7 @@ const GlassLayout = ({ data, accent, openProject }: LayoutProps) => (
             <img
               src={data.photo}
               className="w-48 h-48 rounded-2xl object-cover shadow-lg border-2 border-white/30"
+              alt={`Foto de ${data.name}`}
             />
           )}
           <div>
@@ -808,6 +799,7 @@ const MagazineLayout = ({ data, accent, openProject }: LayoutProps) => (
           <img
             src={data.photo}
             className="w-full grayscale contrast-125 mb-8 border-2 border-black dark:border-stone-100"
+            alt={`Foto de ${data.name}`}
           />
         )}
         <p className="text-lg leading-relaxed mb-8 first-letter:text-5xl first-letter:font-bold first-letter:float-left first-letter:mr-2 first-letter:mt-[-6px]">
@@ -837,6 +829,7 @@ const BentoLayout = ({ data, accent, openProject }: LayoutProps) => (
           <img
             src={data.photo}
             className="w-32 h-32 rounded-full object-cover bg-slate-100 dark:bg-slate-800"
+            alt={`Foto de ${data.name}`}
           />
         )}
         <div className="flex-1 text-center md:text-left">
@@ -867,10 +860,7 @@ const BentoLayout = ({ data, accent, openProject }: LayoutProps) => (
 const SwissLayout = ({ data, accent, openProject }: LayoutProps) => {
   const nameParts = data.name.split(' ');
   return (
-    <div
-      className="bg-white dark:bg-slate-950 min-h-screen font-sans text-black dark:text-white pt-10 px-6 border-t-[20px]"
-      style={{ borderColor: accent }}
-    >
+    <div className="bg-white dark:bg-slate-950 min-h-screen font-sans text-black dark:text-white pt-10 px-6 border-t-[20px] border-[var(--portfolio-accent)]">
       <div className="container mx-auto grid md:grid-cols-2 gap-20">
         <div className="sticky top-20 h-fit">
           <h1 className="text-7xl font-bold leading-none mb-6 tracking-tight">
@@ -920,6 +910,7 @@ const StudioLayout = ({ data, accent, openProject }: LayoutProps) => (
           <img
             src={data.photo}
             className="w-full h-full object-cover grayscale opacity-80 hover:grayscale-0 transition-all duration-700"
+            alt={`Foto de ${data.name}`}
           />
         ) : (
           <div className="text-zinc-600">IMAGEN DE ESTUDIO</div>
@@ -974,6 +965,7 @@ const PastelLayout = ({ data, accent: _accent, openProject }: LayoutProps) => (
           <img
             src={data.photo}
             className="w-32 h-32 rounded-full mx-auto mb-6 object-cover border-4 border-rose-200 dark:border-rose-800"
+            alt={`Foto de ${data.name}`}
           />
         )}
         <h1 className="text-5xl font-bold mb-4 text-rose-500 dark:text-rose-300">{data.name}</h1>
@@ -1016,6 +1008,7 @@ const NatureLayout = ({ data, accent: _accent, openProject }: LayoutProps) => (
           <img
             src={data.photo}
             className="w-80 h-96 object-cover rounded-t-[10rem] rounded-b-3xl border-4 border-green-200 dark:border-green-900 shadow-xl"
+            alt={`Foto de ${data.name}`}
           />
         ) : (
           <div className="w-80 h-96 bg-green-200 dark:bg-green-900 rounded-t-[10rem] flex items-center justify-center text-green-700">
@@ -1069,6 +1062,13 @@ export const PublicPortfolioViewer = ({ userId }: { userId: string }) => {
     }
   }, [isDark]);
 
+  const accent = data?.color || '#16a34a';
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--portfolio-accent', accent);
+    return () => document.documentElement.style.removeProperty('--portfolio-accent');
+  }, [accent]);
+
   if (!data)
     return (
       <div className="h-screen bg-slate-900 flex items-center justify-center text-white font-sans">
@@ -1076,7 +1076,6 @@ export const PublicPortfolioViewer = ({ userId }: { userId: string }) => {
       </div>
     );
 
-  const accent = data.color || '#16a34a';
   const layouts: Record<string, React.FC<LayoutProps>> = {
     classic: ClassicLayout,
     split: SplitLayout,
@@ -1140,6 +1139,8 @@ export const PublicPortfolioViewer = ({ userId }: { userId: string }) => {
                 {/* Botón Cerrar */}
                 <button
                   onClick={() => setSelectedProject(null)}
+                  aria-label="Cerrar vista de proyecto"
+                  title="Cerrar vista de proyecto"
                   className="absolute top-4 right-4 z-50 bg-slate-100 dark:bg-black/50 p-2 rounded-full hover:bg-red-500 hover:text-white transition-colors border border-slate-200 dark:border-white/20 shadow-lg"
                 >
                   <X className="w-6 h-6" />
@@ -1179,7 +1180,7 @@ export const PublicPortfolioViewer = ({ userId }: { userId: string }) => {
                               key={i}
                               src={item.url}
                               className="w-full rounded-xl object-cover"
-                              alt="Galería"
+                              alt={`Elemento de galería ${i + 1}`}
                             />
                           );
                         }

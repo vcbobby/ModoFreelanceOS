@@ -321,6 +321,7 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({ onUsage, userId }) =
                 className="w-full p-3 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none text-sm bg-slate-50 dark:bg-slate-900 dark:text-white font-medium transition-all"
                 value={platform}
                 onChange={(e) => setPlatform(e.target.value)}
+                aria-label="Plataforma"
               >
                 <option value="Workana">Workana</option>
                 <option value="Upwork">Upwork</option>
@@ -459,7 +460,12 @@ export const ProposalTool: React.FC<ProposalToolProps> = ({ onUsage, userId }) =
                           {...props}
                         />
                       ),
-                      li: ({ node: _node, ...props }) => <li className="pl-1" {...props} />,
+                      ol: ({ node: _node, ...props }) => (
+                        <ol
+                          className="list-decimal pl-4 mb-4 space-y-2 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl"
+                          {...props}
+                        />
+                      ),
                       strong: ({ node: _node, ...props }) => (
                         <strong className="font-bold text-slate-900 dark:text-white" {...props} />
                       ),

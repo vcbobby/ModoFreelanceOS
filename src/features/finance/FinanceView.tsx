@@ -736,7 +736,7 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
     isOpen: false,
     title: '',
     message: '',
-    action: () => { },
+    action: () => {},
   });
 
   const normalizeTransaction = (t: Partial<FinanceTransaction>): FinanceTransaction => {
@@ -874,18 +874,22 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
           amount: parsedAmount,
           userId: userId,
         });
-        dispatch(addToast({
-          title: '✅ Transacción Guardada',
-          message: 'El movimiento se ha registrado correctamente.',
-          type: 'success'
-        }));
+        dispatch(
+          addToast({
+            title: '✅ Transacción Guardada',
+            message: 'El movimiento se ha registrado correctamente.',
+            type: 'success',
+          })
+        );
       } catch (error) {
         console.error('Error processing transaction:', error);
-        dispatch(addToast({
-          title: '❌ Error',
-          message: 'No se pudo guardar la transacción. Reintenta.',
-          type: 'error'
-        }));
+        dispatch(
+          addToast({
+            title: '❌ Error',
+            message: 'No se pudo guardar la transacción. Reintenta.',
+            type: 'error',
+          })
+        );
       }
     }
     setAmount('');
@@ -927,18 +931,22 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
           status: 'paid',
           userId: userId,
         });
-        dispatch(addToast({
-          title: '✅ Pago Registrado',
-          message: 'La transacción se ha marcado como pagada.',
-          type: 'success'
-        }));
+        dispatch(
+          addToast({
+            title: '✅ Pago Registrado',
+            message: 'La transacción se ha marcado como pagada.',
+            type: 'success',
+          })
+        );
       } catch (error) {
         console.error('Error updating transaction:', error);
-        dispatch(addToast({
-          title: '❌ Error',
-          message: 'Error al marcar como pagado.',
-          type: 'error'
-        }));
+        dispatch(
+          addToast({
+            title: '❌ Error',
+            message: 'Error al marcar como pagado.',
+            type: 'error',
+          })
+        );
       }
     }
   };
@@ -962,11 +970,13 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
       setAiAnalysis(result);
     } catch (error) {
       void error;
-      dispatch(addToast({
-        title: '❌ Error',
-        message: 'No se pudo completar el análisis financiero.',
-        type: 'error'
-      }));
+      dispatch(
+        addToast({
+          title: '❌ Error',
+          message: 'No se pudo completar el análisis financiero.',
+          type: 'error',
+        })
+      );
     } finally {
       setAnalyzing(false);
     }
@@ -1031,19 +1041,21 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
         <div className="flex bg-white dark:bg-slate-800 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-x-auto w-full md:w-auto">
           <button
             onClick={() => setViewMode('period')}
-            className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors whitespace-nowrap flex items-center gap-2 ${viewMode === 'period'
-              ? 'bg-slate-900 text-white dark:bg-slate-700'
-              : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/50'
-              }`}
+            className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors whitespace-nowrap flex items-center gap-2 ${
+              viewMode === 'period'
+                ? 'bg-slate-900 text-white dark:bg-slate-700'
+                : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/50'
+            }`}
           >
             <Calendar className="w-4 h-4" /> Historial
           </button>
           <button
             onClick={() => setViewMode('pending')}
-            className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors whitespace-nowrap flex items-center gap-2 ${viewMode === 'pending'
-              ? 'bg-orange-500 text-white'
-              : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/50'
-              }`}
+            className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors whitespace-nowrap flex items-center gap-2 ${
+              viewMode === 'pending'
+                ? 'bg-orange-500 text-white'
+                : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/50'
+            }`}
           >
             <Clock className="w-4 h-4" /> Pendientes
             {financialData.pendingTx.length > 0 && (
@@ -1054,10 +1066,11 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
           </button>
           <button
             onClick={() => setViewMode('recurring')}
-            className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors whitespace-nowrap flex items-center gap-2 ${viewMode === 'recurring'
-              ? 'bg-brand-600 text-white'
-              : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/50'
-              }`}
+            className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors whitespace-nowrap flex items-center gap-2 ${
+              viewMode === 'recurring'
+                ? 'bg-brand-600 text-white'
+                : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/50'
+            }`}
           >
             <Repeat className="w-4 h-4" /> Fijos
           </button>
@@ -1072,6 +1085,7 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
             <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(Number(e.target.value))}
+              aria-label="Mes"
               className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-white text-sm rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-brand-500"
             >
               {months.map((m, i) => (
@@ -1083,6 +1097,7 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(Number(e.target.value))}
+              aria-label="Año"
               className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-white text-sm rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-brand-500"
             >
               {years.map((y) => (
@@ -1129,20 +1144,22 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                     <button
                       type="button"
                       onClick={() => setType('income')}
-                      className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${type === 'income'
-                        ? 'bg-white dark:bg-slate-800 text-green-600 shadow-sm'
-                        : 'text-slate-400'
-                        }`}
+                      className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${
+                        type === 'income'
+                          ? 'bg-white dark:bg-slate-800 text-green-600 shadow-sm'
+                          : 'text-slate-400'
+                      }`}
                     >
                       Ingreso
                     </button>
                     <button
                       type="button"
                       onClick={() => setType('expense')}
-                      className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${type === 'expense'
-                        ? 'bg-white dark:bg-slate-800 text-red-600 shadow-sm'
-                        : 'text-slate-400'
-                        }`}
+                      className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${
+                        type === 'expense'
+                          ? 'bg-white dark:bg-slate-800 text-red-600 shadow-sm'
+                          : 'text-slate-400'
+                      }`}
                     >
                       Gasto
                     </button>
@@ -1192,6 +1209,7 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                   <input
                     type="date"
                     required
+                    aria-label="Fecha de movimiento"
                     className="w-full p-3 border rounded-lg text-sm dark:bg-slate-900 dark:border-slate-700 dark:text-white"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
@@ -1203,8 +1221,9 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                       onClick={() => setIsRecurring(!isRecurring)}
                     >
                       <div
-                        className={`w-4 h-4 border rounded flex items-center justify-center ${isRecurring ? 'bg-slate-800 text-white' : 'border-slate-300'
-                          }`}
+                        className={`w-4 h-4 border rounded flex items-center justify-center ${
+                          isRecurring ? 'bg-slate-800 text-white' : 'border-slate-300'
+                        }`}
                       >
                         {isRecurring && <CheckCircle className="w-3 h-3" />}
                       </div>
@@ -1212,10 +1231,11 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                     </div>
                   )}
                   <Button
-                    className={`w-full ${type === 'income'
-                      ? 'bg-green-600 hover:bg-green-700'
-                      : 'bg-red-600 hover:bg-red-700'
-                      }`}
+                    className={`w-full ${
+                      type === 'income'
+                        ? 'bg-green-600 hover:bg-green-700'
+                        : 'bg-red-600 hover:bg-red-700'
+                    }`}
                   >
                     <Plus className="w-4 h-4 mr-2" />{' '}
                     {status === 'pending' ? 'Agendar' : 'Registrar'}
@@ -1263,10 +1283,11 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                       >
                         <div className="flex items-center gap-3">
                           <div
-                            className={`p-2 rounded-full ${t.type === 'income'
-                              ? 'bg-green-100 text-green-600 dark:bg-green-900/30'
-                              : 'bg-red-100 text-red-600 dark:bg-red-900/30'
-                              }`}
+                            className={`p-2 rounded-full ${
+                              t.type === 'income'
+                                ? 'bg-green-100 text-green-600 dark:bg-green-900/30'
+                                : 'bg-red-100 text-red-600 dark:bg-red-900/30'
+                            }`}
                           >
                             {t.type === 'income' ? (
                               <TrendingUp className="w-4 h-4" />
@@ -1295,14 +1316,17 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                         </div>
                         <div className="flex items-center gap-4">
                           <span
-                            className={`font-bold ${t.type === 'income' ? 'text-green-600' : 'text-red-600'
-                              }`}
+                            className={`font-bold ${
+                              t.type === 'income' ? 'text-green-600' : 'text-red-600'
+                            }`}
                           >
                             {t.type === 'income' ? '+' : '-'} {formatMoney(t.amount)}
                           </span>
                           <button
                             onClick={() => handleDelete(t.id)}
                             className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                            aria-label="Eliminar movimiento"
+                            title="Eliminar"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -1348,19 +1372,21 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                   return (
                     <div
                       key={t.id}
-                      className={`p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors ${isLate
-                        ? 'bg-red-50/50 dark:bg-red-900/10'
-                        : isSoon
-                          ? 'bg-orange-50/50 dark:bg-orange-900/10'
-                          : ''
-                        }`}
+                      className={`p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors ${
+                        isLate
+                          ? 'bg-red-50/50 dark:bg-red-900/10'
+                          : isSoon
+                            ? 'bg-orange-50/50 dark:bg-orange-900/10'
+                            : ''
+                      }`}
                     >
                       <div className="flex items-center gap-4">
                         <div
-                          className={`p-3 rounded-xl shrink-0 ${t.type === 'income'
-                            ? 'bg-green-100 text-green-600 dark:bg-green-900/30'
-                            : 'bg-red-100 text-red-600 dark:bg-red-900/30'
-                            }`}
+                          className={`p-3 rounded-xl shrink-0 ${
+                            t.type === 'income'
+                              ? 'bg-green-100 text-green-600 dark:bg-green-900/30'
+                              : 'bg-red-100 text-red-600 dark:bg-red-900/30'
+                          }`}
                         >
                           {t.type === 'income' ? (
                             <DollarSign className="w-5 h-5" />
@@ -1374,12 +1400,13 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                           </p>
                           <div className="flex items-center gap-2 text-sm mt-1">
                             <span
-                              className={`font-bold ${isLate
-                                ? 'text-red-600'
-                                : isSoon
-                                  ? 'text-orange-500'
-                                  : 'text-slate-500'
-                                }`}
+                              className={`font-bold ${
+                                isLate
+                                  ? 'text-red-600'
+                                  : isSoon
+                                    ? 'text-orange-500'
+                                    : 'text-slate-500'
+                              }`}
                             >
                               {isLate
                                 ? `Venció hace ${Math.abs(daysLeft)} días`
@@ -1395,8 +1422,9 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
 
                       <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-0 border-slate-100 dark:border-slate-700">
                         <span
-                          className={`font-bold text-lg ${t.type === 'income' ? 'text-green-600' : 'text-red-600'
-                            }`}
+                          className={`font-bold text-lg ${
+                            t.type === 'income' ? 'text-green-600' : 'text-red-600'
+                          }`}
                         >
                           {formatMoney(t.amount)}
                         </span>
@@ -1411,6 +1439,8 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                           <button
                             onClick={() => handleDelete(t.id)}
                             className="p-2 text-slate-300 hover:text-red-500 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg"
+                            aria-label="Eliminar pendiente"
+                            title="Eliminar"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -1449,12 +1479,14 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                   >
                     <div className="flex items-center gap-3">
                       <div
-                        className={`p-2 rounded-lg ${t.type === 'income' ? 'bg-green-50' : 'bg-red-50'
-                          }`}
+                        className={`p-2 rounded-lg ${
+                          t.type === 'income' ? 'bg-green-50' : 'bg-red-50'
+                        }`}
                       >
                         <Repeat
-                          className={`w-4 h-4 ${t.type === 'income' ? 'text-green-600' : 'text-red-600'
-                            }`}
+                          className={`w-4 h-4 ${
+                            t.type === 'income' ? 'text-green-600' : 'text-red-600'
+                          }`}
                         />
                       </div>
                       <div>
@@ -1464,14 +1496,17 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
                     </div>
                     <div className="flex items-center gap-4">
                       <span
-                        className={`font-bold ${t.type === 'income' ? 'text-green-600' : 'text-red-600'
-                          }`}
+                        className={`font-bold ${
+                          t.type === 'income' ? 'text-green-600' : 'text-red-600'
+                        }`}
                       >
                         {formatMoney(t.amount)} / mes
                       </span>
                       <button
                         onClick={() => handleDelete(t.id)}
                         className="text-slate-400 hover:text-red-600"
+                        aria-label="Eliminar recurrente"
+                        title="Eliminar"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

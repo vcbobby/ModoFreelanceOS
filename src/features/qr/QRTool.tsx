@@ -75,11 +75,13 @@ export const QRTool: React.FC<QRToolProps> = ({ onUsage, userId }) => {
 
         await downloadFile(pngUrl, `qr-${Date.now()}.png`);
 
-        dispatch(addToast({
-          title: '✅ Código QR Listo',
-          message: 'Tu código QR se ha descargado correctamente.',
-          type: 'success'
-        }));
+        dispatch(
+          addToast({
+            title: '✅ Código QR Listo',
+            message: 'Tu código QR se ha descargado correctamente.',
+            type: 'success',
+          })
+        );
 
         return true;
       });
@@ -133,10 +135,14 @@ export const QRTool: React.FC<QRToolProps> = ({ onUsage, userId }) => {
             />
           </div>
           <div>
-            <label className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 block">
+            <label
+              htmlFor="qr-color"
+              className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 block"
+            >
               Color del Código
             </label>
             <input
+              id="qr-color"
               type="color"
               className="w-full h-10 cursor-pointer rounded border p-1 bg-white dark:bg-slate-700"
               value={fgColor}

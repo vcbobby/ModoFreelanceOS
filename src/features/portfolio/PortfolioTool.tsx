@@ -226,6 +226,8 @@ export const PortfolioTool: React.FC<PortfolioToolProps> = ({ onUsage, userId })
             <input
               type="file"
               accept="image/*"
+              aria-label="Subir imagen del proyecto"
+              title="Subir imagen del proyecto"
               className="absolute inset-0 opacity-0 cursor-pointer"
               onChange={handleImageChange}
             />

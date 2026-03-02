@@ -295,6 +295,12 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
     load();
   }, [isE2E, userId]);
 
+  useEffect(() => {
+    const template = document.getElementById('portfolio-pdf-template');
+    if (!template) return;
+    template.style.setProperty('--site-color', siteData.color || '#16a34a');
+  }, [siteData.color]);
+
   const handleExportPDF = async () => {
     await handleSave();
     const element = document.getElementById('portfolio-pdf-template');
@@ -742,6 +748,8 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
                     <label className={labelClass}>Rol Principal</label>
                     <input
                       className={inputClass}
+                      aria-label="Rol principal"
+                      title="Rol principal"
                       value={siteData.role}
                       onChange={(e) => update('role', e.target.value)}
                     />
@@ -751,6 +759,8 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
                   <label className={labelClass}>Bio / Sobre Mí</label>
                   <textarea
                     className={`${inputClass} h-32`}
+                    aria-label="Bio o sobre mí"
+                    title="Bio o sobre mí"
                     value={siteData.bio}
                     onChange={(e) => update('bio', e.target.value)}
                   />
@@ -760,6 +770,8 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
                     <label className={labelClass}>Email</label>
                     <input
                       className={inputClass}
+                      aria-label="Correo electrónico"
+                      title="Correo electrónico"
                       value={siteData.email}
                       onChange={(e) => update('email', e.target.value)}
                     />
@@ -880,6 +892,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
                       <img
                         src={siteData.photo}
                         className="w-20 h-20 rounded-full object-cover border-2 border-white shadow-sm"
+                        alt="Vista previa de foto de perfil"
                       />
                     ) : (
                       <div className="w-20 h-20 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs text-slate-500">
@@ -932,6 +945,8 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
                   <input
                     type="color"
                     className="w-16 h-12 rounded cursor-pointer border-0 p-0 bg-transparent mt-2"
+                    aria-label="Color de acento"
+                    title="Color de acento"
                     value={siteData.color}
                     onChange={(e) => update('color', e.target.value)}
                   />
@@ -956,6 +971,8 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
                     >
                       <button
                         onClick={() => removeProject(i)}
+                        aria-label="Eliminar proyecto"
+                        title="Eliminar proyecto"
                         className="absolute top-4 right-4 text-slate-400 hover:text-red-500 p-2"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -966,6 +983,8 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
                             <label className={labelClass}>Título</label>
                             <input
                               className={`${inputClass} font-bold`}
+                              aria-label="Título del proyecto"
+                              title="Título del proyecto"
                               value={proj.title}
                               onChange={(e) => updateProject(i, 'title', e.target.value)}
                             />
@@ -974,6 +993,8 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
                             <label className={labelClass}>Descripción</label>
                             <textarea
                               className={`${inputClass} h-24 resize-none`}
+                              aria-label="Descripción del proyecto"
+                              title="Descripción del proyecto"
                               value={proj.desc}
                               onChange={(e) => updateProject(i, 'desc', e.target.value)}
                             />
@@ -982,6 +1003,8 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
                             <label className={labelClass}>Link</label>
                             <input
                               className={inputClass}
+                              aria-label="Enlace del proyecto"
+                              title="Enlace del proyecto"
                               value={proj.link}
                               onChange={(e) => updateProject(i, 'link', e.target.value)}
                             />
@@ -990,6 +1013,8 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
                             <label className={labelClass}>Tags</label>
                             <input
                               className={inputClass}
+                              aria-label="Etiquetas del proyecto"
+                              title="Etiquetas del proyecto"
                               value={proj.tags}
                               onChange={(e) => updateProject(i, 'tags', e.target.value)}
                             />
@@ -1014,6 +1039,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
                               <img
                                 src={proj.cover}
                                 className="h-24 mt-3 rounded-lg object-cover w-full border dark:border-slate-600"
+                                alt="Vista previa de portada del proyecto"
                               />
                             )}
                           </div>
@@ -1039,12 +1065,18 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
                                   className="relative group w-14 h-14 border dark:border-slate-600 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center overflow-hidden"
                                 >
                                   {item.type.includes('image') ? (
-                                    <img src={item.url} className="w-full h-full object-cover" />
+                                    <img
+                                      src={item.url}
+                                      className="w-full h-full object-cover"
+                                      alt={`Elemento de galería ${idx + 1}`}
+                                    />
                                   ) : (
                                     <Video className="w-6 h-6 text-slate-400" />
                                   )}
                                   <button
                                     onClick={() => removeFromGallery(i, idx)}
+                                    aria-label="Eliminar elemento de galería"
+                                    title="Eliminar elemento de galería"
                                     className="absolute inset-0 bg-red-500/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                                   >
                                     <Trash2 className="w-4 h-4" />
@@ -1078,6 +1110,8 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
                                   </span>
                                   <button
                                     onClick={() => removeFromDocs(i, idx)}
+                                    aria-label="Eliminar documento"
+                                    title="Eliminar documento"
                                     className="text-red-500"
                                   >
                                     <Trash2 className="w-3 h-3" />
@@ -1101,6 +1135,8 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
                   <label className={labelClass}>Skills</label>
                   <textarea
                     className={`${inputClass} h-20`}
+                    aria-label="Habilidades"
+                    title="Habilidades"
                     value={siteData.skills}
                     onChange={(e) => update('skills', e.target.value)}
                   />
@@ -1119,6 +1155,8 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
                     >
                       <button
                         onClick={() => removeExp(i)}
+                        aria-label="Eliminar experiencia"
+                        title="Eliminar experiencia"
                         className="absolute top-2 right-2 text-slate-300 hover:text-red-500"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -1166,6 +1204,8 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
                     >
                       <button
                         onClick={() => removeEdu(i)}
+                        aria-label="Eliminar educación"
+                        title="Eliminar educación"
                         className="absolute top-2 right-2 text-slate-300 hover:text-red-500"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -1199,42 +1239,20 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
         </div>
       </div>
       {/* --- PLANTILLA OCULTA PARA PDF (SOLUCIÓN FINAL DE CORTES) --- */}
-      <div
-        style={{
-          position: 'absolute',
-          left: '-9999px',
-          top: 0,
-          pointerEvents: 'none',
-          zIndex: -50,
-        }}
-      >
+      <div className="absolute [left:-9999px] top-0 pointer-events-none -z-50">
         <div
           id="portfolio-pdf-template"
-          className="bg-white text-slate-900"
-          style={{
-            width: '210mm',
-            minHeight: '297mm',
-            fontFamily: 'Helvetica, Arial, sans-serif',
-            fontSize: '11pt',
-            lineHeight: '1.5',
-            // CLAVE: El padding aquí actúa como margen de la hoja
-            padding: '15mm 20mm', // 15mm Arriba/Abajo, 20mm Izq/Der
-            boxSizing: 'border-box', // Esto evita que el padding ensanche la hoja
-            margin: '0 auto',
-          }}
+          className="bg-white text-slate-900 w-[210mm] min-h-[297mm] [font-family:Helvetica,Arial,sans-serif] text-[11pt] leading-[1.5] py-[15mm] px-[20mm] box-border mx-auto"
         >
           {/* PORTADA */}
           <div className="w-full relative flex flex-col justify-center items-center text-center mb-16 pb-12 border-b-2 border-[#f1f5f9] page-break-after-avoid">
-            <div
-              className="absolute top-[-15mm] left-[-20mm] w-[210mm] h-4"
-              style={{ backgroundColor: siteData.color }}
-            ></div>
+            <div className="absolute top-[-15mm] left-[-20mm] w-[210mm] h-4 bg-[var(--site-color)]"></div>
 
             {siteData.photo && (
               <img
                 src={siteData.photo}
-                className="w-40 h-40 rounded-full object-cover shadow-xl mb-6 border-4 border-white"
-                style={{ borderColor: siteData.color }}
+                className="w-40 h-40 rounded-full object-cover shadow-xl mb-6 border-4 border-[var(--site-color)]"
+                alt="Foto de perfil para PDF"
               />
             )}
 
@@ -1264,27 +1282,13 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
             {siteData.projects?.length > 0 && (
               <div className="mb-8">
                 {/* TITULO + PRIMER PROYECTO (NO SE SEPARAN) */}
-                <div
-                  style={{
-                    pageBreakInside: 'avoid',
-                    breakInside: 'avoid',
-                  }}
-                >
-                  <div
-                    className="flex items-center gap-4 mb-6 border-b-2 pb-2"
-                    style={{ borderColor: siteData.color }}
-                  >
+                <div className="[page-break-inside:avoid] [break-inside:avoid]">
+                  <div className="flex items-center gap-4 mb-6 border-b-2 pb-2 border-[var(--site-color)]">
                     <h2 className="text-xl font-bold uppercase text-[#1e293b]">Portafolio</h2>
                   </div>
 
                   {/* PRIMER PROYECTO */}
-                  <div
-                    className="mb-8 border-b border-[#f1f5f9] pb-8"
-                    style={{
-                      pageBreakInside: 'avoid',
-                      breakInside: 'avoid',
-                    }}
-                  >
+                  <div className="mb-8 border-b border-[#f1f5f9] pb-8 [page-break-inside:avoid] [break-inside:avoid]">
                     {/* Cabecera del Proyecto */}
                     <div className="flex gap-6 mb-4">
                       <div className="w-24 shrink-0">
@@ -1292,6 +1296,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
                           <img
                             src={siteData.projects[0].cover}
                             className="w-full h-24 object-cover rounded-lg shadow-sm bg-[#f1f5f9]"
+                            alt="Portada de proyecto"
                           />
                         ) : (
                           <div className="w-full h-24 bg-[#f1f5f9] rounded-lg flex items-center justify-center text-[10px] text-[#94a3b8]">
@@ -1306,12 +1311,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
                         </h3>
 
                         {siteData.projects[0].tags && (
-                          <p
-                            className="text-[10px] font-bold uppercase mb-2 opacity-70"
-                            style={{
-                              color: siteData.color,
-                            }}
-                          >
+                          <p className="text-[10px] font-bold uppercase mb-2 opacity-70 text-[var(--site-color)]">
                             {siteData.projects[0].tags}
                           </p>
                         )}
@@ -1343,15 +1343,11 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
                             if (!img.type?.includes('image')) return null;
 
                             return (
-                              <div
-                                key={idx}
-                                style={{
-                                  breakInside: 'avoid',
-                                }}
-                              >
+                              <div key={idx} className="[break-inside:avoid]">
                                 <img
                                   src={img.url}
                                   className="w-full h-40 object-cover rounded border border-slate-200 bg-white"
+                                  alt={`Imagen de galería ${idx + 1}`}
                                 />
                               </div>
                             );
@@ -1370,12 +1366,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
                     return (
                       <div
                         key={i}
-                        className={`mb-8 pb-8 ${isLast ? '' : 'border-b border-[#f1f5f9]'}`}
-                        style={{
-                          pageBreakInside: 'avoid',
-                          breakInside: 'avoid',
-                          pageBreakBefore: isLast ? 'always' : 'auto',
-                        }}
+                        className={`mb-8 pb-8 [page-break-inside:avoid] [break-inside:avoid] ${isLast ? '[page-break-before:always]' : '[page-break-before:auto]'} ${isLast ? '' : 'border-b border-[#f1f5f9]'}`}
                       >
                         {/* Cabecera del Proyecto */}
                         <div className="flex gap-6 mb-4">
@@ -1384,6 +1375,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
                               <img
                                 src={proj.cover}
                                 className="w-full h-24 object-cover rounded-lg shadow-sm bg-slate-100"
+                                alt="Portada de proyecto"
                               />
                             ) : (
                               <div className="w-full h-24 bg-slate-100 rounded-lg flex items-center justify-center text-[10px] text-slate-400">
@@ -1396,12 +1388,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
                             <h3 className="text-lg font-bold text-[#0f172a] mb-1">{proj.title}</h3>
 
                             {proj.tags && (
-                              <p
-                                className="text-[10px] font-bold uppercase mb-2 opacity-70"
-                                style={{
-                                  color: siteData.color,
-                                }}
-                              >
+                              <p className="text-[10px] font-bold uppercase mb-2 opacity-70 text-[var(--site-color)]">
                                 {proj.tags}
                               </p>
                             )}
@@ -1430,15 +1417,11 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
                                 if (!img.type?.includes('image')) return null;
 
                                 return (
-                                  <div
-                                    key={idx}
-                                    style={{
-                                      breakInside: 'avoid',
-                                    }}
-                                  >
+                                  <div key={idx} className="[break-inside:avoid]">
                                     <img
                                       src={img.url}
                                       className="w-full h-40 object-cover rounded border border-[#e2e8f0] bg-white"
+                                      alt={`Imagen de galería ${idx + 1}`}
                                     />
                                   </div>
                                 );
@@ -1457,12 +1440,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
             <div className="grid grid-cols-1 gap-8">
               {/* Experiencia */}
               {siteData.experience?.length > 0 && (
-                <div
-                  style={{
-                    pageBreakInside: 'avoid',
-                    breakInside: 'avoid',
-                  }}
-                >
+                <div className="[page-break-inside:avoid] [break-inside:avoid]">
                   <h3 className="text-lg font-bold uppercase mb-4 pb-2 border-b border-[#e2e8f0] text-[#1e293b]">
                     Experiencia
                   </h3>
@@ -1481,13 +1459,7 @@ export const WebsiteBuilder: React.FC<WebsiteBuilderProps> = ({ onUsage: _onUsag
               )}
 
               {/* Educación y Skills */}
-              <div
-                className="grid grid-cols-2 gap-6"
-                style={{
-                  pageBreakInside: 'avoid',
-                  breakInside: 'avoid',
-                }}
-              >
+              <div className="grid grid-cols-2 gap-6 [page-break-inside:avoid] [break-inside:avoid]">
                 {siteData.education?.length > 0 && (
                   <div>
                     <h3 className="text-base font-bold uppercase mb-3 pb-1 border-b border-[#e2e8f0] text-[#1e293b]">

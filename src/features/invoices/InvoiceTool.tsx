@@ -238,6 +238,7 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({ onUsage, userId }) => 
                 type="text"
                 value={invoicePrefix}
                 onChange={(e) => setInvoicePrefix(e.target.value)}
+                aria-label="Prefijo de factura"
                 className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 dark:text-white"
               />
             </div>
@@ -248,6 +249,7 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({ onUsage, userId }) => 
               <select
                 value={template}
                 onChange={(e) => setTemplate(e.target.value as typeof template)}
+                aria-label="Plantilla de factura"
                 className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 dark:text-white"
               >
                 <option value="classic">Clasica</option>
@@ -269,6 +271,7 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({ onUsage, userId }) => 
                   const num = parseInt(e.target.value);
                   if (!isNaN(num)) setInvoiceSequence(num);
                 }}
+                aria-label="Número de factura"
                 className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 dark:text-white"
               />
             </div>
@@ -280,6 +283,7 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({ onUsage, userId }) => 
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
+                aria-label="Fecha de factura"
                 className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 dark:text-white"
               />
             </div>
@@ -290,6 +294,7 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({ onUsage, userId }) => 
               <select
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
+                aria-label="Moneda de factura"
                 className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 dark:text-white"
               >
                 <option value="$">USD ($)</option>
@@ -479,6 +484,8 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({ onUsage, userId }) => 
                     <button
                       onClick={() => removeItem(item.id)}
                       className="text-slate-400 hover:text-red-500 p-2"
+                      aria-label="Eliminar item"
+                      title="Eliminar item"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -502,6 +509,7 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({ onUsage, userId }) => 
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
+                aria-label="Notas de factura"
                 className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded text-sm h-20 bg-white dark:bg-slate-900 dark:text-white"
               />
             </div>
@@ -513,6 +521,7 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({ onUsage, userId }) => 
                 type="number"
                 value={taxRate}
                 onChange={(e) => setTaxRate(Number(e.target.value))}
+                aria-label="Porcentaje de impuestos"
                 className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 dark:text-white"
               />
             </div>
@@ -533,10 +542,9 @@ export const InvoiceTool: React.FC<InvoiceToolProps> = ({ onUsage, userId }) => 
           <div
             id="invoice-preview"
             ref={invoiceRef}
-            className={`bg-white shadow-xl w-full max-w-[210mm] min-h-[197mm] overflow-x-auto p-8 md:p-12 text-[#1e293b] flex flex-col justify-between ${
+            className={`bg-white shadow-xl w-full max-w-[210mm] min-h-[197mm] overflow-x-auto p-8 md:p-12 text-[14px] text-[#1e293b] flex flex-col justify-between ${
               template === 'minimal' ? 'border border-[#e2e8f0]' : ''
             } ${template === 'bold' ? 'border-2 border-[#0f172a]' : ''}`}
-            style={{ fontSize: '14px' }}
           >
             <div>
               <div className="flex justify-between items-start mb-8">

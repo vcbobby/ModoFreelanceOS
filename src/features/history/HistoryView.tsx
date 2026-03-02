@@ -215,6 +215,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ userId }) => {
               onClick={handleClearAll}
               className="px-3 py-2 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/10 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors flex items-center gap-2 text-sm font-medium"
               title="Vaciar Historial"
+              aria-label="Vaciar historial"
             >
               <Trash2 className="w-4 h-4" />
               <span className="hidden md:inline">Vaciar</span>
@@ -238,6 +239,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ userId }) => {
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
+            aria-label="Filtrar por categoría"
             className="w-full p-3 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm"
           >
             <option value="all">Todas las categorias</option>
@@ -252,6 +254,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ userId }) => {
           <select
             value={timeFilter}
             onChange={(e) => setTimeFilter(e.target.value as typeof timeFilter)}
+            aria-label="Filtrar por tiempo"
             className="w-full p-3 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm"
           >
             <option value="all">Todo el tiempo</option>
@@ -380,6 +383,7 @@ const HistoryCard = ({ item, onDelete }: { item: HistoryItem; onDelete: () => vo
           onClick={onDelete}
           className="text-slate-400 hover:text-red-500 transition-colors p-1"
           title="Borrar"
+          aria-label="Borrar"
         >
           <Trash2 className="w-4 h-4" />
         </button>
@@ -398,6 +402,7 @@ const HistoryCard = ({ item, onDelete }: { item: HistoryItem; onDelete: () => vo
                   <p className="mb-2 whitespace-pre-wrap" {...props} />
                 ),
                 ul: ({ node: _node, ...props }) => <ul className="list-disc pl-4" {...props} />,
+                ol: ({ node: _node, ...props }) => <ol className="list-decimal pl-4" {...props} />,
               }}
             >
               {item.content}
@@ -565,6 +570,7 @@ const LogoHistoryCard = ({ item, onDelete }: { item: HistoryItem; onDelete: () =
           onClick={onDelete}
           className="text-slate-400 hover:text-red-500 transition-colors p-1"
           title="Borrar del historial"
+          aria-label="Borrar del historial"
         >
           <Trash2 className="w-4 h-4" />
         </button>
@@ -888,6 +894,7 @@ const InvoiceHistoryCard = ({ item, onDelete }: { item: HistoryItem; onDelete: (
         <button
           onClick={onDelete}
           className="text-slate-400 hover:text-red-500 transition-colors p-1"
+          aria-label="Borrar factura del historial"
         >
           <Trash2 className="w-4 h-4" />
         </button>

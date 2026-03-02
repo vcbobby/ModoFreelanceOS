@@ -215,6 +215,7 @@ export const AcademyView: React.FC<AcademyViewProps> = ({ onUsage, userId }) => 
                 className="w-full p-3 border rounded-lg mt-1 dark:bg-slate-900 dark:border-slate-700 dark:text-white"
                 value={level}
                 onChange={(e) => setLevel(e.target.value)}
+                aria-label="Nivel actual"
               >
                 <option>Principiante</option>
                 <option>Intermedio</option>
@@ -308,8 +309,11 @@ export const AcademyView: React.FC<AcademyViewProps> = ({ onUsage, userId }) => 
                                   ul: ({ node: _node, ...props }) => (
                                     <ul className="list-disc pl-5 space-y-1 mb-4" {...props} />
                                   ),
-                                  li: ({ node: _node, ...props }) => (
-                                    <li className="pl-1" {...props} />
+                                  ol: ({ node: _node, ...props }) => (
+                                    <ol className="list-decimal pl-5 space-y-1 mb-4" {...props} />
+                                  ),
+                                  p: ({ node: _node, ...props }) => (
+                                    <p className="mb-2 last:mb-0" {...props} />
                                   ),
                                   strong: ({ node: _node, ...props }) => (
                                     <strong

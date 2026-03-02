@@ -62,6 +62,8 @@ export const PortfolioSearch = () => {
         />
         <button
           type="submit"
+          aria-label="Buscar portafolio"
+          title="Buscar portafolio"
           className="absolute right-2 p-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg transition-colors"
         >
           <ArrowRight className="w-4 h-4" />
@@ -202,6 +204,8 @@ export const LandingModern: React.FC = () => {
                       isOpen: false,
                     })
                   }
+                  aria-label="Cerrar modal legal"
+                  title="Cerrar modal legal"
                   className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors"
                 >
                   <X className="w-6 h-6 text-slate-500" />
@@ -314,7 +318,7 @@ export const LandingModern: React.FC = () => {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
             </span>
-            Nueva Versión 2.1.3
+            Nueva Versión 2.1.4
           </motion.div>
 
           <h1 className="relative z-20 text-6xl md:text-8xl lg:text-9xl font-black mb-8 leading-[1] tracking-tighter text-slate-900 dark:text-white drop-shadow-sm">

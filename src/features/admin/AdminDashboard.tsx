@@ -684,12 +684,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
                         {getPlatformIcon(plat)} {plat === 'Unknown' ? 'Web (Antiguo)' : plat}
                       </span>
                       <div className="flex items-center gap-3">
-                        <div className="w-32 bg-slate-200 dark:bg-slate-700 rounded-full h-2">
-                          <div
-                            className="bg-brand-500 h-2 rounded-full"
-                            style={{ width: `${(count / totalUsers) * 100}%` }}
-                          />
-                        </div>
+                        <progress
+                          className="w-32 h-2"
+                          max={Math.max(totalUsers, 1)}
+                          value={count}
+                          aria-label={`Registros de ${plat}`}
+                        />
                         <span className="font-bold text-slate-800 dark:text-white w-8 text-right">
                           {count}
                         </span>
@@ -833,6 +833,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
                             onClick={() => handleViewHistory(u.id, u.email || '')}
                             className="p-1.5 text-slate-400 hover:text-indigo-600 transition-colors"
                             title="Ver Historial"
+                            aria-label="Ver historial"
                           >
                             <History className="w-4 h-4" />
                           </button>
@@ -848,6 +849,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
                             }
                             className="p-1.5 text-slate-400 hover:text-green-600 transition-colors"
                             title="Gestionar Créditos"
+                            aria-label="Gestionar créditos"
                           >
                             <Coins className="w-4 h-4" />
                           </button>
@@ -874,6 +876,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
                             onClick={() => handleDeleteUser(u.id, u.email || '')}
                             className="p-1.5 text-slate-400 hover:text-red-600 transition-colors"
                             title="Eliminar Usuario"
+                            aria-label="Eliminar usuario"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -937,6 +940,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
                         onClick={() => handleViewHistory(u.id, u.email || '')}
                         className="p-1.5 text-slate-400 hover:text-indigo-600 transition-colors"
                         title="Ver Historial"
+                        aria-label="Ver historial"
                       >
                         <History className="w-4 h-4" />
                       </button>
@@ -952,6 +956,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
                         }
                         className="p-1.5 text-slate-400 hover:text-green-600 transition-colors"
                         title="Gestionar Créditos"
+                        aria-label="Gestionar créditos"
                       >
                         <Coins className="w-4 h-4" />
                       </button>
@@ -976,6 +981,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
                         onClick={() => handleDeleteUser(u.id, u.email || '')}
                         className="p-2 text-slate-400 hover:text-red-600 transition-colors"
                         title="Eliminar Usuario"
+                        aria-label="Eliminar usuario"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -1088,6 +1094,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
                   onChange={(e) =>
                     setCreditModal((p) => ({ ...p, amount: parseInt(e.target.value) }))
                   }
+                  aria-label="Cantidad de créditos"
                   className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
                 <p className="text-[10px] text-slate-400 mt-1 italic">
@@ -1135,6 +1142,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userId }) => {
               <button
                 onClick={() => setHistoryModal((p) => ({ ...p, isOpen: false }))}
                 className="p-1 hover:bg-slate-200 rounded-full"
+                aria-label="Cerrar historial de créditos"
+                title="Cerrar"
               >
                 <XCircle className="w-5 h-5 text-slate-400" />
               </button>

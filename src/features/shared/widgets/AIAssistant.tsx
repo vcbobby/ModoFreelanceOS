@@ -76,7 +76,12 @@ const DeleteConfirmationModal: React.FC<DeleteModalProps> = ({ isOpen, onClose, 
             <AlertTriangle className="w-3 h-3 text-orange-400" />
             Confirmar Acción
           </span>
-          <button onClick={onClose} className="hover:text-red-400 transition-colors">
+          <button
+            onClick={onClose}
+            className="hover:text-red-400 transition-colors"
+            aria-label="Cerrar confirmación"
+            title="Cerrar"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -634,12 +639,16 @@ WEB DEL USUARIO:
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
                 className="hidden md:block hover:bg-white/10 p-1.5 rounded transition-colors"
+                aria-label={isExpanded ? 'Minimizar asistente' : 'Expandir asistente'}
+                title={isExpanded ? 'Minimizar' : 'Expandir'}
               >
                 {isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
               </button>
               <button
                 onClick={() => setIsOpen(false)}
                 className="hover:bg-white/10 p-1.5 rounded transition-colors"
+                aria-label="Cerrar asistente"
+                title="Cerrar"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -736,6 +745,8 @@ WEB DEL USUARIO:
               onClick={() => handleSend()}
               disabled={loading || !input.trim()}
               className="bg-indigo-600 text-white p-3 rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-sm active:scale-95 transform"
+              aria-label="Enviar mensaje"
+              title="Enviar"
             >
               <Send className="w-5 h-5" />
             </button>
@@ -749,6 +760,8 @@ WEB DEL USUARIO:
           className={`pointer-events-auto shadow-2xl transition-all duration-300 group hover:shadow-indigo-500/40 hover:-translate-y-1 relative ${
             isOpen ? 'rotate-90 scale-0 opacity-0' : 'scale-100 opacity-100'
           }`}
+          aria-label="Abrir asistente"
+          title="Abrir asistente"
         >
           {/* Contenedor de la imagen redonda */}
           <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 bg-indigo-600">
@@ -762,6 +775,8 @@ WEB DEL USUARIO:
           <button
             onClick={() => setIsOpen(false)}
             className="pointer-events-auto p-4 rounded-full shadow-xl bg-slate-800 dark:bg-slate-700 text-white hover:bg-slate-900 dark:hover:bg-slate-600 transition-all duration-300 animate-in zoom-in spin-in-90"
+            aria-label="Cerrar asistente"
+            title="Cerrar asistente"
           >
             <X className="w-7 h-7" />
           </button>
