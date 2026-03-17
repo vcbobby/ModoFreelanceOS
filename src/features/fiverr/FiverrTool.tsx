@@ -208,67 +208,71 @@ export const FiverrTool: React.FC<FiverrToolProps> = ({ onUsage, userId }) => {
     }
     setLoading(true);
     try {
-      const usage = await runWithCredits(2, (cost?: number) => onUsage(cost ?? 2), async () => {
-        const authHeaders = await getAuthHeaders();
-        const gigTitle = formatGigTitle(trimmedService, stripMarkdown);
+      const usage = await runWithCredits(
+        2,
+        (cost?: number) => onUsage(cost ?? 2),
+        async () => {
+          const authHeaders = await getAuthHeaders();
+          const gigTitle = formatGigTitle(trimmedService, stripMarkdown);
 
-        const res = await fetch(`${BACKEND_URL}/api/v1/fiverr/generate`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...authHeaders,
-          },
-          body: JSON.stringify({
-            userId: userId || 'anon',
-            gigTitle,
-            category: 'General',
-            skills: skillsList,
-            description: trimmedService,
-          }),
-        });
-        if (!res.ok) {
-          let errMsg = 'Error en el servidor';
-          try {
-            const errData = await res.json();
-            if (errData?.detail) {
-              errMsg = Array.isArray(errData.detail) ? formatApiError(errData) : errData.detail;
-            } else {
-              errMsg = JSON.stringify(errData);
+          const res = await fetch(`${BACKEND_URL}/api/v1/fiverr/generate`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...authHeaders,
+            },
+            body: JSON.stringify({
+              userId: userId || 'anon',
+              gigTitle,
+              category: 'General',
+              skills: skillsList,
+              description: trimmedService,
+            }),
+          });
+          if (!res.ok) {
+            let errMsg = 'Error en el servidor';
+            try {
+              const errData = await res.json();
+              if (errData?.detail) {
+                errMsg = Array.isArray(errData.detail) ? formatApiError(errData) : errData.detail;
+              } else {
+                errMsg = JSON.stringify(errData);
+              }
+            } catch (error) {
+              void error;
             }
-          } catch (error) {
-            void error;
+            throw new Error(errMsg);
           }
-          throw new Error(errMsg);
-        }
-        const data = await res.json();
-        if (!data.success) throw new Error('Error generando Gig');
-        if (userId) {
-          try {
-            await addDoc(collection(db, 'users', userId, 'history'), {
-              createdAt: new Date().toISOString(),
-              category: 'fiverr',
-              type: 'fiverr-gig',
-              clientName: data.gigTitle || gigTitle,
-              platform: 'Fiverr',
-              content: data.description,
-              metadata: {
-                tags: data.tags,
-                packages: data.packages,
-                skills: skillsList,
-                category: 'General',
-              },
-            });
-          } catch (error) {
-            console.warn('No se pudo guardar el gig en el historial.', error);
+          const data = await res.json();
+          if (!data.success) throw new Error('Error generando Gig');
+          if (userId) {
+            try {
+              await addDoc(collection(db, 'users', userId, 'history'), {
+                createdAt: new Date().toISOString(),
+                category: 'fiverr',
+                type: 'fiverr-gig',
+                clientName: data.gigTitle || gigTitle,
+                platform: 'Fiverr',
+                content: data.description,
+                metadata: {
+                  tags: data.tags,
+                  packages: data.packages,
+                  skills: skillsList,
+                  category: 'General',
+                },
+              });
+            } catch (error) {
+              console.warn('No se pudo guardar el gig en el historial.', error);
+            }
           }
+          return {
+            title: data.gigTitle,
+            tags: data.tags,
+            description: data.description,
+            packages: data.packages,
+          } as FiverrResult;
         }
-        return {
-          title: data.gigTitle,
-          tags: data.tags,
-          description: data.description,
-          packages: data.packages,
-        } as FiverrResult;
-      });
+      );
       if (!usage.ok || !usage.result) return;
       setResult(usage.result);
     } catch (e) {

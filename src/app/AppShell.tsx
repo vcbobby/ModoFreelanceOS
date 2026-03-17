@@ -75,10 +75,11 @@ const NavItem = ({ icon, label, active, onClick, badge = 0 }: NavItemProps) => (
       event.preventDefault();
       onClick();
     }}
-    className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-colors group ${active
-      ? 'bg-brand-600 text-white shadow-md'
-      : 'hover:bg-slate-800 text-slate-400 hover:text-white'
-      }`}
+    className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-colors group ${
+      active
+        ? 'bg-brand-600 text-white shadow-md'
+        : 'hover:bg-slate-800 text-slate-400 hover:text-white'
+    }`}
   >
     <div className="flex items-center space-x-3">
       {React.cloneElement(icon, { size: 20 })}
@@ -131,7 +132,7 @@ export const AppShell: React.FC<AppShellProps> = ({
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 transition-colors duration-300">
-      <div className="md:hidden fixed top-0 w-full bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-50 px-4 py-3 flex justify-between items-center gap-4 transition-colors">
+      <div className="md:hidden fixed top-0 w-full bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-50 px-4 py-3 flex justify-between items-center gap-4 transition-colors navbar-safe-area">
         <span
           onClick={() => {
             setCurrentView(AppView.DASHBOARD);
@@ -442,10 +443,11 @@ export const AppShell: React.FC<AppShellProps> = ({
 
             <button
               onClick={() => setIsPricingOpen(true)}
-              className={`w-full mt-2 py-1.5 text-[10px] font-bold rounded-lg transition-colors uppercase tracking-wide ${userState.isSubscribed
-                ? 'bg-slate-700 hover:bg-slate-600 text-slate-300 border border-slate-600'
-                : 'bg-brand-600 hover:bg-brand-500 text-white shadow-lg shadow-brand-900/20'
-                }`}
+              className={`w-full mt-2 py-1.5 text-[10px] font-bold rounded-lg transition-colors uppercase tracking-wide ${
+                userState.isSubscribed
+                  ? 'bg-slate-700 hover:bg-slate-600 text-slate-300 border border-slate-600'
+                  : 'bg-brand-600 hover:bg-brand-500 text-white shadow-lg shadow-brand-900/20'
+              }`}
             >
               {userState.isSubscribed ? 'Gestionar Plan' : 'Ser PRO ($10)'}
             </button>

@@ -27,6 +27,8 @@ body {
   font-family: 'Inter', sans-serif;
 }
 
+@import './navbar-safe-area.css';
+
 .custom-scrollbar::-webkit-scrollbar {
   display: none;
 }

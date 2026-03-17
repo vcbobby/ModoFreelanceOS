@@ -107,9 +107,13 @@ export const AnalyzerTool: React.FC<AnalyzerToolProps> = ({ onUsage, userId }) =
   const executeAnalysis = async () => {
     setIsAnalyzing(true);
     try {
-      const usage = await runWithCredits(2, (cost?: number) => onUsage(cost ?? 2), async () => {
-        return analyzeDocument(text, mode);
-      });
+      const usage = await runWithCredits(
+        2,
+        (cost?: number) => onUsage(cost ?? 2),
+        async () => {
+          return analyzeDocument(text, mode);
+        }
+      );
       if (!usage.ok || !usage.result) return;
       const result = usage.result;
       setAnalysis(result);
@@ -179,7 +183,11 @@ export const AnalyzerTool: React.FC<AnalyzerToolProps> = ({ onUsage, userId }) =
             <legend className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2 block">
               Tipo de Análisis
             </legend>
-            <div className="grid grid-cols-2 gap-2" role="group" aria-label="Seleccionar tipo de análisis">
+            <div
+              className="grid grid-cols-2 gap-2"
+              role="group"
+              aria-label="Seleccionar tipo de análisis"
+            >
               <ModeButton
                 active={mode === 'resumen'}
                 onClick={() => setMode('resumen')}
@@ -221,7 +229,11 @@ export const AnalyzerTool: React.FC<AnalyzerToolProps> = ({ onUsage, userId }) =
       <div className="lg:col-span-2">
         <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm min-h-[500px] p-8">
           {!analysis ? (
-            <div className="h-full flex flex-col items-center justify-center text-slate-400 opacity-60 mt-20" role="status" aria-live="polite">
+            <div
+              className="h-full flex flex-col items-center justify-center text-slate-400 opacity-60 mt-20"
+              role="status"
+              aria-live="polite"
+            >
               <FileSearch className="w-16 h-16 mb-4" aria-hidden="true" />
               <p>{extractStatus || 'El resultado aparecerá aquí.'}</p>
             </div>

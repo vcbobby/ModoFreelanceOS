@@ -517,11 +517,13 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage: _onUsage, userId 
                   {/* Sin bordes, sin sombras, tamaño exacto */}
                   <div
                     id="cv-preview"
-                    className={`bg-white text-[#1e293b] box-border w-[210mm] min-h-[297mm] p-[15mm_20mm] text-[11pt] leading-[1.5] ${{
-                      minimal: 'font-serif',
-                      bold: 'font-sans',
-                      classic: 'font-sans',
-                    }[template]}`}
+                    className={`bg-white text-[#1e293b] box-border w-[210mm] min-h-[297mm] p-[15mm_20mm] text-[11pt] leading-[1.5] ${
+                      {
+                        minimal: 'font-serif',
+                        bold: 'font-sans',
+                        classic: 'font-sans',
+                      }[template]
+                    }`}
                   >
                     {/* Header */}
                     <div
@@ -552,7 +554,8 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage: _onUsage, userId 
                         <div className="flex flex-wrap gap-y-2 gap-x-4 text-sm text-[#475569]">
                           {cvData.email && (
                             <span className="flex items-center gap-1.5">
-                              <Mail className="w-4 h-4 text-[#16a34a]" aria-hidden="true" /> {cvData.email}
+                              <Mail className="w-4 h-4 text-[#16a34a]" aria-hidden="true" />{' '}
+                              {cvData.email}
                             </span>
                           )}
                           {cvData.phone && (
@@ -560,7 +563,8 @@ export const CVBuilder: React.FC<CVBuilderProps> = ({ onUsage: _onUsage, userId 
                           )}
                           {cvData.address && (
                             <span className="flex items-center gap-1.5">
-                              <MapPin className="w-4 h-4 text-[#16a34a]" aria-hidden="true" /> {cvData.address}
+                              <MapPin className="w-4 h-4 text-[#16a34a]" aria-hidden="true" />{' '}
+                              {cvData.address}
                             </span>
                           )}
                         </div>

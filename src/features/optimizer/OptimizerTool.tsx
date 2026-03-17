@@ -37,22 +37,26 @@ export const OptimizerTool: React.FC<OptimizerToolProps> = ({ onUsage, userId })
     if (!originalFile) return;
     setIsCompressing(true);
     try {
-      const usage = await runWithCredits(3, (cost?: number) => onUsage(cost ?? 3), async () => {
-        const presets = {
-          low: { maxSizeMB: 2, maxWidthOrHeight: 2560 },
-          medium: { maxSizeMB: 1, maxWidthOrHeight: 1920 },
-          high: { maxSizeMB: 0.5, maxWidthOrHeight: 1280 },
-        };
-        const options = {
-          ...presets[compressionPreset],
-          useWebWorker: true,
-          fileType:
-            outputFormat === 'same'
-              ? undefined
-              : `image/${outputFormat === 'jpeg' ? 'jpeg' : outputFormat}`,
-        };
-        return imageCompression(originalFile, options);
-      });
+      const usage = await runWithCredits(
+        3,
+        (cost?: number) => onUsage(cost ?? 3),
+        async () => {
+          const presets = {
+            low: { maxSizeMB: 2, maxWidthOrHeight: 2560 },
+            medium: { maxSizeMB: 1, maxWidthOrHeight: 1920 },
+            high: { maxSizeMB: 0.5, maxWidthOrHeight: 1280 },
+          };
+          const options = {
+            ...presets[compressionPreset],
+            useWebWorker: true,
+            fileType:
+              outputFormat === 'same'
+                ? undefined
+                : `image/${outputFormat === 'jpeg' ? 'jpeg' : outputFormat}`,
+          };
+          return imageCompression(originalFile, options);
+        }
+      );
 
       if (!usage.ok || !usage.result) return;
       setCompressedFile(usage.result);
