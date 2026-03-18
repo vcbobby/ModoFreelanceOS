@@ -160,9 +160,9 @@ export const LandingModern: React.FC = () => {
 
   const handleLogin = () => (window.location.href = 'https://app.modofreelanceos.com');
   const ANDROID_LINK =
-    'https://github.com/vcbobby/ModoFreelanceOS/releases/download/v2.1.3/app-release.apk';
+    'https://github.com/vcbobby/ModoFreelanceOS/releases/download/v2.1.4/app-release.apk';
   const WINDOWS_LINK =
-    'https://github.com/vcbobby/ModoFreelanceOS/releases/download/v2.1.3/ModoFreelanceOS.Setup.exe';
+    'https://github.com/vcbobby/ModoFreelanceOS/releases/download/v2.1.4/ModoFreelanceOS.Setup.exe';
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });

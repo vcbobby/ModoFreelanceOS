@@ -1,3 +1,7 @@
 .navbar-safe-area {
   padding-top: env(safe-area-inset-top, 16px);
 }
+
+.main-safe-padding {
+  padding-top: calc(4rem + env(safe-area-inset-top, 16px));
+}
