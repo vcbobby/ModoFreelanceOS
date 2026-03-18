@@ -18,6 +18,9 @@ const config: CapacitorConfig = {
       clientId: '878800083110-lndjbjiu0buaab5gmuiataiqckop9hvu.apps.googleusercontent.com',
       forceCodeForRefreshToken: true,
     },
+    StatusBar: {
+      overlaysWebView: true,
+    },
   },
   android: {
     overrideUserAgent: 'Mozilla/5.0 Google',

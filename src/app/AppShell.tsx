@@ -1,4 +1,5 @@
 import React, { useLayoutEffect, useRef } from 'react';
+import { Capacitor } from '@capacitor/core';
 import {
   LayoutDashboard,
   PenTool,
@@ -76,8 +77,8 @@ const NavItem = ({ icon, label, active, onClick, badge = 0 }: NavItemProps) => (
       onClick();
     }}
     className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-colors group ${active
-        ? 'bg-brand-600 text-white shadow-md'
-        : 'hover:bg-slate-800 text-slate-400 hover:text-white'
+      ? 'bg-brand-600 text-white shadow-md'
+      : 'hover:bg-slate-800 text-slate-400 hover:text-white'
       }`}
   >
     <div className="flex items-center space-x-3">
@@ -123,6 +124,14 @@ export const AppShell: React.FC<AppShellProps> = ({
   const sidebarScrollPosition = useRef(0);
   const [isProfileOpen, setIsProfileOpen] = React.useState(false);
 
+  // Bulletproof Safe Area for Android
+  const isAndroid = Capacitor.getPlatform() === 'android';
+  // Android native WebView often wrongly evaluates env() to 0px. We force 45px padding for Android Native.
+  // Other platforms (Web/iOS) can safely use env(safe-area-inset-top)
+  const safeAreaVar = isAndroid ? '45px' : 'env(safe-area-inset-top, 0px)';
+  const navbarStyle = { paddingTop: `calc(0.75rem + ${safeAreaVar})`, paddingBottom: '0.75rem' };
+  const mainStyle = { paddingTop: `calc(4.5rem + ${safeAreaVar})` };
+
   useLayoutEffect(() => {
     if (sidebarRef.current) {
       sidebarRef.current.scrollTop = sidebarScrollPosition.current;
@@ -131,7 +140,10 @@ export const AppShell: React.FC<AppShellProps> = ({
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 transition-colors duration-300">
-      <div className="md:hidden fixed top-0 w-full bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-50 px-4 py-3 flex justify-between items-center gap-4 transition-colors navbar-safe-area">
+      <div
+        style={navbarStyle}
+        className="md:hidden fixed top-0 w-full bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-50 px-4 flex justify-between items-center gap-4 transition-colors"
+      >
         <span
           onClick={() => {
             setCurrentView(AppView.DASHBOARD);
@@ -443,8 +455,8 @@ export const AppShell: React.FC<AppShellProps> = ({
             <button
               onClick={() => setIsPricingOpen(true)}
               className={`w-full mt-2 py-1.5 text-[10px] font-bold rounded-lg transition-colors uppercase tracking-wide ${userState.isSubscribed
-                  ? 'bg-slate-700 hover:bg-slate-600 text-slate-300 border border-slate-600'
-                  : 'bg-brand-600 hover:bg-brand-500 text-white shadow-lg shadow-brand-900/20'
+                ? 'bg-slate-700 hover:bg-slate-600 text-slate-300 border border-slate-600'
+                : 'bg-brand-600 hover:bg-brand-500 text-white shadow-lg shadow-brand-900/20'
                 }`}
             >
               {userState.isSubscribed ? 'Gestionar Plan' : 'Ser PRO ($10)'}
@@ -471,7 +483,10 @@ export const AppShell: React.FC<AppShellProps> = ({
         </div>
       </aside>
 
-      <main className="flex-1 h-full overflow-y-auto overflow-x-hidden main-safe-padding md:pt-0 relative scroll-smooth overscroll-none">
+      <main
+        style={mainStyle}
+        className="flex-1 h-full overflow-y-auto overflow-x-hidden md:pt-0 relative scroll-smooth overscroll-none"
+      >
         <div className="max-w-6xl mx-auto p-4 md:p-8 lg:p-12 pb-24">{children}</div>
       </main>
       {isProfileOpen && (
