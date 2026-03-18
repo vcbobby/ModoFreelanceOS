@@ -1,6 +1,6 @@
 {
   "name": "modofreelanceos",
-  "main": "electron/main.cjs",
+  "main": "main.js",
   "homepage": "./",
   "private": true,
   "version": "2.1.4",
