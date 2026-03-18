@@ -22,7 +22,11 @@ out/
 # Gradle files
 .gradle/
 build/
-
+android
+release-android
+release-android.jks
+release/*
+release/
 # Local configuration file (sdk path, etc)
 local.properties
 

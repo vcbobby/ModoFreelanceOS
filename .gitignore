@@ -17,6 +17,9 @@ dist-ssr
 .env.*.local
 .env.local
 electron 
+release/
+release-android/
+release-android.jks
 *.example
 .env
 .env.*.local

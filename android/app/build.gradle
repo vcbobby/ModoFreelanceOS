@@ -17,11 +17,21 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            // Reemplaza estas rutas con los valores reales si Gradle falla al encontrarlos.
+            storeFile file("release-android.jks")
+            storePassword "vic24929361torvc"
+            keyAlias "key0"
+            keyPassword "vic24929361torvc"
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
 }
