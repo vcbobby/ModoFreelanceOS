@@ -4,17 +4,17 @@ import * as path from 'path';
 import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineConfig(({ mode }) => ({
-  base: '/', // Changed to / because we now use a local HTTP server for Electron
+  base: './', // Changed to './' for Electron and Capacitor to load local file:// assets correctly
   plugins: [
     react(),
     mode === 'analyze' &&
-      visualizer({
-        filename: 'bundle-report.html',
-        template: 'treemap',
-        gzipSize: true,
-        brotliSize: true,
-        open: false,
-      }),
+    visualizer({
+      filename: 'bundle-report.html',
+      template: 'treemap',
+      gzipSize: true,
+      brotliSize: true,
+      open: false,
+    }),
   ].filter(Boolean),
   resolve: {
     alias: {
