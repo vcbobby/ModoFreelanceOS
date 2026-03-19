@@ -1,14 +1,10 @@
 .navbar-safe-area {
-  /* Android frequently evaluates env() to 0px in Capacitor. 
-     Using max() ensures we always have at least 32px for the status bar, plus 12px (0.75rem) normal padding */
-  padding-top: calc(0.75rem + max(env(safe-area-inset-top), 32px));
+  padding-top: calc(0.75rem + var(--safe-area-top, env(safe-area-inset-top, 0px)));
   padding-bottom: 0.75rem;
 }
 
 @media (max-width: 768px) {
   .main-safe-padding {
-    /* Navbar height = content(~28px) + pb(12px) + pt(12px + max) = ~52px + max.
-       Adding extra margin so the dashboard content clears it perfectly. */
-    padding-top: calc(4.5rem + max(env(safe-area-inset-top), 32px)) !important;
+    padding-top: calc(4.5rem + var(--safe-area-top, env(safe-area-inset-top, 0px))) !important;
   }
 }

@@ -126,11 +126,7 @@ export const AppShell: React.FC<AppShellProps> = ({
 
   // Bulletproof Safe Area for Android
   const isAndroid = Capacitor.getPlatform() === 'android';
-  // Android native WebView often wrongly evaluates env() to 0px. We force 45px padding for Android Native.
-  // Other platforms (Web/iOS) can safely use env(safe-area-inset-top)
   const safeAreaVar = isAndroid ? '45px' : 'env(safe-area-inset-top, 0px)';
-  const navbarStyle = { paddingTop: `calc(0.75rem + ${safeAreaVar})`, paddingBottom: '0.75rem' };
-  const mainStyle = { paddingTop: `calc(4.5rem + ${safeAreaVar})` };
 
   useLayoutEffect(() => {
     if (sidebarRef.current) {
@@ -139,10 +135,12 @@ export const AppShell: React.FC<AppShellProps> = ({
   }, [currentView]);
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 transition-colors duration-300">
-      <div
-        style={navbarStyle}
-        className="md:hidden fixed top-0 w-full bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-50 px-4 flex justify-between items-center gap-4 transition-colors"
+    <div 
+      style={{ '--safe-area-top': safeAreaVar } as React.CSSProperties}
+      className="flex h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 transition-colors duration-300"
+    >
+      <div 
+        className="md:hidden fixed top-0 w-full bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-50 px-4 flex justify-between items-center gap-4 transition-colors navbar-safe-area"
       >
         <span
           onClick={() => {
@@ -483,9 +481,8 @@ export const AppShell: React.FC<AppShellProps> = ({
         </div>
       </aside>
 
-      <main
-        style={mainStyle}
-        className="flex-1 h-full overflow-y-auto overflow-x-hidden md:pt-0 relative scroll-smooth overscroll-none"
+      <main 
+        className="flex-1 h-full overflow-y-auto overflow-x-hidden main-safe-padding md:pt-0 relative scroll-smooth overscroll-none"
       >
         <div className="max-w-6xl mx-auto p-4 md:p-8 lg:p-12 pb-24">{children}</div>
       </main>
