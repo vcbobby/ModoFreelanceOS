@@ -1,6 +1,6 @@
 // src/firebase.ts
 import { initializeApp, type FirebaseOptions } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getMessaging } from 'firebase/messaging';
 
@@ -23,5 +23,11 @@ if (!firebaseConfig.apiKey) {
 
 const app = initializeApp(firebaseConfig as FirebaseOptions);
 export const auth = getAuth(app);
+
+// Forzar la persistencia local, especialmente útil en entornos de escritorio (Electron)
+setPersistence(auth, browserLocalPersistence).catch((error) => {
+  console.error('Error al configurar la persistencia de sesión:', error);
+});
+
 export const db = getFirestore(app);
 export const messaging = getMessaging(app);
