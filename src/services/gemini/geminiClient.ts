@@ -62,7 +62,7 @@ const sanitizeWorkanaContent = (text: string): string => {
 
 export const createGeminiClient = ({
   apiKey,
-  modelName = 'gemini-1.5-flash',
+  modelName = 'gemini-2.0-flash-exp',
 }: GeminiClientOptions): GeminiClient => {
   let genAI: GoogleGenerativeAI | null = null;
   if (!apiKey) {
