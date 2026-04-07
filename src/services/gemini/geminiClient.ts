@@ -1,4 +1,3 @@
-import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/generative-ai';
 import { Proposal } from '@types';
 
 export interface GeminiClient {
@@ -62,23 +61,37 @@ const sanitizeWorkanaContent = (text: string): string => {
 
 export const createGeminiClient = ({
   apiKey,
-  modelName = 'gemini-1.5-flash-002',
+  modelName = 'llama-3.3-70b-versatile',
 }: GeminiClientOptions): GeminiClient => {
-  let genAI: GoogleGenerativeAI | null = null;
   if (!apiKey) {
-    // No forzamos un throw en tiempo de importación para evitar romper
-    // la aplicación completa cuando la variable de entorno falta.
-    // En su lugar, inicializamos `genAI` solo si hay key y dejamos
-    // que las funciones comprueben la disponibilidad al ejecutarse.
-    console.warn('VITE_GEMINI_API_KEY no configurada. Funciones de IA deshabilitadas.');
-  } else {
-    genAI = new GoogleGenerativeAI(apiKey);
+    console.warn('VITE_GROQ_API_KEY no configurada. Funciones de IA deshabilitadas.');
   }
 
   const assertConfigured = () => {
-    if (!genAI) {
-      throw new Error('Gemini no está configurado. Define VITE_GEMINI_API_KEY en tu .env');
+    if (!apiKey) {
+      throw new Error('Groq no está configurado. Define VITE_GROQ_API_KEY en tu .env');
     }
+  };
+
+  const groqFetch = async (messages: any[], jsonMode: boolean = false) => {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: modelName,
+        messages,
+        temperature: 0.7,
+        response_format: jsonMode ? { type: "json_object" } : undefined
+      }),
+    });
+    if (!res.ok) {
+      throw new Error(`Error de Groq: ${await res.text()}`);
+    }
+    const data = await res.json();
+    return data.choices[0].message.content;
   };
 
   const generateProposals: GeminiClient['generateProposals'] = async (
@@ -88,11 +101,6 @@ export const createGeminiClient = ({
     clientName
   ) => {
     assertConfigured();
-
-    const model = genAI!.getGenerativeModel({
-      model: modelName,
-      generationConfig: { responseMimeType: 'application/json' },
-    });
 
     let platformInstructions = '';
     switch (platform) {
@@ -156,8 +164,6 @@ export const createGeminiClient = ({
       - NO listes mis habilidades ni mi experiencia tal cual aparecen en mi perfil.
       - NO digas frases como "Como puedes ver en mi perfil tengo habilidades en...".
       - EN SU LUGAR, integra mis habilidades en la narrativa. 
-      - Ejemplo MALO: "Estimado Paul, Entiendo que su visión es establecer una tienda en línea completa y funcional, específicamente optimizada para capitalizar el tráfico proveniente de TikTok, con una atención crítica en la experiencia móvil y la implementación del sistema de Pago Contra Entrega (COD) como opción principal.Como ingeniero y desarrollador web con experiencia en diseño UI/UX, mi enfoque se centrará en una arquitectura de plataforma robusta y escalable. Utilizando mi dominio en Shopify o WordPress con WooCommerce, construiré una tienda que no solo cumpla con todas las funcionalidades estándar de e-commerce (gestión de catálogo, carrito, seguimiento de pedidos), sino que también garantice un rendimiento excepcional y una fluidez total en dispositivos móviles.Mi experiencia en diseño UI/UX, respaldada por herramientas como Figma y el uso de React/Bootstrap, me permite crear interfaces intuitivas y estéticamente atractivas que son cruciales para el público de TikTok, asegurando una alta tasa de compromiso y conversión. La integración del COD será ejecutada con precisión, priorizándola en el proceso de checkout para ofrecer la flexibilidad que sus clientes requieren.Además, desarrollaré un panel de administración intuitivo que simplificará la gestión de inventario y ventas, permitiéndole operar su negocio de manera eficiente. Estoy listo para discutir cómo mi experiencia puede transformar su proyecto en una plataforma de ventas exitosa y rentable."
-      - Ejemplo BUENO: "Hola Miriam, ¿cómo estás? Estuve revisando tu proyecto y me interesa mucho colaborar contigo. Mi nombre es Víctor Castillo y trabajo como desarrollador web especializado en tiendas online. Tengo experiencia creando e-commerce funcionales, fáciles de administrar y listos para que el cliente solo tenga que enfocarse en vender. Por lo que comentas, mi perfil encaja bastante bien con lo que necesitas: una tienda clara, rápida, con buena experiencia de usuario y que además sea fácil de mantener y escalar. He trabajado con plataformas como Shopify, WooCommerce y configuraciones completas tipo “llave en mano”, desde el diseño hasta la integración de productos, pasarelas de pago y ajustes finales. Lo que propongo para tu proyecto 1. Revisión inicial y definición del estilo Conversamos brevemente sobre el tipo de productos, estilo visual y funcionalidades básicas (envíos, pago, categorías, etc.). Con eso defino una línea de diseño limpia, moderna y orientada a conversión. 2. Diseño y maquetación de la tienda Creo una estructura ordenada con un diseño atractivo, adaptable a móviles y que facilite la navegación. Esto incluye homepage, página de producto, carrito y checkout según la plataforma. 3. Configuración completa del sistema de ventas Integración de métodos de pago, logística básica, inventarios, variantes, cupones y todo lo necesario para que la tienda quede operativa. 4. Carga inicial de productos Subo los productos base (cantidad a definir contigo) con imágenes optimizadas y descripciones bien estructuradas. 5. Optimización y pruebas Reviso velocidad, usabilidad y realizo pruebas de compra para asegurar que todo funcione perfecto antes de la entrega. 6. Entrega “llave en mano” + soporte Te entrego la tienda lista para usar y te doy una pequeña guía de gestión para que puedas actualizar productos o realizar cambios sin complicaciones. Si te parece, puedo comenzar de inmediato. Cualquier detalle adicional que quieras incluir, estoy abierto a revisarlo contigo. Quedo atento, Miriam. Con gusto te ayudo a lanzar tu tienda. Saludos, Víctor."
       
       INSTRUCCIONES DE DISEÑO VISUAL (IMPORTANTE):
       - Usa formato Markdown para estructurar el texto.
@@ -187,9 +193,13 @@ export const createGeminiClient = ({
             { "proposals": [ { "type": "Formal", "title": "...", "content": "..." }, ... ] }
         `;
 
-    const result = await model.generateContent(prompt);
-    const text = result.response
-      .text()
+    const messages = [
+      { role: 'system', content: prompt }
+    ];
+
+    const resultText = await groqFetch(messages, true);
+    
+    const text = resultText
       .replace(/```json/g, '')
       .replace(/```/g, '')
       .trim();
@@ -207,14 +217,10 @@ export const createGeminiClient = ({
 
   const analyzeDocument: GeminiClient['analyzeDocument'] = async (text, mode) => {
     assertConfigured();
-    const model = genAI!.getGenerativeModel({ model: modelName });
-    const prompt = `
-            Tarea: ${mode.toUpperCase()}
-            Idioma: Español.
-            Documento: "${text.substring(0, 30000)}"
-        `;
-    const result = await model.generateContent(prompt);
-    return result.response.text();
+    const messages = [
+        { role: 'system', content: `Tarea: ${mode.toUpperCase()}\nIdioma: Español.\nDocumento: "${text.substring(0, 30000)}"` }
+    ];
+    return await groqFetch(messages, false);
   };
 
   const analyzeFinancialHealth: GeminiClient['analyzeFinancialHealth'] = async (
@@ -223,9 +229,6 @@ export const createGeminiClient = ({
     pending
   ) => {
     assertConfigured();
-    const model = genAI!.getGenerativeModel({ model: modelName });
-
-    // Obtenemos fecha actual para que la IA sepa en qué mes estamos
     const today = new Date().toLocaleDateString('es-ES', {
       weekday: 'long',
       year: 'numeric',
@@ -254,8 +257,8 @@ export const createGeminiClient = ({
             Tarea: Diagnóstico de liquidez, estrategia de cobros y 3 consejos.
         `;
 
-    const result = await model.generateContent(prompt);
-    return result.response.text();
+    const messages = [{ role: 'system', content: prompt }];
+    return await groqFetch(messages, false);
   };
 
   const chatWithAssistant: GeminiClient['chatWithAssistant'] = async (
@@ -264,29 +267,7 @@ export const createGeminiClient = ({
     contextData
   ) => {
     assertConfigured();
-    const model = genAI!.getGenerativeModel({
-      model: modelName,
-      safetySettings: [
-        {
-          category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-          threshold: HarmBlockThreshold.BLOCK_NONE,
-        },
-        {
-          category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-          threshold: HarmBlockThreshold.BLOCK_NONE,
-        },
-        {
-          category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-          threshold: HarmBlockThreshold.BLOCK_NONE,
-        },
-        {
-          category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-          threshold: HarmBlockThreshold.BLOCK_NONE,
-        },
-      ],
-    });
 
-    // --- PROMPT DE SISTEMA LIMPIO ---
     const systemContext = `
         IDENTIDAD:
         Tu nombre es **Freency**. Eres la asistente virtual avanzada de ModoFreelanceOS.
@@ -316,35 +297,23 @@ export const createGeminiClient = ({
         - Crear Curso: { "action": "create_course", "topic": "Tema", "level": "Nivel" }
         `;
 
-    // Construcción del historial para Gemini
     const chatHistory = [
-      {
-        role: 'user',
-        parts: [{ text: systemContext }],
-      },
-      {
-        role: 'model',
-        parts: [
-          {
-            text: 'Entendido. Soy Freency, tengo acceso a tus datos y me limitaré a temas de negocio.',
-          },
-        ],
-      },
+      { role: 'system', content: systemContext },
+      { role: 'assistant', content: 'Entendido. Soy Freency, tengo acceso a tus datos y me limitaré a temas de negocio.' },
       ...history.map((msg) => ({
-        role: msg.role === 'user' ? 'user' : 'model',
-        parts: [{ text: msg.text }],
+        role: msg.role === 'user' ? 'user' : 'assistant',
+        content: msg.text,
       })),
+      { role: 'user', content: message }
     ];
 
-    const chat = model.startChat({
-      history: chatHistory,
-      generationConfig: { maxOutputTokens: 800 },
-    });
-
-    const result = await chat.sendMessage(message);
-    const responseText = result.response.text();
-
-    return responseText || 'No pude generar una respuesta.';
+    try {
+      const responseText = await groqFetch(chatHistory, false);
+      return responseText || 'No pude generar una respuesta.';
+    } catch (error) {
+      console.error(error);
+      return 'No pude generar una respuesta por un error de conectividad.';
+    }
   };
 
   return {
