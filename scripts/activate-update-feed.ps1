@@ -1,7 +1,7 @@
 param(
-    [string]$Version = "2.1.4",
+    [string]$Version = "2.1.5",
     [string]$Repo = "vcbobby/ModoFreelanceOS",
-    [string]$Message = "✨ ¡ModoFreelanceOS v2.1.4! Mejoras de seguridad y estabilidad del backend, validaciones reforzadas y correcciones de calidad internas.",
+    [string]$Message = "✨ ¡ModoFreelanceOS v2.1.5! Mejoras y correcciones para una mayor estabilidad.",
     [bool]$Critical = $true,
     [switch]$SkipUrlValidation,
     [switch]$DryRun

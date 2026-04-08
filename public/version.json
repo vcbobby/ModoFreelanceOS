@@ -1,7 +1,7 @@
 {
-  "version": "2.1.4",
+  "version": "2.1.5",
   "critical": true,
-  "apkUrl": "https://github.com/vcbobby/ModoFreelanceOS/releases/download/v2.1.4/app-release.apk",
-  "exeUrl": "https://github.com/vcbobby/ModoFreelanceOS/releases/download/v2.1.4/ModoFreelanceOS.Setup.exe",
-  "message": "🚀 ¡ModoFreelanceOS v2.1.4! Seguridad y estabilidad mejoradas, protección de endpoints, limpieza de logs y hardening de webhook de pagos. Listo para producción."
+  "apkUrl": "https://github.com/vcbobby/ModoFreelanceOS/releases/download/v2.1.5/app-release.apk",
+  "exeUrl": "https://github.com/vcbobby/ModoFreelanceOS/releases/download/v2.1.5/ModoFreelanceOS.Setup.exe",
+  "message": "🚀 ¡ModoFreelanceOS v2.1.5! Mejoras y correcciones para una mayor estabilidad."
 }

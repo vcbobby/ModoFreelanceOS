@@ -160,9 +160,9 @@ export const LandingModern: React.FC = () => {
 
   const handleLogin = () => (window.location.href = 'https://app.modofreelanceos.com');
   const ANDROID_LINK =
-    'https://github.com/vcbobby/ModoFreelanceOS/releases/download/v2.1.4/app-release.apk';
+    'https://github.com/vcbobby/ModoFreelanceOS/releases/download/v2.1.5/app-release.apk';
   const WINDOWS_LINK =
-    'https://github.com/vcbobby/ModoFreelanceOS/releases/download/v2.1.4/ModoFreelanceOS.Setup.exe';
+    'https://github.com/vcbobby/ModoFreelanceOS/releases/download/v2.1.5/ModoFreelanceOS.Setup.exe';
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
@@ -318,7 +318,7 @@ export const LandingModern: React.FC = () => {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
             </span>
-            Nueva Versión 2.1.4
+            Nueva Versión 2.1.5
           </motion.div>
 
           <h1 className="relative z-20 text-6xl md:text-8xl lg:text-9xl font-black mb-8 leading-[1] tracking-tighter text-slate-900 dark:text-white drop-shadow-sm">
