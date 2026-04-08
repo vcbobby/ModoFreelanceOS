@@ -57,7 +57,8 @@ export const CopilotWorkspace: React.FC<CopilotWorkspaceProps> = ({ projectId, o
     if (!input.trim() || isSending) return;
     const msg = input.trim();
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: msg }]);
+    const tempUserMsg = { role: 'user' as const, content: msg };
+    setMessages(prev => [...prev, tempUserMsg]);
     setIsSending(true);
     
     try {
@@ -158,13 +159,14 @@ export const CopilotWorkspace: React.FC<CopilotWorkspaceProps> = ({ projectId, o
                     </ul>
                     
                     <Button 
+                      variant="ghost"
                       onClick={(e: unknown) => { 
                           if (e && typeof e === 'object' && 'stopPropagation' in e) {
                              (e as any).stopPropagation();
                           }
                           togglePhaseCompletion(idx); 
                       }}
-                      className={`w-full text-xs py-2 \${isDone ? 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300' : 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400'}`}
+                      className={`w-full text-xs py-2 ${isDone ? 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300' : 'bg-green-100 !text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:!text-green-400'}`}
                     >
                        {isDone ? 'Marcar como Incompleta' : 'Aprobar Fase Completada'}
                     </Button>
@@ -192,16 +194,19 @@ export const CopilotWorkspace: React.FC<CopilotWorkspaceProps> = ({ projectId, o
         </div>
         
         <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-slate-50 dark:bg-slate-900/50">
-           {messages.map((m, i) => (
-             <div key={i} className={`flex \${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[85%] rounded-2xl p-4 shadow-sm text-sm \${m.role === 'user' ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-tl-none'}`}>
-                   {m.role === 'assistant' && i === 0 && <Sparkles className="w-4 h-4 text-indigo-500 mb-2" />}
-                   <div className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed">
+           {messages.map((m, i) => {
+             const isUser = m.role === 'user';
+             return (
+             <div key={i} className={`flex w-full ${isUser ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[85%] rounded-2xl p-4 shadow-sm text-sm ${isUser ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-tl-none'}`}>
+                   {!isUser && i === 0 && <Sparkles className="w-4 h-4 text-indigo-500 mb-2" />}
+                   <div className={`prose prose-sm max-w-none ${isUser ? 'text-white prose-p:text-white prose-a:text-white' : 'dark:prose-invert prose-p:leading-relaxed text-slate-800 dark:text-slate-100'}`}>
                      <ReactMarkdown>{m.content}</ReactMarkdown>
                    </div>
                 </div>
              </div>
-           ))}
+             );
+           })}
            {isSending && (
               <div className="flex justify-start">
                  <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-2">
