@@ -108,3 +108,13 @@ export const getCopilotProject = async (userId: string, projectId: string): Prom
     
     return await response.json();
 };
+
+export const deleteCopilotProject = async (userId: string, projectId: string): Promise<boolean> => {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE}/delete/${userId}/${projectId}`, {
+        method: 'DELETE',
+        headers,
+    });
+    if (!response.ok) throw new Error('Fallo al eliminar el proyecto');
+    return true;
+};

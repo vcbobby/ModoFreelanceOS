@@ -27,8 +27,17 @@ body {
   font-family: 'Inter', sans-serif;
 }
 
-@import './navbar-safe-area.css';
+/* Safe Area for Mobile */
+.navbar-safe-area {
+  padding-top: calc(0.75rem + var(--safe-area-top, env(safe-area-inset-top, 0px)));
+  padding-bottom: 0.75rem;
+}
 
+@media (max-width: 768px) {
+  .main-safe-padding {
+    padding-top: calc(4.5rem + var(--safe-area-top, env(safe-area-inset-top, 0px))) !important;
+  }
+}
 .custom-scrollbar::-webkit-scrollbar {
   display: none;
 }

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Target, Briefcase, Bot, Layout, Loader2, ArrowRight } from 'lucide-react';
+import { Plus, Target, Briefcase, Bot, Layout, Loader2, ArrowRight, Trash2 } from 'lucide-react';
 import { Button, Card } from '@features/shared/ui';
-import { getCopilotProjects, startCopilotProject, CopilotProject } from './copilotApi';
+import { getCopilotProjects, startCopilotProject, deleteCopilotProject, CopilotProject } from './copilotApi';
 import { runWithCredits } from '@/utils/credits';
 
 interface CopilotDashboardProps {
@@ -56,6 +56,21 @@ export const CopilotDashboard: React.FC<CopilotDashboardProps> = ({ onUsage, use
       alert("Hubo un error inicializando el Copiloto.");
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const handleDelete = async (e: React.MouseEvent, projectId: string) => {
+    e.stopPropagation();
+    if (!userId) return;
+    
+    // eslint-disable-next-line no-restricted-globals
+    if (confirm('¿Estás seguro de que quieres eliminar este proyecto? Se perderá todo su historial e instrucciones.')) {
+        try {
+            await deleteCopilotProject(userId, projectId);
+            setProjects(prev => prev.filter(p => p.id !== projectId));
+        } catch (e) {
+            alert('Error al eliminar el proyecto.');
+        }
     }
   };
 
@@ -151,9 +166,18 @@ export const CopilotDashboard: React.FC<CopilotDashboardProps> = ({ onUsage, use
                   <div className="bg-indigo-50 dark:bg-indigo-900/30 p-2 rounded-lg text-indigo-600 dark:text-indigo-400">
                      <Layout className="w-6 h-6" />
                   </div>
-                  <span className="text-xs font-bold px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500">
-                    {p.profession}
-                  </span>
+                  <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500">
+                        {p.profession}
+                      </span>
+                      <button 
+                         onClick={(e) => handleDelete(e, p.id)}
+                         className="p-1 hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 rounded transition-colors"
+                         title="Eliminar proyecto"
+                      >
+                          <Trash2 className="w-4 h-4" />
+                      </button>
+                  </div>
                </div>
                
                <p className="font-medium text-slate-800 dark:text-white line-clamp-3 mb-6">
