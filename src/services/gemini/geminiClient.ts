@@ -164,13 +164,16 @@ export const createGeminiClient = ({
       - NO listes mis habilidades ni mi experiencia tal cual aparecen en mi perfil.
       - NO digas frases como "Como puedes ver en mi perfil tengo habilidades en...".
       - EN SU LUGAR, integra mis habilidades en la narrativa. 
+      - Ejemplo MALO: "Estimado Paul, Entiendo que su visión es establecer una tienda en línea... Estoy listo para discutir cómo mi experiencia puede transformar su proyecto en una plataforma de ventas exitosa y rentable."
+      - Ejemplo BUENO: "Hola Miriam, ¿cómo estás?\\n\\nEstuve revisando tu proyecto y me interesa mucho colaborar contigo. Mi nombre es Víctor Castillo y trabajo como desarrollador web experto en tiendas online.\\n\\nTengo experiencia creando e-commerce funcionales, fáciles de administrar y listos para vender. Por lo que comentas, mi perfil encaja bastante bien con lo que necesitas.\\n\\n**Lo que propongo para tu proyecto:**\\n\\n- **1. Revisión inicial:** Conversamos sobre el tipo de productos y definimos la línea visual.\\n- **2. Diseño de tienda:** Creo una estructura ordenada y adaptable a móviles.\\n- **3. Sistema de ventas:** Integración de métodos de pago y logística básica.\\n- **4. Optimización:** Reviso la velocidad y usabilidad antes de la entrega.\\n\\nSi te parece, podemos empezar de inmediato. Quedo atento a tus comentarios.\\n\\nSaludos, Víctor."
       
-      INSTRUCCIONES DE DISEÑO VISUAL (IMPORTANTE):
+      INSTRUCCIONES DE DISEÑO VISUAL Y FORMATO (CRÍTICO PARA JSON):
+      - **TODO salto de línea DEBE escribirse explícitamente como \\n\\n**. NUNCA generes un "Enter" o salto de línea real dentro del texto porque rompe el formato JSON.
       - Usa formato Markdown para estructurar el texto.
       - Usa **negritas** para resaltar palabras clave, beneficios o tecnologías importantes.
       - Usa listas con viñetas (- punto 1) o números (1. paso 1) para enumerar pasos o beneficios.
-      - Deja SALTO DE LÍNEA entre párrafos para que el texto respire.
-      - despues de cada punto "." deja un espacio o salto de linea si es otro parrafo.
+      - Deja \\n\\n entre párrafos para que el texto respire.
+      -IMPORTANTE: cuida de que no haya ningun tipo de enlace a sitio web o correos.
 
       CONTEXTO:
       1. Plataforma: ${platform}
