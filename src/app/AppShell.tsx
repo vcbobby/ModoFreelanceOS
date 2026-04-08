@@ -28,6 +28,7 @@ import {
   Monitor,
   BarChart3,
   Settings,
+  Bot,
 } from 'lucide-react';
 import { AppView, UserState } from '@types';
 import { NotificationModal } from '@features/shared/ui';
@@ -236,6 +237,15 @@ export const AppShell: React.FC<AppShellProps> = ({
           <div className="mt-4 px-4 text-[10px] font-bold uppercase tracking-wider text-slate-500">
             Operacion diaria
           </div>
+          <NavItem
+            icon={<Bot />}
+            label="Copiloto IA"
+            active={currentView === AppView.COPILOT}
+            onClick={() => {
+              setCurrentView(AppView.COPILOT);
+              setIsMobileMenuOpen(false);
+            }}
+          />
           <NavItem
             icon={<StickyNote />}
             label="Agenda & Notas"

@@ -23,6 +23,7 @@ export enum AppView {
   KNOWLEDGE_BASE = 'KNOWLEDGE_BASE',
   AUTOMATIONS = 'AUTOMATIONS',
   ANALYTICS = 'ANALYTICS',
+  COPILOT = 'COPILOT',
 }
 
 export interface Proposal {

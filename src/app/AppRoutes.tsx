@@ -26,6 +26,10 @@ const AcademyView = React.lazy(() => import('@features/academy'));
 const AdminDashboard = React.lazy(() => import('@features/admin'));
 const WebsiteBuilder = React.lazy(() => import('@features/website-builder'));
 const AnalyticsView = React.lazy(() => import('@features/analytics'));
+const CopilotMainView = React.lazy(async () => {
+  const mod = await import('@features/copilot/CopilotMainView');
+  return { default: mod.CopilotMainView };
+});
 const DashboardPinnedNotes = React.lazy(async () => {
   const mod = await import('@features/shared/dashboard');
   return { default: mod.DashboardPinnedNotes };
@@ -131,6 +135,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
       AppView.BRIEFING,
       AppView.WEBSITE_BUILDER,
       AppView.HISTORY,
+      AppView.COPILOT,
     ]);
 
     if (prefetchViews.has(currentView)) {
@@ -175,6 +180,8 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         return <AcademyView onUsage={handleFeatureUsage} userId={userId} />;
       case AppView.ADMIN:
         return <AdminDashboard userId={userId} />;
+      case AppView.COPILOT:
+        return <CopilotMainView onUsage={handleFeatureUsage} userId={userId} />;
       case AppView.WEBSITE_BUILDER:
         if (!userState.isSubscribed) {
           return (
