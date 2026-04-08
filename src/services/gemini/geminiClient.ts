@@ -221,7 +221,8 @@ export const createGeminiClient = ({
   const analyzeDocument: GeminiClient['analyzeDocument'] = async (text, mode) => {
     assertConfigured();
     const messages = [
-        { role: 'system', content: `Tarea: ${mode.toUpperCase()}\nIdioma: Español.\nDocumento: "${text.substring(0, 30000)}"` }
+        { role: 'system', content: `Actúa como un experto analista. Tu tarea central es: ${mode.toUpperCase()} el documento proporcionado.` },
+        { role: 'user', content: `Por favor analiza este documento en idioma Español basándote en la tarea indicada arriba:\n\nDocumento:\n"${text.substring(0, 30000)}"` }
     ];
     return await groqFetch(messages, false);
   };
@@ -260,7 +261,10 @@ export const createGeminiClient = ({
             Tarea: Diagnóstico de liquidez, estrategia de cobros y 3 consejos.
         `;
 
-    const messages = [{ role: 'system', content: prompt }];
+    const messages = [
+      { role: 'system', content: 'Actúa como un asesor financiero experto.' },
+      { role: 'user', content: prompt }
+    ];
     return await groqFetch(messages, false);
   };
 
@@ -300,13 +304,19 @@ export const createGeminiClient = ({
         - Crear Curso: { "action": "create_course", "topic": "Tema", "level": "Nivel" }
         `;
 
-    const chatHistory = [
-      { role: 'system', content: systemContext },
-      { role: 'assistant', content: 'Entendido. Soy Freency, tengo acceso a tus datos y me limitaré a temas de negocio.' },
-      ...history.map((msg) => ({
+    // Filtrar mensajes vacíos y asegurar secuencia Válida para Groq
+    const mappedHistory = history
+      .filter((msg) => msg && msg.text && msg.text.trim() !== '')
+      .map((msg) => ({
         role: msg.role === 'user' ? 'user' : 'assistant',
         content: msg.text,
-      })),
+      }));
+
+    const chatHistory = [
+      { role: 'system', content: systemContext },
+      { role: 'user', content: 'Hola, ¿quién eres y qué haces?' },
+      { role: 'assistant', content: 'Entendido. Soy Freency, la asistente virtual avanzada de ModoFreelanceOS. Tengo acceso a tus datos y me limitaré a temas estrictamente de negocio y funciones de la aplicación.' },
+      ...mappedHistory,
       { role: 'user', content: message }
     ];
 
