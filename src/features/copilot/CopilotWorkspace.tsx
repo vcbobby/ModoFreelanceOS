@@ -3,20 +3,27 @@ import { ArrowLeft, Send, Sparkles, CheckCircle, Circle, Map, Bot } from 'lucide
 import { Button } from '@features/shared/ui';
 import { getCopilotProject, chatWithMentor, updatePhaseStatus, setCurrentPhase, CopilotProject, CopilotMessage } from './copilotApi';
 import ReactMarkdown from 'react-markdown';
+import { runWithCredits } from '@/utils/credits';
 
 interface CopilotWorkspaceProps {
   projectId: string;
   onBack: () => void;
   userId?: string;
+  onUsage?: (cost: number) => Promise<boolean>;
 }
 
-export const CopilotWorkspace: React.FC<CopilotWorkspaceProps> = ({ projectId, onBack, userId }) => {
+export const CopilotWorkspace: React.FC<CopilotWorkspaceProps> = ({ projectId, onBack, userId, onUsage }) => {
   
   const [project, setProject] = useState<CopilotProject | null>(null);
   const [messages, setMessages] = useState<CopilotMessage[]>([]);
   const [input, setInput] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [messageCount, setMessageCount] = useState(() => {
+    if (!userId) return 0;
+    const saved = localStorage.getItem(`copilot_msg_count_${userId}`);
+    return saved ? parseInt(saved, 10) : 0;
+  });
   
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
@@ -57,13 +64,37 @@ export const CopilotWorkspace: React.FC<CopilotWorkspaceProps> = ({ projectId, o
     if (!input.trim() || isSending) return;
     const msg = input.trim();
     setInput('');
+    
+    // Calcular el coste: cada 5 mensajes cuesta 1 crédito
+    const nextCount = messageCount + 1;
+    const isChargeable = nextCount % 5 === 0;
+    const cost = isChargeable ? 1 : 0;
+
     const tempUserMsg = { role: 'user' as const, content: msg };
     setMessages(prev => [...prev, tempUserMsg]);
     setIsSending(true);
     
     try {
-      const reply = await chatWithMentor(userId!, projectId, msg);
-      setMessages(prev => [...prev, { role: 'assistant', content: reply }]);
+      const usage = await runWithCredits(
+        cost,
+        async (c) => onUsage ? await onUsage(c || 0) : true,
+        async () => await chatWithMentor(userId!, projectId, msg)
+      );
+
+      if (!usage.ok) {
+        // En caso de que se quede sin créditos
+        setMessages(prev => prev.slice(0, -1)); // Quitar el mensaje optimista si no se pudo enviar
+        alert("💬 Has alcanzado el límite de mensajes del Copiloto IA. Obtén un Pack de Créditos o mejora a PRO para enviar más.");
+        setInput(msg); // Devolver input al usuario
+        return;
+      }
+      
+      setMessages(prev => [...prev, { role: 'assistant', content: usage.result! }]);
+      
+      // Persistimos el estado y local storage si fue exitoso
+      setMessageCount(nextCount);
+      if (userId) localStorage.setItem(`copilot_msg_count_${userId}`, nextCount.toString());
+
     } catch (e) {
       setMessages(prev => [...prev, { role: 'assistant', content: '❌ Error conectando con el mentor. Intenta de nuevo.'}]);
     } finally {
@@ -102,10 +133,10 @@ export const CopilotWorkspace: React.FC<CopilotWorkspaceProps> = ({ projectId, o
   }
 
   return (
-    <div className="h-[calc(100vh-80px)] max-w-7xl mx-auto flex gap-6 py-6 pb-20">
+    <div className="h-[calc(100vh-80px)] max-w-7xl mx-auto flex flex-col lg:flex-row gap-4 lg:gap-6 p-4 lg:py-6 lg:pb-20">
       
       {/* PANEL IZQUIERDO: ROADMAP */}
-      <div className="w-1/3 flex flex-col bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex-shrink-0">
+      <div className="w-full lg:w-1/3 h-[40%] lg:h-full flex flex-col bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex-shrink-0">
         <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex items-center gap-3">
           <button onClick={onBack} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
             <ArrowLeft className="w-5 h-5 text-slate-500" />
@@ -178,7 +209,7 @@ export const CopilotWorkspace: React.FC<CopilotWorkspaceProps> = ({ projectId, o
       </div>
       
       {/* PANEL DERECHO: CHAT MENTOR */}
-      <div className="flex-1 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col relative">
+      <div className="flex-1 w-full h-[60%] lg:h-full bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col relative">
         <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-indigo-600 text-white shadow-md z-10">
            <div className="flex items-center gap-3">
              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm border border-white/30">

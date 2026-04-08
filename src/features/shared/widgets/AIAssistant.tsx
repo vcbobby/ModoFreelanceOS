@@ -138,6 +138,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ userId, onUsage }) => 
     notes: '',
     history: '',
     portfolio: '', // NUEVO: Datos del sitio web
+    copilots: '',
     knowledgeBase: '',
     currentTime: '',
     currentDate: '',
@@ -160,6 +161,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ userId, onUsage }) => 
         { id: 'context-notes', text: data.notes, source: 'notes' },
         { id: 'context-history', text: data.history, source: 'history' },
         { id: 'context-portfolio', text: data.portfolio, source: 'portfolio' },
+        { id: 'context-copilot', text: data.copilots, source: 'copilots' },
         { id: 'context-knowledge', text: data.knowledgeBase, source: 'knowledge_base' },
       ].filter((doc) => doc.text && doc.text.trim().length > 0),
     []
@@ -308,6 +310,25 @@ WEB DEL USUARIO:
         void error;
       }
 
+      // 6. NUEVO: Leer Copilot Projects
+      let copilotContext = 'No tiene proyectos en el Copiloto IA.';
+      try {
+        const copilotQ = query(
+          collection(db, 'users', userId, 'copilots'),
+          orderBy('created_at', 'desc'),
+          limit(5)
+        );
+        const copilotSnap = await getDocs(copilotQ);
+        if (!copilotSnap.empty) {
+            copilotContext = copilotSnap.docs.map(d => {
+                const cp = d.data();
+                const completedPhases = cp.phases ? cp.phases.filter((p: any) => p.is_completed).length : 0;
+                const totalPhases = cp.phases ? cp.phases.length : 0;
+                return `- Proyecto: ${cp.profession} (Fase Actual: ${cp.current_phase || 0}, Progreso: ${completedPhases}/${totalPhases} completas)`;
+            }).join('\n');
+        }
+      } catch(e) { void e; }
+
       const ingestKey = `assistant_ingest_${userId}`;
       const lastIngest = Number(localStorage.getItem(ingestKey) || 0);
       const shouldIngest = !lastIngest || Date.now() - lastIngest > INGEST_TTL_MS;
@@ -318,6 +339,7 @@ WEB DEL USUARIO:
           notes: notesList,
           history: historyList,
           portfolio: portfolioContext,
+          copilots: copilotContext,
           knowledgeBase: knowledgeBaseList,
           currentTime: '',
           currentDate: '',
@@ -338,6 +360,7 @@ WEB DEL USUARIO:
         notes: notesList,
         history: historyList,
         portfolio: portfolioContext,
+        copilots: copilotContext,
         knowledgeBase: knowledgeBaseList,
         currentTime: new Date().toLocaleTimeString(),
         currentDate: new Date().toLocaleDateString('en-CA'),

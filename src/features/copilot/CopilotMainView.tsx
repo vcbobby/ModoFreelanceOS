@@ -11,7 +11,7 @@ export const CopilotMainView: React.FC<CopilotMainViewProps> = ({ onUsage, userI
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
 
   if (activeProjectId) {
-    return <CopilotWorkspace projectId={activeProjectId} onBack={() => setActiveProjectId(null)} userId={userId} />;
+    return <CopilotWorkspace projectId={activeProjectId} onBack={() => setActiveProjectId(null)} userId={userId} onUsage={onUsage} />;
   }
 
   return <CopilotDashboard onUsage={onUsage} onOpenProject={(id) => setActiveProjectId(id)} userId={userId} />;

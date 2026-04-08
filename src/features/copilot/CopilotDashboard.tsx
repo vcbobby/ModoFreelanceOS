@@ -68,8 +68,8 @@ export const CopilotDashboard: React.FC<CopilotDashboardProps> = ({ onUsage, use
   }
 
   return (
-    <div className="max-w-6xl mx-auto py-8">
-      <div className="mb-8 p-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl shadow-xl flex items-center justify-between">
+    <div className="max-w-6xl mx-auto py-6 lg:py-8 px-4 lg:px-0">
+      <div className="mb-8 p-6 lg:p-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="text-white">
           <h1 className="text-3xl font-bold flex items-center gap-3">
             <Bot className="w-8 h-8" />
