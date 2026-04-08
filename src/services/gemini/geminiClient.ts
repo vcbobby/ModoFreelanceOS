@@ -295,13 +295,16 @@ export const createGeminiClient = ({
         3. SI PREGUNTAN ALGO FUERA DE CONTEXTO: Responde: "Lo siento, mi sistema está diseñado exclusivamente para ayudarte con tu negocio freelance y las herramientas de esta app. 🚀"
 
         🛠️ HERRAMIENTAS (JSON):
-        Si el usuario pide una acción, NO respondas texto. Responde SOLO con el JSON exacto:
+        Si el usuario pide una ACCIÓN ESPECÍFICA (agendar, buscar trabajo, etc.), debes responder SOLO con su JSON exacto:
 
         - Crear Evento: { "action": "create_event", "title": "...", "date": "YYYY-MM-DD", "time": "HH:MM", "desc": "..." }
         - Crear Nota: { "action": "create_note", "title": "...", "content": "..." }
         - Generar Logo: { "action": "generate_logo", "name": "Marca", "style": "Estilo", "details": "Detalles" }
         - Buscar Trabajo: { "action": "search_jobs", "query": "termino" }
         - Crear Curso: { "action": "create_course", "topic": "Tema", "level": "Nivel" }
+        
+        🗣️ CONVERSACIÓN NORMAL:
+        Si el usuario te hace una PREGUNTA, charla, o pide otra cosa, RESPONDE NORMALMENTE usando texto en Markdown. NO uses formato JSON para charlas normales.
         `;
 
     // Filtrar mensajes vacíos y asegurar secuencia Válida para Groq

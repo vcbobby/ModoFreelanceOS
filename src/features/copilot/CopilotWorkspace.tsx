@@ -222,7 +222,7 @@ export const CopilotWorkspace: React.FC<CopilotWorkspaceProps> = ({ projectId, o
                 onKeyDown={e => e.key === 'Enter' && handleSend()}
                 disabled={isSending}
                 placeholder="Pregunta sobre la fase actual, pide código o ejemplos..."
-                className="w-full bg-slate-100 dark:bg-slate-900 border-none rounded-xl pl-4 pr-12 py-4 text-sm focus:ring-2 focus:ring-indigo-500 dark:text-white placeholder:text-slate-400 disabled:opacity-50"
+                className="w-full bg-slate-100 dark:bg-slate-900 border-none rounded-xl pl-4 pr-12 py-4 text-sm focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-white placeholder:text-slate-400 disabled:opacity-50"
               />
               <button 
                 onClick={handleSend}

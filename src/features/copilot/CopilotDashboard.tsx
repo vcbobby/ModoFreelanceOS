@@ -83,7 +83,7 @@ export const CopilotDashboard: React.FC<CopilotDashboardProps> = ({ onUsage, use
         {!showCreate && (
           <Button 
             onClick={() => setShowCreate(true)}
-            className="bg-white text-indigo-700 hover:bg-slate-50 border-none shadow-lg whitespace-nowrap"
+            className="!bg-white !text-indigo-700 hover:!bg-slate-50 border-none shadow-lg whitespace-nowrap"
           >
             <Plus className="w-5 h-5 mr-2" />
             Nuevo Proyecto
