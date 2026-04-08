@@ -212,7 +212,7 @@ export const CopilotWorkspace: React.FC<CopilotWorkspaceProps> = ({ projectId, o
       </div>
       
       {/* PANEL DERECHO: CHAT MENTOR */}
-      <div className="flex-1 w-full min-h-[600px] lg:min-h-0 lg:h-full bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col relative">
+      <div className="flex-1 w-full h-[600px] lg:h-full bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col relative">
         <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-indigo-600 text-white shadow-md z-10">
            <div className="flex items-center gap-3">
              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm border border-white/30">
@@ -232,7 +232,7 @@ export const CopilotWorkspace: React.FC<CopilotWorkspaceProps> = ({ projectId, o
              const isUser = m.role === 'user';
              return (
              <div key={i} className={`flex w-full ${isUser ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[85%] rounded-2xl p-4 shadow-sm text-sm ${isUser ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-tl-none'}`}>
+                <div className={`max-w-[95%] sm:max-w-[85%] overflow-hidden rounded-2xl p-4 shadow-sm text-sm ${isUser ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-tl-none'}`}>
                    {!isUser && i === 0 && <Sparkles className="w-4 h-4 text-indigo-500 mb-2" />}
                    <div className={`prose prose-sm max-w-none ${isUser ? 'text-white prose-p:text-white prose-a:text-white' : 'dark:prose-invert prose-p:leading-relaxed text-slate-800 dark:text-slate-100'}`}>
                      <ReactMarkdown>{m.content}</ReactMarkdown>
