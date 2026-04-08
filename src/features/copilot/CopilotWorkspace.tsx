@@ -133,10 +133,10 @@ export const CopilotWorkspace: React.FC<CopilotWorkspaceProps> = ({ projectId, o
   }
 
   return (
-    <div className="h-[calc(100vh-80px)] max-w-7xl mx-auto flex flex-col lg:flex-row gap-4 lg:gap-6 p-4 lg:py-6 lg:pb-20">
+    <div className="h-auto min-h-[calc(100vh-80px)] lg:h-[calc(100vh-80px)] max-w-7xl mx-auto flex flex-col lg:flex-row gap-4 lg:gap-6 p-4 lg:py-6 lg:pb-20">
       
       {/* PANEL IZQUIERDO: ROADMAP */}
-      <div className="w-full lg:w-1/3 h-[40%] lg:h-full flex flex-col bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex-shrink-0">
+      <div className="w-full lg:w-1/3 min-h-[400px] lg:min-h-0 lg:h-full flex flex-col bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex-shrink-0">
         <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex items-center gap-3">
           <button onClick={onBack} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
             <ArrowLeft className="w-5 h-5 text-slate-500" />
@@ -209,7 +209,7 @@ export const CopilotWorkspace: React.FC<CopilotWorkspaceProps> = ({ projectId, o
       </div>
       
       {/* PANEL DERECHO: CHAT MENTOR */}
-      <div className="flex-1 w-full h-[60%] lg:h-full bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col relative">
+      <div className="flex-1 w-full min-h-[600px] lg:min-h-0 lg:h-full bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col relative">
         <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-indigo-600 text-white shadow-md z-10">
            <div className="flex items-center gap-3">
              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm border border-white/30">
