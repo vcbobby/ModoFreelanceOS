@@ -136,7 +136,7 @@ export const CopilotWorkspace: React.FC<CopilotWorkspaceProps> = ({ projectId, o
     <div className="h-auto min-h-[calc(100vh-80px)] lg:h-[calc(100vh-80px)] max-w-7xl mx-auto flex flex-col lg:flex-row gap-4 lg:gap-6 p-4 lg:py-6 lg:pb-20">
       
       {/* PANEL IZQUIERDO: ROADMAP */}
-      <div className="w-full lg:w-1/3 min-h-[400px] lg:min-h-0 lg:h-full flex flex-col bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex-shrink-0">
+      <div className="w-full lg:w-1/3 h-auto lg:h-full flex flex-col bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex-shrink-0">
         <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex items-center gap-3">
           <button onClick={onBack} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
             <ArrowLeft className="w-5 h-5 text-slate-500" />
@@ -173,34 +173,37 @@ export const CopilotWorkspace: React.FC<CopilotWorkspaceProps> = ({ projectId, o
                     onClick={() => selectPhase(idx)}
                     className={`cursor-pointer rounded-xl p-4 transition-all \${isActive ? 'bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800/50' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
                   >
-                    <h3 className={`font-bold text-sm mb-1 \${isDone ? 'text-green-600 dark:text-green-400' : 'text-slate-800 dark:text-white'}`}>
+                     <h3 className={`font-bold text-sm mb-1 \${isDone ? 'text-green-600 dark:text-green-400' : 'text-slate-800 dark:text-white'}`}>
                       {phase.title}
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
-                      {phase.description}
-                    </p>
                     
-                    <ul className="space-y-2 mb-4">
-                      {phase.tasks.map((t, tid) => (
-                        <li key={tid} className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-300">
-                           <div className="mt-1 w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600 flex-shrink-0" />
-                           {t}
-                        </li>
-                      ))}
-                    </ul>
-                    
-                    <Button 
-                      variant="ghost"
-                      onClick={(e: unknown) => { 
-                          if (e && typeof e === 'object' && 'stopPropagation' in e) {
-                             (e as any).stopPropagation();
-                          }
-                          togglePhaseCompletion(idx); 
-                      }}
-                      className={`w-full text-xs py-2 ${isDone ? 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300' : 'bg-green-100 !text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:!text-green-400'}`}
-                    >
-                       {isDone ? 'Marcar como Incompleta' : 'Aprobar Fase Completada'}
-                    </Button>
+                    <div className={!isActive ? "hidden lg:block" : "block pt-2"}>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
+                        {phase.description}
+                      </p>
+                      
+                      <ul className="space-y-2 mb-4">
+                        {phase.tasks.map((t, tid) => (
+                          <li key={tid} className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-300">
+                             <div className="mt-1 w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600 flex-shrink-0" />
+                             {t}
+                          </li>
+                        ))}
+                      </ul>
+                      
+                      <Button 
+                        variant="ghost"
+                        onClick={(e: unknown) => { 
+                            if (e && typeof e === 'object' && 'stopPropagation' in e) {
+                               (e as any).stopPropagation();
+                            }
+                            togglePhaseCompletion(idx); 
+                        }}
+                        className={`w-full text-xs py-2 \${isDone ? 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300' : 'bg-green-100 !text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:!text-green-400'}`}
+                      >
+                         {isDone ? 'Marcar como Incompleta' : 'Aprobar Fase Completada'}
+                      </Button>
+                    </div>
                   </div>
                </div>
              );
