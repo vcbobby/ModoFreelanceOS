@@ -3,8 +3,13 @@ import react from '@vitejs/plugin-react';
 import * as path from 'path';
 import { visualizer } from 'rollup-plugin-visualizer';
 
-export default defineConfig(({ mode }) => ({
-  base: './', // Changed to './' for Electron and Capacitor to load local file:// assets correctly
+export default defineConfig(({ mode }) => {
+  return {
+  // Use '/' for all environments:
+  // - Vercel: absolute paths required for deep routes (/p/slug)
+  // - Electron: local HTTP server at 127.0.0.1:59910
+  // - Capacitor: serves from https://localhost
+  base: '/',
   plugins: [
     react(),
     mode === 'analyze' &&
@@ -53,4 +58,6 @@ export default defineConfig(({ mode }) => ({
       },
     },
   },
-}));
+  };
+});
+
