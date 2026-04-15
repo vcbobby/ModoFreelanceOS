@@ -50,39 +50,59 @@ const renderPortfolio = async (slugOrId: string) => {
   // Renderizamos un estado de carga inicial para evitar pantalla blanca
   root.render(
     <div className="flex items-center justify-center h-screen bg-gray-900 text-white">
-      Cargando portafolio...
+      <div className="text-center">
+        <div className="w-10 h-10 border-4 border-white/20 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
+        Cargando portafolio...
+      </div>
     </div>
   );
 
-  const [{ PublicPortfolioViewer }, { db }, firestore] = await Promise.all([
-    import('@features/public-portfolio'),
-    import('@config/firebase'),
-    import('firebase/firestore'),
-  ]);
-
-  const { doc, getDoc } = firestore;
-
-  let finalUserId = slugOrId;
-
   try {
-    // Intentar buscar si es un SLUG
-    const slugRef = doc(db, 'slugs', slugOrId);
-    const slugSnap = await getDoc(slugRef);
+    const [{ PublicPortfolioViewer }, { db }, firestore] = await Promise.all([
+      import('@features/public-portfolio'),
+      import('@config/firebase'),
+      import('firebase/firestore'),
+    ]);
 
-    if (slugSnap.exists()) {
-      finalUserId = slugSnap.data().userId;
+    const { doc, getDoc } = firestore;
+
+    let finalUserId = slugOrId;
+
+    try {
+      // Intentar buscar si es un SLUG
+      const slugRef = doc(db, 'slugs', slugOrId);
+      const slugSnap = await getDoc(slugRef);
+
+      if (slugSnap.exists()) {
+        finalUserId = slugSnap.data().userId;
+      }
+    } catch (e) {
+      console.error('Error resolviendo slug', e);
+      // Continuamos con el slugOrId original como fallback
     }
-  } catch (e) {
-    console.error('Error resolviendo slug', e);
-    // Opcional: Renderizar página de error aquí
-  }
 
-  // Renderizar con el ID resuelto
-  root.render(
-    <React.StrictMode>
-      <PublicPortfolioViewer userId={finalUserId} />
-    </React.StrictMode>
-  );
+    // Renderizar con el ID resuelto
+    root.render(
+      <React.StrictMode>
+        <PublicPortfolioViewer userId={finalUserId} />
+      </React.StrictMode>
+    );
+  } catch (e) {
+    console.error('Error crítico cargando portafolio:', e);
+    root.render(
+      <div className="flex flex-col items-center justify-center h-screen bg-gray-900 text-white">
+        <div className="text-6xl mb-4">⚠️</div>
+        <h1 className="text-2xl font-bold mb-2">Error al cargar</h1>
+        <p className="text-gray-400 mb-6">No se pudo cargar el portafolio.</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-6 py-3 bg-white text-gray-900 font-bold rounded-xl"
+        >
+          Reintentar
+        </button>
+      </div>
+    );
+  }
 };
 
 const bootstrap = async () => {

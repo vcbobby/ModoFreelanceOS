@@ -1029,6 +1029,7 @@ export const PublicPortfolioViewer = ({ userId }: { userId: string }) => {
   const [data, setData] = useState<PortfolioData | null>(null);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isDark, setIsDark] = useState(false);
+  const [loadingState, setLoadingState] = useState<'loading' | 'ready' | 'not_found' | 'error'>('loading');
 
   useEffect(() => {
     const fetchPortfolio = async () => {
@@ -1038,6 +1039,7 @@ export const PublicPortfolioViewer = ({ userId }: { userId: string }) => {
         if (snap.exists()) {
           const d = snap.data() as PortfolioData;
           setData(d);
+          setLoadingState('ready');
           // Auto-detección de layouts oscuros por defecto
           if (['minimal_dark', 'terminal', 'cyber', 'studio', 'vibrant'].includes(d.layoutId)) {
             setIsDark(true);
@@ -1045,9 +1047,12 @@ export const PublicPortfolioViewer = ({ userId }: { userId: string }) => {
             // Respetar preferencia del sistema si no es un layout forzado
             setIsDark(window.matchMedia('(prefers-color-scheme: dark)').matches);
           }
+        } else {
+          setLoadingState('not_found');
         }
       } catch (e) {
-        void e;
+        console.error('Error cargando portafolio:', e);
+        setLoadingState('error');
       }
     };
     fetchPortfolio();
@@ -1069,10 +1074,37 @@ export const PublicPortfolioViewer = ({ userId }: { userId: string }) => {
     return () => document.documentElement.style.removeProperty('--portfolio-accent');
   }, [accent]);
 
-  if (!data)
+  if (loadingState === 'loading')
     return (
       <div className="h-screen bg-slate-900 flex items-center justify-center text-white font-sans">
-        Cargando portafolio...
+        <div className="text-center">
+          <div className="w-10 h-10 border-4 border-white/20 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
+          Cargando portafolio...
+        </div>
+      </div>
+    );
+
+  if (loadingState === 'not_found')
+    return (
+      <div className="h-screen bg-slate-900 flex flex-col items-center justify-center text-white font-sans">
+        <div className="text-6xl mb-4">🔍</div>
+        <h1 className="text-2xl font-bold mb-2">Portafolio no encontrado</h1>
+        <p className="text-slate-400">Este enlace no tiene un portafolio publicado aún.</p>
+      </div>
+    );
+
+  if (loadingState === 'error' || !data)
+    return (
+      <div className="h-screen bg-slate-900 flex flex-col items-center justify-center text-white font-sans">
+        <div className="text-6xl mb-4">⚠️</div>
+        <h1 className="text-2xl font-bold mb-2">Error al cargar</h1>
+        <p className="text-slate-400 mb-6">No se pudo cargar el portafolio. Intenta nuevamente.</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-6 py-3 bg-white text-slate-900 font-bold rounded-xl hover:bg-slate-100 transition-colors"
+        >
+          Reintentar
+        </button>
       </div>
     );
 
