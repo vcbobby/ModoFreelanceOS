@@ -31,24 +31,30 @@ export const downloadFile = async (url: string, filename: string) => {
       throw new Error('URL inválida para descarga');
     }
 
+    const isDataUri = url.startsWith('data:');
+
     // 1. LÓGICA PARA ANDROID / IOS (Nativo)
     if (Capacitor.isNativePlatform()) {
-      // Convertir la imagen a Base64 porque Filesystem no acepta Blobs directos fácilmente
-      const response = await fetchWithRetry(url, {
-        timeout: 60000, // 60 segundos para archivos grandes
-        retries: 3,
-        retryDelay: 1000,
-        onRetry: (attempt: number, error: Error) => {
-          console.warn(`[Download] Retry attempt ${attempt} for ${filename}:`, error.message);
-        },
-      });
+      let base64Data = '';
+      if (isDataUri) {
+        base64Data = url.split(',')[1];
+      } else {
+        const response = await fetchWithRetry(url, {
+          timeout: 60000, // 60 segundos para archivos grandes
+          retries: 3,
+          retryDelay: 1000,
+          onRetry: (attempt: number, error: Error) => {
+            console.warn(`[Download] Retry attempt ${attempt} for ${filename}:`, error.message);
+          },
+        });
 
-      if (!response.ok) {
-        throw new Error(`Error al descargar: ${response.status} ${response.statusText}`);
+        if (!response.ok) {
+          throw new Error(`Error al descargar: ${response.status} ${response.statusText}`);
+        }
+
+        const blob = await response.blob();
+        base64Data = (await convertBlobToBase64(blob)) as string;
       }
-
-      const blob = await response.blob();
-      const base64Data = (await convertBlobToBase64(blob)) as string;
 
       // Guardar en la carpeta de Documentos del teléfono
       const savedFile = await Filesystem.writeFile({
@@ -69,29 +75,50 @@ export const downloadFile = async (url: string, filename: string) => {
 
     // 2. LÓGICA PARA WEB / WINDOWS (Electron)
     else {
-      const response = await fetchWithRetry(url, {
-        timeout: 60000, // 60 segundos para archivos grandes
-        retries: 3,
-        retryDelay: 1000,
-        onRetry: (attempt: number, error: Error) => {
-          console.warn(`[Download] Retry attempt ${attempt} for ${filename}:`, error.message);
-        },
-      });
+      let downloadUrl = url;
+      let blobUrl = null;
 
-      if (!response.ok) {
-        throw new Error(`Error al descargar: ${response.status} ${response.statusText}`);
+      if (isDataUri) {
+        // Convertir data URI a Blob para evitar que el navegador lo bloquee por tamaño
+        const [header, base64Data] = url.split(',');
+        const mime = header.match(/:(.*?);/)?.[1] || 'application/octet-stream';
+        const binary = atob(base64Data);
+        const array = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+          array[i] = binary.charCodeAt(i);
+        }
+        const blob = new Blob([array], { type: mime });
+        blobUrl = window.URL.createObjectURL(blob);
+        downloadUrl = blobUrl;
+      } else {
+        const response = await fetchWithRetry(url, {
+          timeout: 60000, // 60 segundos para archivos grandes
+          retries: 3,
+          retryDelay: 1000,
+          onRetry: (attempt: number, error: Error) => {
+            console.warn(`[Download] Retry attempt ${attempt} for ${filename}:`, error.message);
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Error al descargar: ${response.status} ${response.statusText}`);
+        }
+
+        const blob = await response.blob();
+        blobUrl = window.URL.createObjectURL(blob);
+        downloadUrl = blobUrl;
       }
 
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-
       const link = document.createElement('a');
-      link.href = blobUrl;
+      link.href = downloadUrl;
       link.download = filename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
+
+      if (blobUrl) {
+        window.URL.revokeObjectURL(blobUrl);
+      }
 
       return true;
     }
