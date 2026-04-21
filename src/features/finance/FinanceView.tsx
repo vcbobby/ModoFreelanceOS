@@ -865,7 +865,9 @@ export const FinanceView: React.FC<FinanceViewProps> = ({ userId }) => {
       saveE2eTransactions(normalized);
     } else {
       try {
+        const uniqueId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `tx_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         await processTransaction({
+          id: isRecurring ? undefined : uniqueId,
           description,
           type,
           date,
