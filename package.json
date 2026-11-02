@@ -75,7 +75,7 @@
     "@typescript-eslint/eslint-plugin": "^8.54.0",
     "@typescript-eslint/parser": "^8.54.0",
     "@vitejs/plugin-react": "^5.0.0",
-    "@vitest/coverage-v8": "^1.6.1",
+    "@vitest/coverage-v8": "^5.0.5",
     "autoprefixer": "^10.4.24",
     "concurrently": "^9.2.1",
     "cross-env": "^7.0.3",
@@ -97,8 +97,8 @@
     "rollup-plugin-visualizer": "^5.14.0",
     "tailwindcss": "^4.1.18",
     "typescript": "~5.8.2",
-    "vite": "^6.4.1",
-    "vitest": "^1.6.1",
+    "vite": "^6.4.5",
+    "vitest": "^5.0.5",
     "wait-on": "^9.0.3"
   },
   "husky": {
